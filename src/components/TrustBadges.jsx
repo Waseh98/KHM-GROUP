@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function TrustBadges() {
   const badges = [
     {
@@ -9,8 +7,8 @@ export default function TrustBadges() {
     },
     {
       icon: "🔄",
-      title: "Easy Returns",
-      desc: "7-day hassle-free returns"
+      title: "Size/Color Exchange",
+      desc: "Customer pays delivery charges"
     },
     {
       icon: "🛡️",

@@ -1,29 +1,40 @@
+/* ═══════════════════════════════════════════════════════════
+   K-TEX — Global Stylesheet
+   Mobile-first, cross-browser compatible
+═══════════════════════════════════════════════════════════ */
+
 :root {
   --black: #0D0D0D;
   --gold: #B8972A;
   --light-gold: #D4AF5A;
+  --red: #C8102E;
   --bg: #FAF8F3;
-  --light-gray: #1E1E1E; /* Used for dark cards as per SKILL.md */
+  --light-gray: #1E1E1E;
   --mid-gray: #888888;
-  --border: #333333;
+  --border: #E2DDD6;
   --white: #ffffff;
   --font-heading: 'Cormorant Garamond', serif;
   --font-body: 'Montserrat', sans-serif;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 20px rgba(0,0,0,0.3);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.25);
+  --navbar-h: 70px;
 }
 
+/* ── Reset & Box Model ── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
 }
 
 body {
@@ -33,11 +44,13 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 img {
   max-width: 100%;
   display: block;
+  height: auto;
 }
 
 a {
@@ -50,6 +63,13 @@ button {
   border: none;
   background: none;
   font-family: var(--font-body);
+  -webkit-appearance: none;
+}
+
+input, textarea, select {
+  font-family: var(--font-body);
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 /* ── Keyframes ── */
@@ -65,6 +85,11 @@ button {
 
 @keyframes slideInRight {
   from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
   to   { transform: translateX(0); }
 }
 
@@ -84,27 +109,217 @@ button {
   100% { background-position: 200% 0; }
 }
 
-/* ── Utility ── */
-.fade-up { animation: fadeUp 0.7s ease both; }
-.fade-up-1 { animation: fadeUp 0.7s 0.1s ease both; }
-.fade-up-2 { animation: fadeUp 0.7s 0.25s ease both; }
-.fade-up-3 { animation: fadeUp 0.7s 0.4s ease both; }
-.fade-up-4 { animation: fadeUp 0.7s 0.55s ease both; }
-.fade-up-5 { animation: fadeUp 0.7s 0.7s ease both; }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
+/* ── Utility Classes ── */
+.fade-up   { animation: fadeUp 0.7s ease both; }
+.fade-up-1 { animation: fadeUp 0.7s 0.10s ease both; }
+.fade-up-2 { animation: fadeUp 0.7s 0.25s ease both; }
+.fade-up-3 { animation: fadeUp 0.7s 0.40s ease both; }
+.fade-up-4 { animation: fadeUp 0.7s 0.55s ease both; }
+.fade-up-5 { animation: fadeUp 0.7s 0.70s ease both; }
+
+/* ── Container ── */
 .container {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
+/* ── Product Grid ── */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+}
+
+/* ── Product Page Layout ── */
+.product-layout {
+  display: flex;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+.product-images  { flex: 1 1 420px; }
+.product-details { flex: 1 1 380px; padding: 20px 0; }
+
+/* ── Size Buttons ── */
+.size-btn {
+  min-width: 48px;
+  height: 48px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.size-btn:hover  { border-color: var(--black); background: var(--black); color: var(--white); }
+.size-btn.active { border-color: var(--black); background: var(--black); color: var(--white); }
+
+/* ── Color Swatches ── */
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  outline: none;
+}
+.color-swatch.active,
+.color-swatch:focus {
+  box-shadow: 0 0 0 2px var(--white), 0 0 0 4px var(--black);
+}
+
+/* ── Action Buttons ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--gold); }
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  background: transparent;
+  color: var(--black);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 6px;
+  border: 2px solid var(--black);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.btn-outline:hover { background: var(--black); color: var(--white); }
+
+/* ── Wishlist Button (card hover) ── */
+.wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--white);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  border: none;
+  cursor: pointer;
+  z-index: 2;
+}
+.product-card:hover .wishlist-btn { opacity: 1; }
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--light-gray); }
+::-webkit-scrollbar-track { background: #f1f1f1; }
 ::-webkit-scrollbar-thumb { background: #c0bdb8; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #9e9a94; }
 
-/* ── Responsive ── */
-@media (max-width: 600px) {
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   Tablet: ≤ 1024px
+   Mobile: ≤ 768px
+   Small:  ≤ 480px
+════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .container { padding: 0 20px; }
+
+  .product-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  .product-layout { gap: 36px; }
+  .product-images  { flex: 1 1 340px; }
+  .product-details { flex: 1 1 300px; }
+}
+
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
   .container { padding: 0 16px; }
+
+  html { font-size: 15px; }
+
+  /* Product grid → 2 columns */
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+  /* Product page: stack image above details */
+  .product-layout {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .product-images  { flex: none; width: 100%; }
+  .product-details { flex: none; width: 100%; padding: 0; }
+
+  /* Make wishlist btn always visible on mobile (no hover) */
+  .wishlist-btn { opacity: 1 !important; }
+
+  /* Hero text scaling */
+  h1 { font-size: clamp(1.8rem, 7vw, 3rem); }
+  h2 { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+}
+
+/* ── Small Mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+  .container { padding: 0 14px; }
+
+  html { font-size: 14px; }
+
+  .product-grid { gap: 10px; }
+
+  /* Stack flex items */
+  .flex-mobile-col { flex-direction: column !important; }
+
+  /* Full width buttons on mobile */
+  .btn-full-mobile { width: 100% !important; }
+}
+
+/* ── Touch device optimizations ── */
+@media (hover: none) and (pointer: coarse) {
+  /* Always show wishlist buttons on touch */
+  .wishlist-btn { opacity: 1 !important; }
+
+  /* Bigger tap targets */
+  button, a { min-height: 44px; }
+  .size-btn { min-height: 48px; min-width: 48px; }
+}
+
+/* ── Firefox scrollbar ── */
+* { scrollbar-width: thin; scrollbar-color: #c0bdb8 #f1f1f1; }
+
+/* ── Safe area (iOS notch) ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }

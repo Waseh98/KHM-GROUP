@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { products } from '../data';
+import { getProducts } from '../data';
 import TrustBadges from '../components/TrustBadges';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
-export default function Product({ onAddToCart }) {
+export default function Product() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const product = products.find(p => p.id === parseInt(id));
+  const allProducts = getProducts();
+  const product = allProducts.find(p => String(p.id) === String(id));
+  const { addToCart } = useCart();
+  const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedSize, setSelectedSize] = useState('M');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('details');
   const [added, setAdded] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const productImages = product?.images && product.images.filter(img => img !== '').length > 0 
+    ? product.images.filter(img => img !== '') 
+    : [product?.image];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -27,89 +37,113 @@ export default function Product({ onAddToCart }) {
   }
 
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  const relatedProducts = allProducts.filter(p => p.id !== product?.id && p.tag === product?.tag).slice(0, 4);
 
   const handleAdd = () => {
-    for (let i = 0; i < quantity; i++) {
-      onAddToCart();
-    }
+    const selectedColorValue = product.colors?.[selectedColor] || null;
+    addToCart(product, { size: selectedSize, color: selectedColorValue, colorIndex: selectedColor, quantity });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
-    for (let i = 0; i < quantity; i++) {
-      onAddToCart();
-    }
+    const selectedColorValue = product.colors?.[selectedColor] || null;
+    addToCart(product, { size: selectedSize, color: selectedColorValue, colorIndex: selectedColor, quantity });
     navigate('/checkout');
   };
 
   return (
     <main style={{ backgroundColor: 'var(--white)' }}>
       {/* Breadcrumbs */}
-      <div className="container" style={{ padding: '24px 24px 0' }}>
-        <div style={{ fontSize: '0.85rem', color: 'var(--mid-gray)', fontFamily: "var(--font-body)" }}>
+      <div className="container" style={{ padding: '16px 24px 0' }}>
+        <div style={{ fontSize: '0.8rem', color: 'var(--mid-gray)', fontFamily: 'var(--font-body)', display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
           <Link to="/" style={{ color: 'var(--black)' }}>Home</Link>
-          <span style={{ margin: '0 8px' }}>/</span>
+          <span style={{ margin: '0 4px' }}>/</span>
           <Link to={`/${product.tag.toLowerCase()}`} style={{ color: 'var(--black)' }}>{product.tag}</Link>
-          <span style={{ margin: '0 8px' }}>/</span>
-          <span>{product.name}</span>
+          <span style={{ margin: '0 4px' }}>/</span>
+          <span style={{ color: 'var(--mid-gray)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{product.name}</span>
         </div>
       </div>
 
-      <section style={{ padding: '40px 0 80px' }}>
+      <section style={{ padding: '24px 0 80px' }}>
         <div className="container">
-          <div style={{ display: 'flex', gap: '60px', flexWrap: 'wrap' }} className="product-layout">
-            
+          <div className="product-layout">
             {/* Left: Images */}
-            <div style={{ flex: '1 1 500px' }} className="product-images">
-              <div style={{ 
-                backgroundColor: '#f4f3f0', 
-                borderRadius: '12px', 
-                overflow: 'hidden',
-                aspectRatio: '3/4',
-                position: 'relative'
-              }}>
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                {product.badge && (
-                  <div style={{
-                    position: 'absolute', top: '20px', left: '20px',
-                    backgroundColor: product.badgeColor, color: '#fff',
-                    fontSize: '0.75rem', fontWeight: 700, padding: '6px 12px',
-                    borderRadius: '2px', letterSpacing: '0.05em'
-                  }}>{product.badge}</div>
+            <div className="product-images">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ 
+                  backgroundColor: '#f4f3f0', 
+                  borderRadius: '12px', 
+                  overflow: 'hidden',
+                  aspectRatio: '3/4',
+                  position: 'relative'
+                }}>
+                  <img 
+                    src={productImages[selectedImageIndex] || productImages[0]} 
+                    alt={product.name} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  {product.badge && (
+                    <div style={{
+                      position: 'absolute', top: '20px', left: '20px',
+                      backgroundColor: product.badgeColor, color: '#fff',
+                      fontSize: '0.75rem', fontWeight: 700, padding: '6px 12px',
+                      borderRadius: '2px', letterSpacing: '0.05em'
+                    }}>{product.badge}</div>
+                  )}
+                </div>
+                {/* Thumbnails */}
+                {productImages.length > 1 && (
+                  <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
+                    {productImages.map((img, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImageIndex(idx)}
+                        style={{
+                          width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden',
+                          border: selectedImageIndex === idx ? '2px solid var(--black)' : '2px solid transparent',
+                          cursor: 'pointer', flexShrink: 0, opacity: selectedImageIndex === idx ? 1 : 0.6,
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <img src={img} alt={`${product.name} thumbnail ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Right: Details */}
-            <div style={{ flex: '1 1 400px', padding: '20px 0' }} className="product-details">
+            <div className="product-details">
               <h1 style={{
-                fontFamily: "var(--font-heading)",
-                fontSize: 'clamp(2rem, 3vw, 2.75rem)',
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'clamp(1.8rem, 4vw, 2.75rem)',
                 fontWeight: 600,
                 color: 'var(--black)',
-                margin: '0 0 16px 0',
-                lineHeight: 1.2
+                margin: '0 0 12px 0',
+                lineHeight: 1.15
               }}>{product.name}</h1>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                <span style={{ fontWeight: 600, fontSize: '1.5rem' }}>Rs. {product.price.toLocaleString()}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, fontSize: 'clamp(1.3rem, 3vw, 1.5rem)' }}>Rs. {product.price.toLocaleString()}</span>
                 {product.oldPrice && (
-                  <span style={{ textDecoration: 'line-through', color: 'var(--mid-gray)', fontSize: '1.1rem' }}>
+                  <span style={{ textDecoration: 'line-through', color: 'var(--mid-gray)', fontSize: '1rem' }}>
                     Rs. {product.oldPrice.toLocaleString()}
+                  </span>
+                )}
+                {product.discount && (
+                  <span style={{ backgroundColor: 'var(--red)', color: '#fff', fontSize: '0.75rem', fontWeight: 800, padding: '3px 8px', borderRadius: 4 }}>
+                    -{product.discount}% OFF
                   </span>
                 )}
               </div>
 
               <p style={{
                 color: 'var(--mid-gray)',
-                fontSize: '1rem',
-                lineHeight: 1.6,
-                marginBottom: '32px'
+                fontSize: '0.9rem',
+                lineHeight: 1.7,
+                marginBottom: '24px'
               }}>
                 Crafted from premium Egyptian cotton for unmatched comfort and breathability. Featuring a tailored fit, ribbed collar, and signature reinforced stitching.
               </p>
@@ -120,22 +154,31 @@ export default function Product({ onAddToCart }) {
                   Color: <span style={{ color: 'var(--mid-gray)', fontWeight: 400 }}>Selected Option</span>
                 </h3>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  {product.colors.map((color, idx) => (
-                    <button 
-                      key={idx}
-                      onClick={() => setSelectedColor(idx)}
-                      style={{
-                        width: '36px', height: '36px', borderRadius: '50%',
-                        backgroundColor: color,
-                        border: selectedColor === idx ? '2px solid var(--black)' : '1px solid #ddd',
-                        outline: selectedColor === idx ? '2px solid var(--white)' : 'none',
-                        outlineOffset: '-4px',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s',
-                        transform: selectedColor === idx ? 'scale(1.1)' : 'scale(1)'
-                      }}
-                    />
-                  ))}
+                  {product.colors.map((color, idx) => {
+                    // Only show color if there's a corresponding image
+                    if (!product.images || !product.images[idx]) return null;
+                    
+                    return (
+                      <button 
+                        key={idx}
+                        onClick={() => {
+                          setSelectedColor(idx);
+                          setSelectedImageIndex(idx);
+                        }}
+                        title={`Select color ${idx + 1}`}
+                        style={{
+                          width: '36px', height: '36px', borderRadius: '50%',
+                          backgroundColor: color,
+                          border: selectedColor === idx ? '2px solid var(--black)' : '1px solid #ddd',
+                          outline: selectedColor === idx ? '2px solid var(--white)' : 'none',
+                          outlineOffset: '-4px',
+                          cursor: 'pointer',
+                          transition: 'transform 0.2s',
+                          transform: selectedColor === idx ? 'scale(1.1)' : 'scale(1)'
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 
@@ -168,66 +211,70 @@ export default function Product({ onAddToCart }) {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: '16px', marginBottom: '40px', flexWrap: 'wrap' }}>
-                {/* Quantity Selector */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', border: '1px solid var(--border)',
-                  borderRadius: '4px', height: '54px'
-                }}>
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ padding: '0 20px', fontSize: '1.2rem', cursor: 'pointer' }}>-</button>
-                  <span style={{ padding: '0 10px', fontWeight: 600, minWidth: '40px', textAlign: 'center' }}>{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} style={{ padding: '0 20px', fontSize: '1.2rem', cursor: 'pointer' }}>+</button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+                {/* Row 1: Qty + Wishlist */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {/* Quantity Selector */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', border: '1.5px solid var(--border)',
+                    borderRadius: '6px', height: '50px', overflow: 'hidden'
+                  }}>
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ padding: '0 16px', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--black)', height: '100%' }}>−</button>
+                    <span style={{ padding: '0 8px', fontWeight: 700, minWidth: '36px', textAlign: 'center', fontSize: '1rem' }}>{quantity}</span>
+                    <button onClick={() => setQuantity(quantity + 1)} style={{ padding: '0 16px', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--black)', height: '100%' }}>+</button>
+                  </div>
+
+                  {/* Wishlist Button */}
+                  <button
+                    onClick={() => toggleWishlist(product)}
+                    style={{
+                      height: '50px', padding: '0 16px',
+                      border: `1.5px solid ${isWishlisted(product.id) ? 'var(--red)' : 'var(--border)'}`,
+                      backgroundColor: isWishlisted(product.id) ? '#fff0f2' : 'transparent',
+                      color: isWishlisted(product.id) ? 'var(--red)' : 'var(--mid-gray)',
+                      borderRadius: '6px', cursor: 'pointer',
+                      transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: 6,
+                      fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <svg width="16" height="16" fill={isWishlisted(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    {isWishlisted(product.id) ? 'Wishlisted' : 'Wishlist'}
+                  </button>
                 </div>
-                
-                {/* Action Buttons Container */}
-                <div style={{ display: 'flex', gap: '16px', flex: 1, minWidth: '300px' }}>
-                  {/* Add to Cart - Outline */}
+
+                {/* Row 2: Add to Cart + Buy Now */}
+                <div style={{ display: 'flex', gap: '10px' }}>
                   <button
                     onClick={handleAdd}
                     style={{
-                      flex: 1, height: '54px',
+                      flex: 1, height: '52px',
                       backgroundColor: added ? 'var(--black)' : 'transparent',
                       color: added ? 'var(--white)' : 'var(--black)',
                       border: '2px solid var(--black)',
-                      fontSize: '0.95rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                      transition: 'all 0.3s ease', borderRadius: '4px', cursor: 'pointer'
+                      fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+                      transition: 'all 0.3s ease', borderRadius: '6px', cursor: 'pointer',
+                      whiteSpace: 'nowrap',
                     }}
-                    onMouseEnter={e => {
-                      if (!added) {
-                        e.target.style.backgroundColor = 'var(--black)';
-                        e.target.style.color = 'var(--white)';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!added) {
-                        e.target.style.backgroundColor = 'transparent';
-                        e.target.style.color = 'var(--black)';
-                      }
-                    }}
+                    onMouseEnter={e => { if (!added) { e.currentTarget.style.backgroundColor = 'var(--black)'; e.currentTarget.style.color = 'var(--white)'; }}}
+                    onMouseLeave={e => { if (!added) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--black)'; }}}
                   >
-                    {added ? 'Added to Cart ✓' : 'Add to Cart'}
+                    {added ? '✓ Added' : 'Add to Cart'}
                   </button>
 
-                  {/* Buy Now - Solid */}
                   <button
                     onClick={handleBuyNow}
                     style={{
-                      flex: 1, height: '54px',
-                      backgroundColor: 'var(--gold)', color: 'var(--white)', border: '2px solid var(--red)',
-                      fontSize: '0.95rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                      transition: 'all 0.3s ease', borderRadius: '4px', cursor: 'pointer',
-                      boxShadow: '0 4px 15px rgba(200,16,46,0.3)'
+                      flex: 1, height: '52px',
+                      backgroundColor: 'var(--gold)', color: 'var(--white)', border: '2px solid var(--gold)',
+                      fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+                      transition: 'all 0.3s ease', borderRadius: '6px', cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      boxShadow: '0 4px 15px rgba(184,151,42,0.3)'
                     }}
-                    onMouseEnter={e => {
-                      e.target.style.backgroundColor = '#a30d25';
-                      e.target.style.borderColor = '#a30d25';
-                      e.target.style.boxShadow = '0 6px 20px rgba(200,16,46,0.5)';
-                    }}
-                    onMouseLeave={e => {
-                      e.target.style.backgroundColor = 'var(--red)';
-                      e.target.style.borderColor = 'var(--red)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(200,16,46,0.3)';
-                    }}
+                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--black)'; e.currentTarget.style.borderColor = 'var(--black)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--gold)'; e.currentTarget.style.borderColor = 'var(--gold)'; }}
                   >
                     Buy It Now
                   </button>
@@ -261,7 +308,7 @@ export default function Product({ onAddToCart }) {
                           </ul>
                         )}
                         {tab === 'shipping' && 'Free shipping on all orders over Rs. 2,000. Standard delivery takes 3-5 business days. Cash on Delivery is available across Pakistan.'}
-                        {tab === 'returns' && 'We accept returns within 7 days of delivery. Items must be unworn with original tags attached. A return pickup fee may apply.'}
+                        {tab === 'returns' && 'Exchange is available only for size or color change. The item must be unused with original tags attached, and all exchange delivery charges are paid by the customer.'}
                       </div>
                     )}
                   </div>
@@ -275,11 +322,82 @@ export default function Product({ onAddToCart }) {
 
       <TrustBadges />
 
+      {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <section style={{ padding: '60px 0', backgroundColor: 'var(--bg)' }}>
+          <div className="container">
+            <h2 style={{
+              fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+              marginBottom: 24, color: 'var(--black)'
+            }}>You May Also Like</h2>
+            <div className="product-grid">
+              {relatedProducts.map(p => (
+                <Link key={p.id} to={`/product/${p.id}`} style={{
+                  display: 'block', backgroundColor: 'var(--white)',
+                  borderRadius: 10, overflow: 'hidden',
+                  boxShadow: 'var(--shadow-sm)', textDecoration: 'none',
+                  transition: 'transform 0.3s, box-shadow 0.3s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
+                >
+                  <div style={{ aspectRatio: '3/4', overflow: 'hidden' }}>
+                    <img src={p.image} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
+                      onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
+                      onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                    />
+                  </div>
+                  <div style={{ padding: '14px' }}>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', margin: '0 0 6px', color: 'var(--black)' }}>{p.name}</h3>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Rs. {p.price.toLocaleString()}</span>
+                      <span style={{ textDecoration: 'line-through', color: 'var(--mid-gray)', fontSize: '0.8rem' }}>Rs. {p.oldPrice.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Sticky Mobile CTA */}
+      <div className="mobile-sticky-cta" style={{
+        display: 'none',
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
+        backgroundColor: 'var(--white)',
+        padding: '12px 16px',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.12)',
+        gap: '10px',
+        alignItems: 'center',
+        borderTop: '1px solid var(--border)',
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', fontWeight: 700 }}>{product.name}</div>
+          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--gold)' }}>Rs. {product.price.toLocaleString()}</div>
+        </div>
+        <button
+          onClick={handleAdd}
+          style={{
+            padding: '12px 20px', backgroundColor: added ? 'var(--black)' : 'var(--gold)',
+            color: 'var(--white)', border: 'none', borderRadius: 6,
+            fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em',
+            cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+        >
+          {added ? '✓ Added' : 'Add to Cart'}
+        </button>
+      </div>
+
       <style>{`
-        @media (max-width: 900px) {
-          .product-layout { flex-direction: column; gap: 40px !important; }
-          .product-images { flex: 1 1 auto; }
-          .product-details { padding-top: 0 !important; }
+        /* Mobile sticky CTA */
+        @media (max-width: 768px) {
+          .mobile-sticky-cta { display: flex !important; }
+          main { padding-bottom: 80px; }
+        }
+        /* Product page thumbnails on mobile */
+        @media (max-width: 480px) {
+          .product-images div[style*="aspectRatio"] { border-radius: 8px; }
         }
       `}</style>
     </main>

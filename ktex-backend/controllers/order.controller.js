@@ -1,0 +1,201 @@
+const Order = require('../models/Order.model');
+const Product = require('../models/Product.model');
+
+// @POST /api/orders
+exports.createOrder = async (req, res) => {
+  try {
+    const { orderItems, shippingAddress, paymentInfo, notes } = req.body;
+
+    if (!orderItems?.length) {
+      return res.status(400).json({ success: false, message: 'No order items provided' });
+    }
+
+    // Calculate prices
+    let itemsPrice = 0;
+    for (const item of orderItems) {
+      const product = await Product.findById(item.product);
+      if (!product) return res.status(404).json({ success: false, message: `Product ${item.product} not found` });
+      const unitPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
+      itemsPrice += unitPrice * item.quantity;
+    }
+
+    const shippingPrice = itemsPrice > 5000 ? 0 : 200; // Free shipping over PKR 5000
+    const taxPrice      = Math.round(itemsPrice * 0.05); // 5% tax
+    const totalPrice    = itemsPrice + shippingPrice + taxPrice;
+
+    const order = await Order.create({
+      user: req.user._id,
+      orderItems,
+      shippingAddress,
+      paymentInfo,
+      itemsPrice,
+      shippingPrice,
+      taxPrice,
+      totalPrice,
+      notes
+    });
+
+    res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @POST /api/orders/guest — Guest checkout (no login)
+exports.createGuestOrder = async (req, res) => {
+  try {
+    const { orderItems, shippingAddress, paymentInfo, notes, email } = req.body;
+
+    if (!orderItems?.length) {
+      return res.status(400).json({ success: false, message: 'No order items provided' });
+    }
+
+    // Guest checkout: frontend may not have Mongo product ids yet.
+    // We accept price/qty from payload and compute totals.
+    let itemsPrice = 0;
+    for (const item of orderItems) {
+      if (!item?.name || !item?.image || typeof item?.price !== 'number' || !item?.quantity) {
+        return res.status(400).json({ success: false, message: 'Invalid order item payload' });
+      }
+      itemsPrice += item.price * Number(item.quantity);
+    }
+
+    const shippingPrice = itemsPrice > 5000 ? 0 : 200;
+    const taxPrice      = Math.round(itemsPrice * 0.05);
+    const totalPrice    = itemsPrice + shippingPrice + taxPrice;
+
+    const order = await Order.create({
+      user: null,
+      guestEmail: email,
+      orderItems,
+      shippingAddress,
+      paymentInfo: { ...(paymentInfo || {}), method: paymentInfo?.method || 'cod' },
+      itemsPrice,
+      shippingPrice,
+      taxPrice,
+      totalPrice,
+      notes
+    });
+
+    res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @GET /api/orders/my-orders
+exports.getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .populate('orderItems.product', 'name images')
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, count: orders.length, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @GET /api/orders/:id
+exports.getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email phone')
+      .populate('orderItems.product', 'name images price');
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @PUT /api/orders/:id/cancel
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!['pending', 'confirmed'].includes(order.orderStatus)) {
+      return res.status(400).json({ success: false, message: 'Cannot cancel order at this stage' });
+    }
+    order.orderStatus  = 'cancelled';
+    order.cancelledAt  = Date.now();
+    order.cancelReason = req.body.reason || 'Cancelled by user';
+    await order.save();
+    res.status(200).json({ success: true, message: 'Order cancelled successfully', data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @GET /api/orders — Admin: all orders
+exports.getAllOrders = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const query = status ? { orderStatus: status } : {};
+    const skip  = (Number(page) - 1) * Number(limit);
+    const total  = await Order.countDocuments(query);
+    const orders = await Order.find(query)
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip).limit(Number(limit));
+
+    res.status(200).json({ success: true, count: orders.length, total, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @PUT /api/orders/:id/status — Admin
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { status, trackingNumber } = req.body;
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    order.orderStatus = status;
+    if (trackingNumber) order.trackingNumber = trackingNumber;
+    if (status === 'delivered') order.deliveredAt = Date.now();
+    await order.save();
+
+    res.status(200).json({ success: true, message: `Order status updated to ${status}`, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @GET /api/orders/track/:trackingId — Public order tracking
+exports.trackOrder = async (req, res) => {
+  try {
+    const trackingId = String(req.params.trackingId || '').trim();
+    if (!trackingId) {
+      return res.status(400).json({ success: false, message: 'Tracking ID is required' });
+    }
+
+    const order = await Order.findOne({
+      $or: [
+        { orderNumber: trackingId },
+        { trackingNumber: trackingId },
+      ],
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found for this tracking ID' });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        orderNumber: order.orderNumber,
+        trackingNumber: order.trackingNumber || null,
+        orderStatus: order.orderStatus,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        deliveredAt: order.deliveredAt || null,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

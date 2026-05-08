@@ -1,17 +1,34 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
+  const quickLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Men', to: '/men' },
+    { label: 'Women', to: '/women' },
+    { label: 'New Arrivals', to: '/#new-arrivals' },
+    { label: 'Sale', to: '/sale' },
+    { label: 'About Us', to: '/about' },
+    { label: 'Collections', to: '/collections' },
+  ];
+
+  const helpLinks = [
+    { label: 'Track Order', to: '/track-order' },
+    { label: 'Return Policy', to: '/return-policy' },
+    { label: 'FAQs', to: '/faqs' },
+    { label: 'Contact Us', to: '/contact' },
+  ];
+
   return (
     <footer style={{ backgroundColor: 'var(--black)', color: '#a09e99', paddingTop: '80px' }}>
       <div className="container">
-        
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '40px',
           marginBottom: '60px'
         }} className="footer-grid">
-          
+
           {/* Col 1 */}
           <div>
             <h3 style={{
@@ -38,9 +55,9 @@ export default function Footer() {
           <div>
             <h4 className="footer-heading">Quick Links</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {['Home', 'Men', 'Women', 'New Arrivals', 'Sale', 'About Us'].map(link => (
-                <li key={link}>
-                  <a href="#" className="hover-white" style={{ fontSize: '0.9rem' }}>{link}</a>
+              {quickLinks.map(link => (
+                <li key={link.label}>
+                  <Link to={link.to} className="hover-white" style={{ fontSize: '0.9rem' }}>{link.label}</Link>
                 </li>
               ))}
             </ul>
@@ -50,9 +67,9 @@ export default function Footer() {
           <div>
             <h4 className="footer-heading">Help</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {['Track Order', 'Returns', 'Size Guide', 'FAQs', 'Contact Us'].map(link => (
-                <li key={link}>
-                  <a href="#" className="hover-white" style={{ fontSize: '0.9rem' }}>{link}</a>
+              {helpLinks.map(link => (
+                <li key={link.label}>
+                  <Link to={link.to} className="hover-white" style={{ fontSize: '0.9rem' }}>{link.label}</Link>
                 </li>
               ))}
             </ul>
@@ -63,40 +80,40 @@ export default function Footer() {
             <h4 className="footer-heading">Contact Info</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <li style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem' }}>
-                <span style={{ fontSize: '1.2rem' }}>📞</span> 0300-1234567
+                <span style={{ fontSize: '1.2rem' }}>📞</span> 0333-0557783
               </li>
               <li style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem' }}>
-                <span style={{ fontSize: '1.2rem' }}>✉️</span> hello@ktex.com
+                <span style={{ fontSize: '1.2rem' }}>✉️</span> abdulwasay@khm.ae
               </li>
               <li style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem' }}>
-                <span style={{ fontSize: '1.2rem' }}>📍</span> Rawalpindi, Pakistan
+                <span style={{ fontSize: '1.2rem' }}>📍</span> Islambad,pakistan
               </li>
             </ul>
+              </div>
+
+          </div>
+
+          {/* Bottom Bar */}
+          <div style={{
+            borderTop: '1px solid #2a2a2a',
+            padding: '24px 0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }} className="footer-bottom">
+            <p style={{ fontSize: '0.85rem', margin: 0 }}>
+              &copy; {new Date().getFullYear()} K-TEX. All rights reserved.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', color: 'var(--white)', fontSize: '0.85rem', fontWeight: 600 }}>
+              <span>JazzCash</span> • <span>EasyPaisa</span> • <span>COD</span> • <span>Visa</span> • <span>Mastercard</span>
+            </div>
           </div>
 
         </div>
 
-        {/* Bottom Bar */}
-        <div style={{
-          borderTop: '1px solid #1e1e1e',
-          padding: '24px 0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px'
-        }} className="footer-bottom">
-          <p style={{ fontSize: '0.85rem', margin: 0 }}>
-            &copy; {new Date().getFullYear()} K-TEX. All rights reserved.
-          </p>
-          <div style={{ display: 'flex', gap: '12px', color: 'var(--white)', fontSize: '0.85rem', fontWeight: 600 }}>
-            <span>JazzCash</span> • <span>EasyPaisa</span> • <span>COD</span> • <span>Visa</span> • <span>Mastercard</span>
-          </div>
-        </div>
-
-      </div>
-
-      <style>{`
+        <style>{`
         .footer-heading {
           font-family: var(--font-heading);
           color: var(--white);

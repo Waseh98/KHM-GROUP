@@ -1,22 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { products } from '../data';
+import { getProducts } from '../data';
 import TrustBadges from '../components/TrustBadges';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
-export default function Men({ onAddToCart }) {
-  const [wishlist, setWishlist] = useState({});
+export default function Men() {
+  const { addToCart } = useCart();
+  const { toggle: toggleWishlist, isWishlisted } = useWishlist();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const menProducts = products.filter(p => p.tag === 'Men' || p.name.toLowerCase().includes('men') || p.name.toLowerCase().includes('polo') && !p.tag.includes('Women'));
+  const menProducts = getProducts().filter(p => p.tag === 'Men' || p.name.toLowerCase().includes('men') || p.name.toLowerCase().includes('polo') && !p.tag.includes('Women'));
 
-  const toggleWishlist = (e, id) => {
+  const handleWishlist = (e, product) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlist(prev => ({...prev, [id]: !prev[id]}));
-    
+    toggleWishlist(product);
     const btn = e.currentTarget;
     btn.style.animation = 'none';
     void btn.offsetWidth;
@@ -149,16 +151,16 @@ export default function Men({ onAddToCart }) {
 
                   <button
                     className="wishlist-btn"
-                    onClick={(e) => toggleWishlist(e, product.id)}
+                    onClick={(e) => handleWishlist(e, product)}
                     style={{
                       position: 'absolute', top: '12px', right: '12px',
                       backgroundColor: 'var(--white)', width: '32px', height: '32px',
                       borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       boxShadow: 'var(--shadow-sm)', opacity: 0, transition: 'opacity 0.2s, transform 0.2s',
-                      color: wishlist[product.id] ? 'var(--gold)' : 'var(--black)', zIndex: 2
+                      color: isWishlisted(product.id) ? 'var(--red)' : 'var(--black)', zIndex: 2
                     }}
                   >
-                    <svg width="18" height="18" fill={wishlist[product.id] ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg width="18" height="18" fill={isWishlisted(product.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                     </svg>
                   </button>
@@ -189,7 +191,7 @@ export default function Men({ onAddToCart }) {
                   </div>
 
                   <button
-                    onClick={() => onAddToCart()}
+                    onClick={() => addToCart(product, { size: 'M' })}
                     style={{
                       marginTop: 'auto', width: '100%', backgroundColor: 'var(--black)', color: 'var(--white)',
                       padding: '12px', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase',

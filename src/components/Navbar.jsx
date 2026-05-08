@@ -1,9 +1,215 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { getProducts } from '../data';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const links = ['Men', 'Women', 'New Arrivals', 'Collections', 'Sale'];
 
-export default function Navbar({ cartCount }) {
+function getPath(link) {
+  if (link === 'Men') return '/men';
+  if (link === 'Women') return '/women';
+  if (link === 'Collections') return '/collections';
+  if (link === 'Sale') return '/sale';
+  return `/#${link.toLowerCase().replace(' ', '-')}`;
+}
+
+/* ─── Live Search Bar Component ─────────────────────────────── */
+function SearchBar({ open, onClose }) {
+  const [query, setQuery] = useState('');
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Reset query & focus when opened
+  useEffect(() => {
+    if (open) {
+      setQuery('');
+      setTimeout(() => inputRef.current?.focus(), 60);
+    }
+  }, [open]);
+
+  const results = query.trim().length > 0
+    ? getProducts().filter(p =>
+        p.name.toLowerCase().includes(query.toLowerCase()) ||
+        p.tag?.toLowerCase().includes(query.toLowerCase())
+      )
+    : [];
+
+  const handleSelect = (product) => {
+    navigate(`/product/${product.id}`);
+    onClose();
+    setQuery('');
+  };
+
+  if (!open) return null;
+
+  return (
+    <div style={{
+      backgroundColor: '#111', borderTop: '1px solid #222',
+      padding: '14px 24px 16px',
+      animation: 'slideDown 0.22s ease',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative' }}>
+        {/* Input Row */}
+        <div style={{ position: 'relative' }}>
+          {/* Search Icon */}
+          <span style={{
+            position: 'absolute', left: 14, top: '50%',
+            transform: 'translateY(-50%)', color: '#888', pointerEvents: 'none',
+          }}>
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </span>
+
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search polo shirts, collections, categories…"
+            style={{
+              width: '100%', padding: '11px 44px 11px 42px',
+              backgroundColor: '#1c1c1c', border: '1px solid #2e2e2e',
+              borderRadius: 8, color: '#f0ede8', fontSize: 14,
+              fontFamily: "var(--font-body)", outline: 'none',
+              boxSizing: 'border-box',
+              transition: 'border-color 0.2s',
+            }}
+            onFocus={e => e.target.style.borderColor = 'var(--gold)'}
+            onBlur={e => e.target.style.borderColor = '#2e2e2e'}
+          />
+
+          {/* Clear button */}
+          {query && (
+            <button
+              onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+              style={{
+                position: 'absolute', right: 12, top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none', border: 'none', color: '#666',
+                cursor: 'pointer', padding: 4, display: 'flex',
+              }}
+            >
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Results Dropdown */}
+        {results.length > 0 && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0,
+            backgroundColor: '#161616', border: '1px solid #2a2a2a',
+            borderTop: 'none', borderRadius: '0 0 10px 10px',
+            zIndex: 9999, overflow: 'hidden',
+            boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+            animation: 'fadeIn 0.15s ease',
+          }}>
+            {results.slice(0, 5).map((product, i) => (
+              <div
+                key={product.id}
+                onClick={() => handleSelect(product)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14,
+                  padding: '10px 16px',
+                  borderBottom: i < Math.min(results.length, 5) - 1 ? '1px solid #1e1e1e' : 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1f1f1f'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                {/* Product Thumbnail */}
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  style={{
+                    width: 46, height: 46, objectFit: 'cover',
+                    borderRadius: 6, flexShrink: 0,
+                    border: '1px solid #2a2a2a',
+                  }}
+                />
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    color: '#e8e6e1', fontSize: 13, fontWeight: 500,
+                    fontFamily: "var(--font-body)",
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {product.name}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                    <span style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 600 }}>
+                      Rs. {product.price.toLocaleString()}
+                    </span>
+                    <span style={{
+                      fontSize: 11, color: '#555', backgroundColor: '#1e1e1e',
+                      padding: '1px 7px', borderRadius: 4, letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                    }}>
+                      {product.tag}
+                    </span>
+                  </div>
+                </div>
+                {/* Arrow */}
+                <svg width="14" height="14" fill="none" stroke="#444" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="m9 18 6-6-6-6"/>
+                </svg>
+              </div>
+            ))}
+
+            {/* Footer hint */}
+            <div style={{
+              padding: '8px 16px',
+              backgroundColor: '#0f0f0f',
+              borderTop: '1px solid #1e1e1e',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span style={{ color: '#555', fontSize: 11, fontFamily: "var(--font-body)" }}>
+                {results.length} result{results.length !== 1 ? 's' : ''} found
+              </span>
+              <span style={{ color: '#444', fontSize: 11 }}>Press ESC to close</span>
+            </div>
+          </div>
+        )}
+
+        {/* No Results */}
+        {query.trim().length > 1 && results.length === 0 && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0,
+            backgroundColor: '#161616', border: '1px solid #2a2a2a',
+            borderTop: 'none', borderRadius: '0 0 10px 10px',
+            padding: '20px', textAlign: 'center',
+            boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+          }}>
+            <div style={{ color: '#555', fontSize: 13, fontFamily: "var(--font-body)" }}>
+              No products found for <span style={{ color: 'var(--gold)' }}>"{query}"</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ─── Main Navbar ─────────────────────────────────────────────── */
+export default function Navbar() {
+  const { totalItems, setDrawerOpen } = useCart();
+  const { totalItems: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -18,6 +224,12 @@ export default function Navbar({ cartCount }) {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') setSearchOpen(false); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const navStyle = {
     position: 'sticky', top: 0, zIndex: 999,
@@ -35,13 +247,11 @@ export default function Navbar({ cartCount }) {
   const logoStyle = {
     fontFamily: "'Cormorant Garamond', serif",
     fontSize: 26, fontWeight: 700, letterSpacing: '0.12em',
-    color: '#fff', cursor: 'pointer',
-    userSelect: 'none',
+    color: '#fff', cursor: 'pointer', userSelect: 'none',
   };
 
   const linkListStyle = {
-    display: 'flex', gap: 32, listStyle: 'none',
-    alignItems: 'center',
+    display: 'flex', gap: 32, listStyle: 'none', alignItems: 'center',
   };
 
   const linkStyle = (isSale) => ({
@@ -57,6 +267,7 @@ export default function Navbar({ cartCount }) {
     background: 'none', border: 'none', cursor: 'pointer',
     color: '#fff', display: 'flex', alignItems: 'center',
     padding: '6px', position: 'relative',
+    transition: 'color 0.2s',
   };
 
   return (
@@ -71,23 +282,22 @@ export default function Navbar({ cartCount }) {
           {/* Desktop Links */}
           <ul style={{ ...linkListStyle, display: 'flex' }} className="nav-links-desktop">
             {links.map(link => {
-              const toPath = link === 'Men' ? '/men' : `/#${link.toLowerCase().replace(' ', '-')}`;
-              const isPage = link === 'Men';
-              
+              const toPath = getPath(link);
+              const isPage = link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
               return (
                 <li key={link}>
                   {isPage ? (
                     <Link to={toPath}
-                       style={linkStyle(link === 'Sale')}
-                       onMouseEnter={e => e.target.style.color = link === 'Sale' ? 'var(--light-gold)' : '#fff'}
-                       onMouseLeave={e => e.target.style.color = link === 'Sale' ? 'var(--gold)' : '#e8e6e1'}>
+                      style={linkStyle(link === 'Sale')}
+                      onMouseEnter={e => e.target.style.color = link === 'Sale' ? 'var(--light-gold)' : '#fff'}
+                      onMouseLeave={e => e.target.style.color = link === 'Sale' ? 'var(--gold)' : '#e8e6e1'}>
                       {link}
                     </Link>
                   ) : (
                     <a href={toPath}
-                       style={linkStyle(link === 'Sale')}
-                       onMouseEnter={e => e.target.style.color = link === 'Sale' ? 'var(--light-gold)' : '#fff'}
-                       onMouseLeave={e => e.target.style.color = link === 'Sale' ? 'var(--gold)' : '#e8e6e1'}>
+                      style={linkStyle(link === 'Sale')}
+                      onMouseEnter={e => e.target.style.color = link === 'Sale' ? 'var(--light-gold)' : '#fff'}
+                      onMouseLeave={e => e.target.style.color = link === 'Sale' ? 'var(--gold)' : '#e8e6e1'}>
                       {link}
                     </a>
                   )}
@@ -98,28 +308,56 @@ export default function Navbar({ cartCount }) {
 
           {/* Icons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {/* Search */}
-            <button style={iconBtnStyle} aria-label="Search" onClick={() => setSearchOpen(s => !s)}>
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
+            {/* Search Toggle — icon becomes X when open */}
+            <button
+              style={{ ...iconBtnStyle, color: searchOpen ? 'var(--gold)' : '#fff' }}
+              aria-label={searchOpen ? 'Close Search' : 'Open Search'}
+              onClick={() => setSearchOpen(s => !s)}
+            >
+              {searchOpen ? (
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+              )}
             </button>
 
             {/* Wishlist */}
-            <button style={iconBtnStyle} aria-label="Wishlist">
+            <button style={iconBtnStyle} aria-label={`Wishlist, ${wishlistCount} items`}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--gold)'}
+              onMouseLeave={e => e.currentTarget.style.color = '#fff'}
+              onClick={() => {}}
+            >
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
+              {wishlistCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: 0, right: 0,
+                  backgroundColor: 'var(--red)', color: '#fff',
+                  borderRadius: '50%', width: 17, height: 17,
+                  fontSize: 10, fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {wishlistCount > 9 ? '9+' : wishlistCount}
+                </span>
+              )}
             </button>
 
             {/* Cart */}
-            <button style={{ ...iconBtnStyle, marginLeft: 4 }} aria-label={`Cart, ${cartCount} items`}>
+            <button style={{ ...iconBtnStyle, marginLeft: 4 }} aria-label={`Cart, ${totalItems} items`}
+              onClick={() => setDrawerOpen(true)}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--gold)'}
+              onMouseLeave={e => e.currentTarget.style.color = '#fff'}>
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
                 <path d="M16 10a4 4 0 0 1-8 0"/>
               </svg>
-              {cartCount > 0 && (
+              {totalItems > 0 && (
                 <span style={{
                   position: 'absolute', top: 0, right: 0,
                   backgroundColor: 'var(--gold)', color: '#fff',
@@ -128,7 +366,7 @@ export default function Navbar({ cartCount }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   lineHeight: 1,
                 }}>
-                  {cartCount > 9 ? '9+' : cartCount}
+                  {totalItems > 9 ? '9+' : totalItems}
                 </span>
               )}
             </button>
@@ -149,35 +387,8 @@ export default function Navbar({ cartCount }) {
           </div>
         </div>
 
-        {/* Search Bar */}
-        {searchOpen && (
-          <div style={{
-            backgroundColor: '#1a1a1a', padding: '12px 24px',
-            borderTop: '1px solid #2a2a2a',
-          }}>
-            <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative' }}>
-              <input
-                autoFocus
-                type="text"
-                placeholder="Search polo shirts, collections…"
-                style={{
-                  width: '100%', padding: '10px 44px 10px 16px',
-                  backgroundColor: '#2a2a2a', border: '1px solid #3a3a3a',
-                  borderRadius: 6, color: '#fff', fontSize: 14,
-                  fontFamily: "var(--font-body)", outline: 'none',
-                }}
-              />
-              <span style={{
-                position: 'absolute', right: 14, top: '50%',
-                transform: 'translateY(-50%)', color: '#6b6b6b',
-              }}>
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Animated Search Panel */}
+        <SearchBar open={searchOpen} onClose={() => setSearchOpen(false)} />
       </nav>
 
       {/* Mobile Menu Overlay */}
@@ -217,34 +428,33 @@ export default function Navbar({ cartCount }) {
           </button>
         </div>
         <nav style={{ flex: 1, padding: '24px 0' }}>
-          {links.map((link, i) => {
-            const toPath = link === 'Men' ? '/men' : `/#${link.toLowerCase().replace(' ', '-')}`;
-            const isPage = link === 'Men';
+          {links.map((link) => {
+            const toPath = getPath(link);
+            const isPage = link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
             const commonStyle = {
-                 display: 'block', padding: '14px 28px',
-                 fontFamily: "var(--font-body)",
-                 fontSize: 15, fontWeight: 500, letterSpacing: '0.1em',
-                 color: link === 'Sale' ? 'var(--gold)' : '#e8e6e1',
-                 textTransform: 'uppercase',
-                 borderBottom: '1px solid #1a1a1a',
-                 transition: 'background 0.2s, color 0.2s',
-               };
-               
+              display: 'block', padding: '14px 28px',
+              fontFamily: "var(--font-body)",
+              fontSize: 15, fontWeight: 500, letterSpacing: '0.1em',
+              color: link === 'Sale' ? 'var(--gold)' : '#e8e6e1',
+              textTransform: 'uppercase',
+              borderBottom: '1px solid #1a1a1a',
+              transition: 'background 0.2s, color 0.2s',
+            };
             return isPage ? (
               <Link key={link} to={toPath}
-                 onClick={() => setMenuOpen(false)}
-                 style={commonStyle}
-                 onMouseEnter={e => { e.target.style.backgroundColor = '#1a1a1a'; }}
-                 onMouseLeave={e => { e.target.style.backgroundColor = 'transparent'; }}
+                onClick={() => setMenuOpen(false)}
+                style={commonStyle}
+                onMouseEnter={e => { e.target.style.backgroundColor = '#1a1a1a'; }}
+                onMouseLeave={e => { e.target.style.backgroundColor = 'transparent'; }}
               >
                 {link}
               </Link>
             ) : (
               <a key={link} href={toPath}
-                 onClick={() => setMenuOpen(false)}
-                 style={commonStyle}
-                 onMouseEnter={e => { e.target.style.backgroundColor = '#1a1a1a'; }}
-                 onMouseLeave={e => { e.target.style.backgroundColor = 'transparent'; }}
+                onClick={() => setMenuOpen(false)}
+                style={commonStyle}
+                onMouseEnter={e => { e.target.style.backgroundColor = '#1a1a1a'; }}
+                onMouseLeave={e => { e.target.style.backgroundColor = 'transparent'; }}
               >
                 {link}
               </a>

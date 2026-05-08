@@ -1,7 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+const HERO_IMAGES = [
+  "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=1600&q=80",
+  "https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=1600&q=80",
+  "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=1600&q=80"
+];
+
 export default function Hero() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % HERO_IMAGES.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section style={{
       position: 'relative',
@@ -13,24 +29,33 @@ export default function Hero() {
       overflow: 'hidden',
     }} className="hero-section">
       
-      {/* Background Image with subtle zoom effect */}
+      {/* Background Images Carousel */}
       <div style={{
         position: 'absolute',
         inset: 0,
         zIndex: 1,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        backgroundColor: '#000'
       }}>
-        <img 
-          src="https://images.unsplash.com/photo-1617137968427-85924c800a22?w=1600&q=80" 
-          alt="Premium Polo Collection"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center 20%',
-            animation: 'slowZoom 20s ease-out infinite alternate',
-          }}
-        />
+        {HERO_IMAGES.map((imgUrl, idx) => (
+          <img 
+            key={idx}
+            src={imgUrl} 
+            alt={`Premium Polo Collection ${idx + 1}`}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 20%',
+              opacity: idx === currentImageIndex ? 1 : 0,
+              transition: 'opacity 1.5s ease-in-out',
+              animation: idx === currentImageIndex ? 'slowZoom 10s ease-out forwards' : 'none',
+              transform: 'scale(1)'
+            }}
+          />
+        ))}
         {/* Luxurious dark overlay */}
         <div style={{
           position: 'absolute',
