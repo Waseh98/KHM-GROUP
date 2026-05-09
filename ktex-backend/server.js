@@ -11,7 +11,10 @@ const app = express();
 // ─── Middleware ───────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 app.use(morgan('dev'));
 const corsAllowed = new Set(
   ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL].filter(Boolean)
@@ -43,7 +46,7 @@ app.use('/api/reviews', require('./routes/review.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 
 // ─── Health Check ─────────────────────────────────────────
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({
     success: true,
     message: '🏆 K-TEX API is running!',
@@ -60,9 +63,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// ─── 404 Handler ──────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+// ─── API 404 Handler ──────────────────────────────────────
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, message: `API Route ${req.originalUrl} not found` });
+});
+
+// ─── Serve Frontend in Production ──────────────────────────
+const path = require('path');
+const clientDistPath = path.join(__dirname, '../dist');
+app.use(express.static(clientDistPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
 // ─── Global Error Handler ─────────────────────────────────
