@@ -34,13 +34,13 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // ─── Routes ───────────────────────────────────────────────
-app.use('/api/auth',     require('./routes/auth.routes'));
-app.use('/api/users',    require('./routes/user.routes'));
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/products', require('./routes/product.routes'));
-app.use('/api/orders',   require('./routes/order.routes'));
-app.use('/api/payment',  require('./routes/payment.routes'));
-app.use('/api/reviews',  require('./routes/review.routes'));
-app.use('/api/admin',    require('./routes/admin.routes'));
+app.use('/api/orders', require('./routes/order.routes'));
+app.use('/api/payment', require('./routes/payment.routes'));
+app.use('/api/reviews', require('./routes/review.routes'));
+app.use('/api/admin', require('./routes/admin.routes'));
 
 // ─── Health Check ─────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -49,13 +49,13 @@ app.get('/', (req, res) => {
     message: '🏆 K-TEX API is running!',
     version: '1.0.0',
     endpoints: {
-      auth:     '/api/auth',
-      users:    '/api/users',
+      auth: '/api/auth',
+      users: '/api/users',
       products: '/api/products',
-      orders:   '/api/orders',
-      payment:  '/api/payment',
-      reviews:  '/api/reviews',
-      admin:    '/api/admin'
+      orders: '/api/orders',
+      payment: '/api/payment',
+      reviews: '/api/reviews',
+      admin: '/api/admin'
     }
   });
 });
@@ -75,15 +75,19 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Database + Start ─────────────────────────────────────
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 K-TEX Server running on port ${PORT}`);
+});
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB Connected');
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`🚀 K-TEX Server running on port ${PORT}`));
   })
   .catch(err => {
     console.error('❌ MongoDB connection failed:', err.message);
-    process.exit(1);
   });
 
 module.exports = app;
