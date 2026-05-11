@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ─── Middleware ───────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
