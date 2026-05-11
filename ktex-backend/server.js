@@ -91,13 +91,15 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 K-TEX Server running on port ${PORT}`);
-});
 
-mongoose.connect(process.env.MONGO_URI)
+
+mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 50000 })
   .then(() => {
     console.log('✅ MongoDB Connected');
+    // Start server only after DB is ready
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 K-TEX Server running on port ${PORT}`);
+    });
   })
   .catch(err => {
     console.error('❌ MongoDB connection failed:', err.message);
