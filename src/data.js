@@ -164,31 +164,31 @@ const defaultProducts = [
 const defaultCategories = [
   {
     id: "cat_001", name: "Classic Polo", subtitle: "Timeless essentials for every wardrobe",
-    image: "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=800&q=85", tall: true
+    image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&q=85", tall: true
   },
   {
     id: "cat_002", name: "Premium Piqué", subtitle: "Luxury texture & refinement",
-    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1578681994506-b8f463449011?w=600&q=85"
   },
   {
     id: "cat_003", name: "Corporate Wear", subtitle: "Office-ready professional looks",
-    image: "https://images.unsplash.com/photo-1603252109303-2751441dd157?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=85"
   },
   {
     id: "cat_004", name: "Summer Collection", subtitle: "Light & breathable comfort",
-    image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&q=85"
   },
   {
     id: "cat_005", name: "Golf Edition", subtitle: "Performance meets style",
-    image: "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=600&q=85"
   },
   {
     id: "cat_006", name: "Women's Collection", subtitle: "Elegant femininity redefined",
-    image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=85"
   },
   {
     id: "cat_007", name: "Sale", subtitle: "Up to 50% off on selected items",
-    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=85"
   },
 ];
 
