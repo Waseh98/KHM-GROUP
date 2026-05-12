@@ -21,15 +21,19 @@ export default function CollectionDetail() {
   }, [slug]);
 
   const collectionProducts = useMemo(() => {
-    // Simple demo mapping: show all non-sale products, or filter by keyword from collection name.
     const name = (collection?.name || '').toLowerCase();
-    const base = products.filter((p) => p.tag !== 'Sale');
-    if (!name) return base;
-    if (name.includes('summer')) return base.filter((p) => String(p.name).toLowerCase().includes('summer'));
-    if (name.includes('corporate')) return base.filter((p) => String(p.name).toLowerCase().includes('corporate'));
-    if (name.includes('golf')) return base.filter((p) => String(p.name).toLowerCase().includes('golf'));
-    if (name.includes('premium')) return base.filter((p) => String(p.name).toLowerCase().includes('premium') || p.tag === 'Men');
-    return base;
+    const base = products;
+
+    // Category to tag mapping
+    if (name.includes('classic')) return base.filter(p => p.tag === 'Men' && !p.name.toLowerCase().includes('golf') && !p.name.toLowerCase().includes('corporate'));
+    if (name.includes('premium')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('signature') || p.name.toLowerCase().includes('premium') || p.name.toLowerCase().includes('mesh') || p.name.toLowerCase().includes('luxury')));
+    if (name.includes('corporate')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('corporate') || p.name.toLowerCase().includes('executive') || p.name.toLowerCase().includes('business')));
+    if (name.includes('summer')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('summer') || p.name.toLowerCase().includes('linen') || p.name.toLowerCase().includes('breathable') || p.name.toLowerCase().includes('cool')));
+    if (name.includes('golf')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('golf') || p.name.toLowerCase().includes('sport') || p.name.toLowerCase().includes('pro') || p.name.toLowerCase().includes('performance')));
+    if (name.includes('women')) return base.filter(p => p.tag === 'Women');
+    if (name.includes('sale')) return base.filter(p => p.tag === 'Sale');
+
+    return base.filter(p => p.tag !== 'Sale');
   }, [collection]);
 
   useEffect(() => {
