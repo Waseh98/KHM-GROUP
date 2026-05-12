@@ -31,79 +31,24 @@ export default function Collections() {
 
       <section style={{ padding: '26px 0 90px', backgroundColor: 'var(--light-gray)' }}>
         <div className="container">
-          <div
-            className="collection-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(12, 1fr)',
-              gap: 18,
-            }}
-          >
-            {categories.map((c, idx) => {
-              const tall = Boolean(c.tall);
-              const colSpan = tall ? 6 : 3;
-              const rowSpan = tall ? 2 : 1;
+          <div className="collection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 16 }}>
+            {categories.slice(0, 6).map((c, idx) => {
+              const isRow1 = idx < 3;
+              const isTall = isRow1 && (idx === 0);
+              const colSpan = isTall ? 3 : (isRow1 ? 3 : 3);
+              const rowSpan = isTall ? 2 : 1;
               const slug = slugify(c.name);
 
               return (
-                <Link
-                  key={c.id}
-                  to={`/collections/${slug}`}
-                  style={{
-                    gridColumn: `span ${colSpan}`,
-                    gridRow: `span ${rowSpan}`,
-                    borderRadius: 14,
-                    overflow: 'hidden',
-                    position: 'relative',
-                    boxShadow: 'var(--shadow-sm)',
-                    minHeight: tall ? 420 : 200,
-                    background: '#eee',
-                    textDecoration: 'none',
-                  }}
-                  onMouseEnter={(e) => {
-                    const img = e.currentTarget.querySelector('img');
-                    const overlay = e.currentTarget.querySelector('[data-overlay]');
-                    if (img) img.style.transform = 'scale(1.06)';
-                    if (overlay) overlay.style.backgroundColor = 'rgba(0,0,0,0.55)';
-                  }}
-                  onMouseLeave={(e) => {
-                    const img = e.currentTarget.querySelector('img');
-                    const overlay = e.currentTarget.querySelector('[data-overlay]');
-                    if (img) img.style.transform = 'scale(1)';
-                    if (overlay) overlay.style.backgroundColor = 'rgba(0,0,0,0.35)';
-                  }}
-                >
-                  <img
-                    src={c.image}
-                    alt={c.name}
-                    loading="lazy"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      transition: 'transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    }}
-                  />
-                  <div
-                    data-overlay
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'flex',
-                      alignItems: 'flex-end',
-                      padding: 22,
-                      background:
-                        'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.18) 55%, rgba(0,0,0,0.08) 100%)',
-                      transition: 'background-color 0.35s ease',
-                    }}
-                  >
+                <Link key={c.id} to={`/collections/${slug}`} style={{ gridColumn: `span ${colSpan}`, gridRow: `span ${rowSpan}`, borderRadius: 16, overflow: 'hidden', position: 'relative', boxShadow: 'var(--shadow-sm)', minHeight: isTall ? 440 : 210, background: '#eee', textDecoration: 'none' }}
+                  onMouseEnter={(e) => { const img = e.currentTarget.querySelector('img'); if (img) img.style.transform = 'scale(1.08)'; }}
+                  onMouseLeave={(e) => { const img = e.currentTarget.querySelector('img'); if (img) img.style.transform = 'scale(1)'; }}>
+                  <img src={c.image} alt={c.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', padding: 24, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)' }}>
                     <div>
-                      <div style={{ color: '#fff', fontFamily: 'var(--font-heading)', fontSize: tall ? 34 : 22, fontWeight: 700 }}>
-                        {c.name}
-                      </div>
-                      <div style={{ color: 'rgba(255,255,255,0.86)', fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>
-                        {c.subtitle}
-                      </div>
+                      <div style={{ color: '#d4af5a', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>Shop Now</div>
+                      <div style={{ color: '#fff', fontFamily: 'var(--font-heading)', fontSize: isTall ? 28 : 20, fontWeight: 800 }}>{c.name}</div>
+                      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 4 }}>{c.subtitle}</div>
                     </div>
                   </div>
                 </Link>
@@ -113,14 +58,9 @@ export default function Collections() {
         </div>
 
         <style>{`
-          @media (max-width: 900px) {
-            .collection-grid { grid-template-columns: repeat(2, 1fr) !important; }
-            .collection-grid a { grid-column: span 1 !important; grid-row: span 1 !important; min-height: 240px !important; }
-          }
-          @media (max-width: 600px) {
-            .collection-grid { grid-template-columns: 1fr !important; }
-            .collection-grid a { min-height: 240px !important; }
-          }
+          @media (max-width: 1024px) { .collection-grid { grid-template-columns: repeat(3, 1fr) !important; } .collection-grid a { minHeight: 200px !important; } }
+          @media (max-width: 768px) { .collection-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; } .collection-grid a { min-height: 220px !important; } }
+          @media (max-width: 480px) { .collection-grid { grid-template-columns: 1fr !important; } .collection-grid a { min-height: 240px !important; } }
         `}</style>
       </section>
     </main>
