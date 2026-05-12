@@ -7,7 +7,7 @@ const Order    = require('../models/Order.model');
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ktex_db';
 
 const users = [
-  { name: 'Admin K-TEX', email: 'admin@ktex.com', password: 'admin1234', role: 'admin', phone: '+923001234567' },
+  { name: 'Abdul Wasay', email: 'abdulwasay@khm.ae', password: 'Wasay123', role: 'admin', phone: '+923001234567' },
   { name: 'Ayesha Khan',  email: 'ayesha@test.com', password: 'test1234',  role: 'user',  phone: '+923009876543' },
   { name: 'Ali Hassan',   email: 'ali@test.com',    password: 'test1234',  role: 'user',  phone: '+923331234567' }
 ];
@@ -82,7 +82,7 @@ const seedDB = async () => {
     const createdUsers = await User.create(users);
     const adminUser = createdUsers.find(u => u.role === 'admin');
     console.log(`👤 Created ${createdUsers.length} users`);
-    console.log(`   Admin: admin@ktex.com / admin1234`);
+    console.log(`   Admin: abdulwasay@khm.ae / Wasay123`);
     console.log(`   User:  ayesha@test.com / test1234`);
 
     // Create products

@@ -115,8 +115,8 @@ export default function AdminOrders() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 12 }}>
         <div>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 34 }}>Orders</h1>
-          <p style={{ margin: '6px 0 0', color: '#c9c6bf' }}>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px, 5vw, 34px)' }}>Orders</h1>
+          <p style={{ margin: '6px 0 0', color: '#c9c6bf', fontSize: 'clamp(12px, 2vw, 14px)' }}>
             {isOffline ? '⚡ Offline Mode — Showing locally saved orders' : 'All website orders. Confirm / update status from here.'}
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function AdminOrders() {
 
       {/* Table */}
       <div style={{ border: '1px solid #1f1f1f', borderRadius: 14, overflow: 'hidden' }}>
-        <div style={{ background: '#0d0d0d', padding: '12px 16px', borderBottom: '1px solid #1f1f1f', color: '#c9c6bf', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ background: '#0d0d0d', padding: '12px 16px', borderBottom: '1px solid #1f1f1f', color: '#c9c6bf', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: 12, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <span>{loading ? 'Loading…' : `${orders.length} order${orders.length !== 1 ? 's' : ''}`}</span>
           {isOffline && <span style={{ color: '#d4af5a' }}>Locally saved only</span>}
         </div>
@@ -168,10 +168,10 @@ export default function AdminOrders() {
           </div>
         ) : (
           <div style={{ width: '100%', overflowX: 'auto', background: '#0b0b0b' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
               <thead>
                 <tr style={{ background: '#0b0b0b' }}>
-                  {['Order', 'Customer', 'Phone', 'Address', 'Items', 'Total', 'Status', 'Update'].map(h => (
+                  {['Order', 'Customer', 'Items', 'Total', 'Status', 'Update'].map(h => (
                     <Th key={h}>{h}</Th>
                   ))}
                 </tr>
@@ -184,37 +184,35 @@ export default function AdminOrders() {
                       <div style={{ color: '#c9c6bf', fontSize: 11, marginTop: 2 }}>
                         {o.isLocal ? '⚡ Offline' : new Date(o.createdAt).toLocaleString('en-PK')}
                       </div>
+                      <div style={{ fontSize: 11, color: '#888', marginTop: 4 }}>{o.shippingAddress?.phone || '—'}</div>
                     </Td>
                     <Td>
                       <div style={{ fontWeight: 800 }}>{o.shippingAddress?.fullName || o.user?.name || '—'}</div>
                       <div style={{ color: '#c9c6bf', fontSize: 12 }}>{o.user?.email || o.guestEmail || 'Guest'}</div>
                     </Td>
-                    <Td>{o.shippingAddress?.phone || '—'}</Td>
                     <Td>
-                      <div style={{ fontSize: 12, color: '#c9c6bf', maxWidth: 160 }}>{o.shippingAddress?.street || '—'}</div>
-                    </Td>
-                    <Td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {(o.orderItems || []).map((item, idx) => (
-                          <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            {item.image && <img src={item.image} alt={item.name} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4 }} />}
-                            <div style={{ fontSize: 12, color: '#c9c6bf' }}>
-                              <div style={{ fontWeight: 600, color: '#fff' }}>{item.name}</div>
-                              <div>Qty: {item.quantity} | Size: {item.size || '—'}</div>
+                          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                            {item.image && <img src={item.image} alt={item.name} style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 3 }} />}
+                            <div style={{ fontSize: 11, color: '#c9c6bf' }}>
+                              <span style={{ fontWeight: 600, color: '#fff' }}>{item.name}</span>
+                              <span style={{ color: '#888', marginLeft: 4 }}>×{item.quantity}</span>
+                              <span style={{ color: '#d4af5a', marginLeft: 4, fontWeight: 700 }}>{item.size || ''}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                     </Td>
-                    <Td style={{ fontWeight: 900 }}>{typeof o.totalPrice === 'number' ? `PKR ${o.totalPrice}` : o.totalPrice}</Td>
+                    <Td style={{ fontWeight: 900 }}>{typeof o.totalPrice === 'number' ? `PKR ${o.totalPrice.toLocaleString()}` : o.totalPrice}</Td>
                     <Td><Badge status={o.orderStatus} /></Td>
                     <Td>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                         <select
                           defaultValue={o.orderStatus}
                           onChange={e => updateStatus(o._id, e.target.value)}
                           disabled={savingId === o._id}
-                          style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #2a2a2a', background: '#0d0d0d', color: '#fff', fontWeight: 700 }}
+                          style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #2a2a2a', background: '#0d0d0d', color: '#fff', fontWeight: 700, fontSize: 12 }}
                         >
                           {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
@@ -234,14 +232,14 @@ export default function AdminOrders() {
 
 function Th({ children }) {
   return (
-    <th style={{ textAlign: 'left', padding: '12px', color: '#c9c6bf', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1f1f1f', fontWeight: 900, whiteSpace: 'nowrap' }}>
+    <th style={{ textAlign: 'left', padding: '12px', color: '#c9c6bf', fontSize: 'clamp(10px, 2vw, 11px)', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1f1f1f', fontWeight: 900, whiteSpace: 'nowrap' }}>
       {children}
     </th>
   );
 }
 
 function Td({ children, style }) {
-  return <td style={{ padding: '12px', color: '#fff', verticalAlign: 'top', ...style }}>{children}</td>;
+  return <td style={{ padding: '12px', color: '#fff', verticalAlign: 'middle', ...style }}>{children}</td>;
 }
 
 function Badge({ status }) {

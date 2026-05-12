@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getProducts } from '../data';
+import { useCart } from '../context/CartContext';
 
 // ─── Order Number Generator ────────────────────────────────────
 function generateOrderNumber() {
@@ -61,26 +61,30 @@ async function submitOrderToBackend(payload) {
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const { items: cartItems, totalPrice: cartTotal } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   function buildOrderItems() {
-    const p = getProducts()?.[0];
-    if (!p) return [];
-    const pId = String(p.id);
-    const validObjectId = /^[0-9a-fA-F]{24}$/.test(pId) ? pId : '5f8d04b3a4f8913b8c4c7f0b';
+    if (!cartItems || cartItems.length === 0) return [];
 
-    return [{
-      product: validObjectId,
-      name: p.name,
-      image: p.image,
-      price: p.price,
-      quantity: 1,
-      size: 'M',
-      color: 'Default',
-    }];
+    return cartItems.map(item => {
+      // Generate a valid object ID or use existing product ID
+      const pId = String(item.id || item._id || '');
+      const validObjectId = /^[0-9a-fA-F]{24}$/.test(pId) ? pId : '5f8d04b3a4f8913b8c4c7f0b';
+
+      return {
+        product: validObjectId,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity || 1,
+        size: item.size || 'M',
+        color: item.color || 'Default',
+      };
+    });
   }
 
   const handleSubmit = async (e) => {
@@ -155,7 +159,29 @@ export default function Checkout() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        {/* Cart Summary */}
+      {cartItems.length > 0 && (
+        <div style={{ marginBottom: '24px', padding: '16px', background: '#f8f8f8', borderRadius: 8 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: 700 }}>Order Summary</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {cartItems.map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                <div>
+                  <span style={{ fontWeight: 600 }}>{item.name}</span>
+                  <span style={{ color: '#666', marginLeft: 8 }}>Size: {item.size} × {item.quantity}</span>
+                </div>
+                <span style={{ fontWeight: 700 }}>PKR {(item.price * item.quantity).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid #ddd', marginTop: 12, paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 800 }}>
+            <span>Total</span>
+            <span>PKR {cartTotal.toLocaleString()}</span>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
           {/* Full Name */}
           <div style={{ marginBottom: '18px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
