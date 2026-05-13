@@ -19,26 +19,23 @@ export default function CategoryGrid() {
           </div>
         </div>
 
-        <div className="category-grid" style={{ display: 'grid', gap: 20 }}>
-          {categories.map((cat, idx) => {
-            const isTall = cat.tall;
-            return (
-              <Link to={`/collections/${slugify(cat.name)}`} key={cat.id} className={`cat-card ${isTall ? 'tall-card' : 'small-card'}`} style={{ position: 'relative', display: 'block', overflow: 'hidden', borderRadius: 20, background: '#000' }}>
-                <img src={cat.image} alt={cat.name} loading="lazy" className="cat-img" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.7s ease', willChange: 'transform' }} />
-                <div className="cat-overlay" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 'clamp(16px, 3vw, 32px)', zIndex: 2 }}>
-                  <div className="cat-content">
-                    <p style={{ fontFamily: 'var(--font-body)', color: '#d4af5a', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 8px 0' }}>{cat.subtitle}</p>
-                    <h3 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: isTall ? 'clamp(1.8rem, 4vw, 2.8rem)' : 'clamp(1.3rem, 2.5vw, 2rem)', fontWeight: 800, margin: '0 0 12px 0', lineHeight: 1.1, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>{cat.name}</h3>
-                    <div className="shop-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#d4af5a', color: '#000', padding: '10px 20px', borderRadius: 30, fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      <span>Shop Now</span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </div>
+        <div className="category-grid" style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 300px)' }}>
+          {categories.slice(0, 6).map((cat) => (
+            <Link to={`/collections/${slugify(cat.name)}`} key={cat.id} className="cat-card" style={{ position: 'relative', display: 'block', overflow: 'hidden', borderRadius: 20, background: '#000' }}>
+              <img src={cat.image} alt={cat.name} loading="lazy" className="cat-img" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.7s ease', willChange: 'transform' }} />
+              <div className="cat-overlay" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 'clamp(16px, 3vw, 32px)', zIndex: 2 }}>
+                <div className="cat-content">
+                  <p style={{ fontFamily: 'var(--font-body)', color: '#d4af5a', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', margin: '0 0 8px 0' }}>{cat.subtitle}</p>
+                  <h3 style={{ fontFamily: 'var(--font-heading)', color: '#fff', fontSize: 'clamp(1.3rem, 2.5vw, 2rem)', fontWeight: 800, margin: '0 0 12px 0', lineHeight: 1.1, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>{cat.name}</h3>
+                  <div className="shop-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: '#d4af5a', color: '#000', padding: '10px 20px', borderRadius: 30, fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span>Shop Now</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                   </div>
                 </div>
-                <div className="cat-shine" style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', transform: 'skewX(-20deg)', transition: 'left 0.6s ease', zIndex: 1, pointerEvents: 'none' }}></div>
-              </Link>
-            );
-          })}
+              </div>
+              <div className="cat-shine" style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', transform: 'skewX(-20deg)', transition: 'left 0.6s ease', zIndex: 1, pointerEvents: 'none' }}></div>
+            </Link>
+          ))}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 50 }}>
@@ -47,17 +44,12 @@ export default function CategoryGrid() {
       </div>
 
       <style>{`
-        .category-grid { grid-template-columns: repeat(7, 1fr); grid-auto-rows: 280px; }
-        .tall-card { grid-column: span 3; grid-row: span 2; }
-        .small-card { grid-column: span 2; grid-row: span 1; }
         .cat-card:hover .cat-img { transform: scale(1.1); }
         .cat-card:hover .cat-shine { left: 150%; }
         .cat-card:hover .shop-btn { background: '#fff !important'; transform: scale(1.05); box-shadow: 0 10px 30px rgba(212,175,90,0.4); }
         .shop-btn { transition: all 0.3s ease; }
-        @media (max-width: 1400px) { .category-grid { grid-template-columns: repeat(6, 1fr); } .tall-card { grid-column: span 3; } }
-        @media (max-width: 1024px) { .category-grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 260px; } .tall-card { grid-column: span 2; grid-row: span 2; } .small-card { grid-column: span 1; } }
-        @media (max-width: 768px) { .category-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 240px; gap: 14px !important; } .tall-card { grid-column: span 2; grid-row: span 1; } .small-card { grid-column: span 1; } }
-        @media (max-width: 480px) { .category-grid { grid-template-columns: 1fr; grid-auto-rows: 280px; gap: 12px !important; } .tall-card, .small-card { grid-column: span 1; grid-row: span 1; } }
+        @media (max-width: 768px) { .category-grid { grid-template-columns: repeat(2, 1fr) !important; grid-template-rows: repeat(3, 280px) !important; gap: 14px !important; } }
+        @media (max-width: 480px) { .category-grid { grid-template-columns: 1fr !important; grid-template-rows: repeat(6, 280px) !important; gap: 12px !important; } }
       `}</style>
     </section>
   );
