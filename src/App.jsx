@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import CartDrawer from './components/CartDrawer';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 
@@ -40,6 +41,7 @@ function App() {
         <Router>
           <ScrollToTop />
           <CartDrawer />
+          <FloatingWhatsApp />
           <AppFrame />
         </Router>
       </WishlistProvider>

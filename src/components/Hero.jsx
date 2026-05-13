@@ -22,7 +22,9 @@ export default function Hero() {
     <section style={{
       position: 'relative',
       width: '100%',
-      height: 'max(90vh, 700px)',
+      height: '100vh',
+      maxHeight: '900px',
+      minHeight: '500px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -42,13 +44,14 @@ export default function Hero() {
             key={idx}
             src={imgUrl} 
             alt={`Premium Polo Collection ${idx + 1}`}
+            className="hero-image"
             style={{
               position: 'absolute',
               inset: 0,
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center 20%',
+              objectPosition: 'center top',
               opacity: idx === currentImageIndex ? 1 : 0,
               transition: 'opacity 1.5s ease-in-out',
               animation: idx === currentImageIndex ? 'slowZoom 10s ease-out forwards' : 'none',
@@ -93,7 +96,7 @@ export default function Hero() {
           New Season Collection
         </span>
         
-        <h1 className="fade-up-1" style={{
+        <h1 className="fade-up-1 hero-heading" style={{
           fontFamily: "var(--font-heading)",
           fontSize: 'clamp(3.5rem, 8vw, 6.5rem)',
           lineHeight: 1.05,
@@ -105,7 +108,7 @@ export default function Hero() {
           The Art of the <span style={{ fontStyle: 'italic', fontWeight: 300 }}>Polo</span>
         </h1>
         
-        <p className="fade-up-2" style={{
+        <p className="fade-up-2 hero-subtitle" style={{
           fontFamily: "var(--font-body)",
           fontSize: 'clamp(1rem, 2vw, 1.2rem)',
           color: 'rgba(255,255,255,0.85)',
@@ -216,6 +219,42 @@ export default function Hero() {
         @keyframes scrollDown {
           0% { transform: translateY(-100%); }
           100% { transform: translateY(200%); }
+        }
+
+        /* Desktop — show more of the image, shift focal point down slightly */
+        @media (min-width: 769px) {
+          .hero-image {
+            object-position: center 20% !important;
+          }
+        }
+
+        /* Tablet */
+        @media (max-width: 768px) {
+          .hero-image {
+            object-position: center top !important;
+          }
+          .hero-heading {
+            font-size: clamp(2.5rem, 7vw, 4rem) !important;
+          }
+        }
+
+        /* Small mobile */
+        @media (max-width: 480px) {
+          .hero-section {
+            height: 100vh !important;
+            max-height: 700px !important;
+          }
+          .hero-image {
+            object-position: center 15% !important;
+          }
+          .hero-heading {
+            font-size: 2.2rem !important;
+            line-height: 1.1 !important;
+          }
+          .hero-subtitle {
+            font-size: 0.9rem !important;
+            margin-bottom: 32px !important;
+          }
         }
       `}</style>
     </section>
