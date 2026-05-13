@@ -4,9 +4,10 @@ import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-const links = ['Men', 'Women', 'New Arrivals', 'Collections', 'Sale'];
+const links = ['Home', 'Men', 'Women', 'New Arrivals', 'Collections', 'Sale'];
 
 function getPath(link) {
+  if (link === 'Home') return '/';
   if (link === 'Men') return '/men';
   if (link === 'Women') return '/women';
   if (link === 'Collections') return '/collections';
@@ -283,7 +284,7 @@ export default function Navbar() {
           <ul style={{ ...linkListStyle, display: 'flex' }} className="nav-links-desktop">
             {links.map(link => {
               const toPath = getPath(link);
-              const isPage = link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
+              const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
               return (
                 <li key={link}>
                   {isPage ? (
@@ -430,7 +431,7 @@ export default function Navbar() {
         <nav style={{ flex: 1, padding: '24px 0' }}>
           {links.map((link) => {
             const toPath = getPath(link);
-            const isPage = link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
+            const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
             const commonStyle = {
               display: 'block', padding: '14px 28px',
               fontFamily: "var(--font-body)",
