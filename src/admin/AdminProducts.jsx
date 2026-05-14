@@ -1,5 +1,22 @@
 import { useState } from 'react';
-import { getProducts } from '../data';
+import { getProducts, categories } from '../data';
+
+function getAllTags() {
+  const cats = typeof window !== 'undefined'
+    ? (() => { try { const s = localStorage.getItem('ktex_categories'); return s ? JSON.parse(s) : categories; } catch { return categories; } })()
+    : categories;
+
+  const tags = [];
+  for (const cat of cats) {
+    tags.push(cat.name);
+    if (cat.subcategories) {
+      for (const sub of cat.subcategories) {
+        tags.push(sub.name);
+      }
+    }
+  }
+  return [...new Set(tags)];
+}
 
 export default function AdminProducts() {
   const [productsList, setProductsList] = useState(() => getProducts());
@@ -196,9 +213,11 @@ export default function AdminProducts() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: 8, color: '#888', fontSize: 13, fontWeight: 600 }}>Category Tag</label>
+                  <label style={{ display: 'block', marginBottom: 8, color: '#888', fontSize: 13, fontWeight: 600 }}>Category / Sub-Category</label>
                   <select value={formData.tag} onChange={e => setFormData({...formData, tag: e.target.value})} style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'linear-gradient(135deg, #111 0%, #0a0a0a 100%)', color: '#fff', boxSizing: 'border-box', fontSize: 14 }}>
-                    <option value="Men">Men</option><option value="Women">Women</option><option value="Sale">Sale</option><option value="Collections">Collections</option>
+                    {getAllTags().map(tag => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

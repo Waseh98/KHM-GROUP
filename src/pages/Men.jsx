@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getProducts } from '../data';
+import { getProducts, categories } from '../data';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-const categories = [
-  { key: 'all', label: 'All Products' },
-  { key: 'polo', label: 'Polo Shirts' },
-  { key: 'tshirt', label: 'T-Shirts' },
-  { key: 'roundneck', label: 'Round Neck' },
-];
+function getMenSubCategories() {
+  const cats = typeof window !== 'undefined'
+    ? (() => { try { const s = localStorage.getItem('ktex_categories'); return s ? JSON.parse(s) : categories; } catch { return categories; } })()
+    : categories;
+  const menCat = cats.find(c => c.name === 'Men' || c.id === 'cat_men');
+  return menCat?.subcategories || [];
+}
 
 function ProductCard({ product, onWishlist, isWishlisted }) {
   const { addToCart } = useCart();
@@ -121,7 +122,7 @@ function ProductCard({ product, onWishlist, isWishlisted }) {
   );
 }
 
-function ProductSegment({ title, subtitle, products, toggleWishlist, isWishlisted }) {
+function ProductSegment({ title, subtitle, products, toggleWishlist, isWishlisted, image }) {
   if (products.length === 0) return null;
 
   return (
@@ -170,21 +171,34 @@ export default function Men() {
     window.scrollTo(0, 0);
   }, []);
 
+  const menSubs = getMenSubCategories();
   const allProducts = getProducts();
 
-  const poloProducts = allProducts.filter(
-    p => p.tag === 'Men' || (p.name.toLowerCase().includes('polo') && !p.tag.includes('Women'))
+  const segmentProducts = menSubs.map(sub => ({
+    id: sub.id,
+    name: sub.name,
+    image: sub.image || '',
+    products: allProducts.filter(p =>
+      p.tag === sub.name ||
+      p.tag === sub.name.replace(/\s+/g, '-') ||
+      (p.name.toLowerCase().includes(sub.name.toLowerCase()) && p.tag !== 'Women')
+    ),
+  }));
+
+  const allMenProducts = allProducts.filter(p =>
+    p.tag === 'Men' ||
+    segmentProducts.some(seg => seg.products.some(sp => sp.id === p.id))
   );
 
-  const tshirtProducts = allProducts.filter(p => p.tag === 'T-Shirt');
-
-  const roundNeckProducts = allProducts.filter(p => p.tag === 'Round-Neck');
+  const filterCategories = [
+    { key: 'all', label: 'All Products' },
+    ...menSubs.map(sub => ({ key: sub.id, label: sub.name })),
+  ];
 
   const getFiltered = () => {
-    if (selected === 'polo') return { title: 'Polo Shirts', subtitle: 'Timeless classics with premium piqué fabric', products: poloProducts };
-    if (selected === 'tshirt') return { title: 'T-Shirts', subtitle: 'Everyday essentials in heavyweight cotton & modern fits', products: tshirtProducts };
-    if (selected === 'roundneck') return { title: 'Round Neck', subtitle: 'Comfort-first round necks for a clean, casual look', products: roundNeckProducts };
-    return null;
+    const seg = segmentProducts.find(s => s.id === selected);
+    if (!seg) return null;
+    return { title: seg.name, subtitle: '', products: seg.products };
   };
 
   const filtered = getFiltered();
@@ -255,7 +269,7 @@ export default function Men() {
         }}>
           {/* Desktop Tabs */}
           <div className="cat-tabs" style={{ display: 'flex', gap: 4 }}>
-            {categories.map(cat => (
+            {filterCategories.map(cat => (
               <button
                 key={cat.key}
                 onClick={() => {
@@ -311,14 +325,14 @@ export default function Men() {
               appearance: 'auto',
             }}
           >
-            {categories.map(cat => (
+            {filterCategories.map(cat => (
               <option key={cat.key} value={cat.key}>{cat.label}</option>
             ))}
           </select>
 
           <span style={{ color: 'var(--mid-gray)', fontSize: '0.85rem', fontWeight: 500 }}>
             {selected === 'all'
-              ? `${poloProducts.length + tshirtProducts.length + roundNeckProducts.length} Products`
+              ? `${allMenProducts.length} Products`
               : `${filtered?.products.length ?? 0} Products`
             }
           </span>
@@ -328,29 +342,17 @@ export default function Men() {
       {/* Products */}
       <div id="men-products" style={{ backgroundColor: 'var(--bg)', padding: '10px 0 40px' }}>
         {selected === 'all' ? (
-          <>
+          segmentProducts.map(seg => (
             <ProductSegment
-              title="Polo Shirts"
-              subtitle="Timeless classics with premium piqué fabric"
-              products={poloProducts}
+              key={seg.id}
+              title={seg.name}
+              subtitle=""
+              products={seg.products}
               toggleWishlist={toggleWishlist}
               isWishlisted={isWishlisted}
+              image={seg.image}
             />
-            <ProductSegment
-              title="T-Shirts"
-              subtitle="Everyday essentials in heavyweight cotton & modern fits"
-              products={tshirtProducts}
-              toggleWishlist={toggleWishlist}
-              isWishlisted={isWishlisted}
-            />
-            <ProductSegment
-              title="Round Neck"
-              subtitle="Comfort-first round necks for a clean, casual look"
-              products={roundNeckProducts}
-              toggleWishlist={toggleWishlist}
-              isWishlisted={isWishlisted}
-            />
-          </>
+          ))
         ) : (
           <ProductSegment
             title={filtered.title}

@@ -251,32 +251,57 @@ const defaultProducts = [
 
 const defaultCategories = [
   {
+    id: "cat_men", name: "Men", subtitle: "Premium clothing for the modern gentleman",
+    image: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=800&q=80", tall: true,
+    subcategories: [
+      { id: "sub_men_polo", name: "Polo Shirts", image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&q=80" },
+      { id: "sub_men_tshirt", name: "T-Shirts", image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&q=80" },
+      { id: "sub_men_roundneck", name: "Round Neck", image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&q=80" },
+    ]
+  },
+  {
+    id: "cat_women", name: "Women", subtitle: "Elegance & comfort for every occasion",
+    image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=800&q=80", tall: true,
+    subcategories: [
+      { id: "sub_women_polo", name: "Polo Tops", image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80" },
+      { id: "sub_women_tees", name: "T-Shirts", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=400&q=80" },
+      { id: "sub_women_tops", name: "Elegant Tops", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80" },
+    ]
+  },
+  {
     id: "cat_001", name: "Classic Polo", subtitle: "Timeless essentials for every wardrobe",
-    image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&q=85", tall: true
+    image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&q=85", tall: true,
+    subcategories: []
   },
   {
     id: "cat_002", name: "Premium Piqué", subtitle: "Luxury texture & refinement",
-    image: "https://images.unsplash.com/photo-1578681994506-b8f463449011?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1578681994506-b8f463449011?w=600&q=85",
+    subcategories: []
   },
   {
     id: "cat_003", name: "Corporate Wear", subtitle: "Office-ready professional looks",
-    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=85",
+    subcategories: []
   },
   {
     id: "cat_004", name: "Summer Collection", subtitle: "Light & breathable comfort",
-    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&q=85",
+    subcategories: []
   },
   {
     id: "cat_005", name: "Golf Edition", subtitle: "Performance meets style",
-    image: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=600&q=85",
+    subcategories: []
   },
   {
     id: "cat_006", name: "Women's Collection", subtitle: "Elegant femininity redefined",
-    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=85",
+    subcategories: []
   },
   {
     id: "cat_007", name: "Sale", subtitle: "Up to 50% off on selected items",
-    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=85"
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=85",
+    subcategories: []
   },
 ];
 
