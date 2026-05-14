@@ -6,11 +6,21 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
 function getMenSubCategories() {
-  const cats = typeof window !== 'undefined'
-    ? (() => { try { const s = localStorage.getItem('ktex_categories'); return s ? JSON.parse(s) : categories; } catch { return categories; } })()
-    : categories;
-  const menCat = cats.find(c => c.name === 'Men' || c.id === 'cat_men');
-  return menCat?.subcategories || [];
+  const defaultSubs = [
+    { id: 'sub_men_polo', name: 'Polo Shirts', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&q=80' },
+    { id: 'sub_men_tshirt', name: 'T-Shirts', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&q=80' },
+    { id: 'sub_men_roundneck', name: 'Round Neck', image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&q=80' },
+  ];
+  try {
+    const cats = typeof window !== 'undefined'
+      ? (() => { try { const s = localStorage.getItem('ktex_categories'); return s ? JSON.parse(s) : null; } catch { return null; } })()
+      : null;
+    const source = cats || categories;
+    const menCat = source.find(c => c.name === 'Men' || c.id === 'cat_men' || c.name?.toLowerCase().includes('men'));
+    return (menCat?.subcategories?.length > 0) ? menCat.subcategories : defaultSubs;
+  } catch {
+    return defaultSubs;
+  }
 }
 
 function ProductCard({ product, onWishlist, isWishlisted }) {
