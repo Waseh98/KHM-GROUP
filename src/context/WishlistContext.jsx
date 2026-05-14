@@ -14,6 +14,7 @@ function loadWishlist() {
 
 export function WishlistProvider({ children }) {
   const [items, setItems] = useState(loadWishlist);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -31,7 +32,7 @@ export function WishlistProvider({ children }) {
   const totalItems = items.length;
 
   return (
-    <WishlistContext.Provider value={{ items, toggle, isWishlisted, totalItems }}>
+    <WishlistContext.Provider value={{ items, toggle, isWishlisted, totalItems, wishlistOpen, setWishlistOpen }}>
       {children}
     </WishlistContext.Provider>
   );

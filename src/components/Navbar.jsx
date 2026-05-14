@@ -210,7 +210,7 @@ function SearchBar({ open, onClose }) {
 /* ─── Main Navbar ─────────────────────────────────────────────── */
 export default function Navbar() {
   const { totalItems, setDrawerOpen } = useCart();
-  const { totalItems: wishlistCount } = useWishlist();
+  const { totalItems: wishlistCount, setWishlistOpen } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -330,7 +330,7 @@ export default function Navbar() {
             <button style={iconBtnStyle} aria-label={`Wishlist, ${wishlistCount} items`}
               onMouseEnter={e => e.currentTarget.style.color = 'var(--gold)'}
               onMouseLeave={e => e.currentTarget.style.color = '#fff'}
-              onClick={() => {}}
+              onClick={() => setWishlistOpen(true)}
             >
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>

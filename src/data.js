@@ -159,6 +159,94 @@ const defaultProducts = [
     image: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80",
     tag: "Sale", colorCount: 3
   },
+
+  // T-Shirts - Men
+  {
+    id: "650000000000000000000101", name: "Premium Cotton T-Shirt - Black", badge: "NEW", badgeColor: "var(--black)",
+    colors: ["#000","#fff","#2c3e50"],
+    price: 1990, oldPrice: 2990, discount: 33,
+    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&q=80",
+    tag: "T-Shirt", colorCount: 3
+  },
+  {
+    id: "650000000000000000000102", name: "Heavyweight Drop-Shoulder Tee", badge: "HOT", badgeColor: "#e67e22",
+    colors: ["#fff","#1a1a2e","#95a5a6"],
+    price: 2290, oldPrice: 3490, discount: 34,
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80",
+    tag: "T-Shirt", colorCount: 3
+  },
+  {
+    id: "650000000000000000000103", name: "Classic Fit Crew Tee - White", badge: "ESSENTIAL", badgeColor: "#2c3e50",
+    colors: ["#fff","#f5f5f5","#1a1a2e"],
+    price: 1790, oldPrice: 2490, discount: 28,
+    image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&q=80",
+    tag: "T-Shirt", colorCount: 3
+  },
+  {
+    id: "650000000000000000000104", name: "Slim Fit Stretch T-Shirt", badge: "FIT", badgeColor: "var(--gold)",
+    colors: ["#1a1a2e","#c0392b","#fff"],
+    price: 2490, oldPrice: 3490, discount: 29,
+    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80",
+    tag: "T-Shirt", colorCount: 3
+  },
+  {
+    id: "650000000000000000000105", name: "Graphic Print Tee - Grey", badge: "ART", badgeColor: "#8e44ad",
+    colors: ["#7f8c8d","#fff","#2c3e50"],
+    price: 1990, oldPrice: 2790, discount: 29,
+    image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=600&q=80",
+    tag: "T-Shirt", colorCount: 3
+  },
+  {
+    id: "650000000000000000000106", name: "Oversized Box Tee - Navy", badge: "TREND", badgeColor: "#2980b9",
+    colors: ["#1a1a2e","#fff","#95a5a6"],
+    price: 2190, oldPrice: 3190, discount: 31,
+    image: "https://images.unsplash.com/photo-1554568218-0f1715e72254?w=600&q=80",
+    tag: "T-Shirt", colorCount: 3
+  },
+
+  // Round Neck - Men
+  {
+    id: "650000000000000000000201", name: "Cotton Round Neck - Maroon", badge: "COMFORT", badgeColor: "#c0392b",
+    colors: ["#c0392b","#1a1a2e","#fff"],
+    price: 1890, oldPrice: 2690, discount: 30,
+    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80",
+    tag: "Round-Neck", colorCount: 3
+  },
+  {
+    id: "650000000000000000000202", name: "Ribbed Round Neck Tee - Olive", badge: "TEXTURE", badgeColor: "#27ae60",
+    colors: ["#2d6a4f","#fff","#1a1a2e"],
+    price: 2390, oldPrice: 3490, discount: 32,
+    image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&q=80",
+    tag: "Round-Neck", colorCount: 3
+  },
+  {
+    id: "650000000000000000000203", name: "Everyday Round Neck - Charcoal", badge: "BASIC", badgeColor: "var(--black)",
+    colors: ["#34495e","#fff","#7f8c8d"],
+    price: 1590, oldPrice: 2290, discount: 31,
+    image: "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=600&q=80",
+    tag: "Round-Neck", colorCount: 3
+  },
+  {
+    id: "650000000000000000000204", name: "Pima Cotton Round Neck", badge: "LUXE", badgeColor: "var(--gold)",
+    colors: ["var(--gold)","#fff","#1a1a2e"],
+    price: 2890, oldPrice: 3990, discount: 28,
+    image: "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=600&q=80",
+    tag: "Round-Neck", colorCount: 3
+  },
+  {
+    id: "650000000000000000000205", name: "Athletic Round Neck - Blue", badge: "SPORT", badgeColor: "#2980b9",
+    colors: ["#2980b9","#fff","#1a1a2e"],
+    price: 2090, oldPrice: 2990, discount: 30,
+    image: "https://images.unsplash.com/photo-1625910513648-77e8b62a8e6c?w=600&q=80",
+    tag: "Round-Neck", colorCount: 3
+  },
+  {
+    id: "650000000000000000000206", name: "Classic Round Neck - Cream", badge: "CLEAN", badgeColor: "#e67e22",
+    colors: ["#f5f5dc","#1a1a2e","#fff"],
+    price: 1790, oldPrice: 2590, discount: 31,
+    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=80",
+    tag: "Round-Neck", colorCount: 3
+  },
 ];
 
 const defaultCategories = [
