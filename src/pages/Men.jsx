@@ -176,17 +176,20 @@ export default function Men() {
 
   const normalize = (str) => str.toLowerCase().replace(/[\s-]/g, '');
 
-  const segmentProducts = menSubs.map(sub => ({
+  const segmentProducts = menSubs.map((sub, idx) => ({
     id: sub.id,
     name: sub.name,
     image: sub.image || '',
     products: allProducts.filter(p => {
       const pTagNorm = normalize(p.tag);
       const subNorm = normalize(sub.name);
-      if (pTagNorm === subNorm) return true;
+      // Exact or bi-directional partial match
+      if (pTagNorm === subNorm || pTagNorm.includes(subNorm) || subNorm.includes(pTagNorm)) return true;
+      // Check product name
       if (p.name.toLowerCase().includes(sub.name.toLowerCase())) return true;
-      // Polo Shirts also matches old Men-tagged polo products
-      if (sub.id === 'sub_men_polo' && (p.tag === 'Men' || p.name.toLowerCase().includes('polo'))) return true;
+      // First sub-category (usually Polo Shirts) also catches old Men-tagged products
+      if (idx === 0 && p.tag === 'Men') return true;
+      if (idx === 0 && p.name.toLowerCase().includes('polo')) return true;
       return false;
     }),
   }));
@@ -348,25 +351,37 @@ export default function Men() {
       {/* Products */}
       <div id="men-products" style={{ backgroundColor: 'var(--bg)', padding: '10px 0 40px' }}>
         {selected === 'all' ? (
-          segmentProducts.map(seg => (
+          segmentProducts.length > 0 ? (
+            segmentProducts.map(seg => (
+              <ProductSegment
+                key={seg.id}
+                title={seg.name}
+                subtitle=""
+                products={seg.products}
+                toggleWishlist={toggleWishlist}
+                isWishlisted={isWishlisted}
+                image={seg.image}
+              />
+            ))
+          ) : (
             <ProductSegment
-              key={seg.id}
-              title={seg.name}
+              title="Men's Products"
               subtitle=""
-              products={seg.products}
+              products={allMenProducts}
               toggleWishlist={toggleWishlist}
               isWishlisted={isWishlisted}
-              image={seg.image}
             />
-          ))
+          )
         ) : (
-          <ProductSegment
-            title={filtered.title}
-            subtitle={filtered.subtitle}
-            products={filtered.products}
-            toggleWishlist={toggleWishlist}
-            isWishlisted={isWishlisted}
-          />
+          filtered && (
+            <ProductSegment
+              title={filtered.title}
+              subtitle={filtered.subtitle}
+              products={filtered.products}
+              toggleWishlist={toggleWishlist}
+              isWishlisted={isWishlisted}
+            />
+          )
         )}
       </div>
 
