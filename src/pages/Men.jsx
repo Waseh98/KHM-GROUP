@@ -173,26 +173,25 @@ export default function Men() {
 
   const menSubs = getMenSubCategories();
   const allProducts = getProducts();
+  const menTagged = allProducts.filter(p => p.tag === 'Men' || p.tag === 'men');
 
   const normalize = (str) => str.toLowerCase().replace(/[\s-]/g, '');
 
-  const segmentProducts = menSubs.map((sub, idx) => ({
-    id: sub.id,
-    name: sub.name,
-    image: sub.image || '',
-    products: allProducts.filter(p => {
-      const pTagNorm = normalize(p.tag);
-      const subNorm = normalize(sub.name);
-      // Exact or bi-directional partial match
-      if (pTagNorm === subNorm || pTagNorm.includes(subNorm) || subNorm.includes(pTagNorm)) return true;
-      // Check product name
-      if (p.name.toLowerCase().includes(sub.name.toLowerCase())) return true;
-      // First sub-category (usually Polo Shirts) also catches old Men-tagged products
-      if (idx === 0 && p.tag === 'Men') return true;
-      if (idx === 0 && p.name.toLowerCase().includes('polo')) return true;
-      return false;
-    }),
-  }));
+  const segmentProducts = menSubs.length > 0
+    ? menSubs.map((sub, idx) => ({
+        id: sub.id,
+        name: sub.name,
+        image: sub.image || '',
+        products: allProducts.filter(p => {
+          const pTagNorm = normalize(p.tag);
+          const subNorm = normalize(sub.name);
+          if (pTagNorm === subNorm || pTagNorm.includes(subNorm) || subNorm.includes(pTagNorm)) return true;
+          if (p.name.toLowerCase().includes(sub.name.toLowerCase())) return true;
+          if (idx === 0 && (p.tag === 'Men' || p.name.toLowerCase().includes('polo'))) return true;
+          return false;
+        }),
+      }))
+    : [{ id: 'all-men', name: "Men's Collection", image: '', products: menTagged }];
 
   const allMenProducts = allProducts.filter(p =>
     p.tag === 'Men' ||
