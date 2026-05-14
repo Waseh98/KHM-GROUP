@@ -174,15 +174,21 @@ export default function Men() {
   const menSubs = getMenSubCategories();
   const allProducts = getProducts();
 
+  const normalize = (str) => str.toLowerCase().replace(/[\s-]/g, '');
+
   const segmentProducts = menSubs.map(sub => ({
     id: sub.id,
     name: sub.name,
     image: sub.image || '',
-    products: allProducts.filter(p =>
-      p.tag === sub.name ||
-      p.tag === sub.name.replace(/\s+/g, '-') ||
-      (p.name.toLowerCase().includes(sub.name.toLowerCase()) && p.tag !== 'Women')
-    ),
+    products: allProducts.filter(p => {
+      const pTagNorm = normalize(p.tag);
+      const subNorm = normalize(sub.name);
+      if (pTagNorm === subNorm) return true;
+      if (p.name.toLowerCase().includes(sub.name.toLowerCase())) return true;
+      // Polo Shirts also matches old Men-tagged polo products
+      if (sub.id === 'sub_men_polo' && (p.tag === 'Men' || p.name.toLowerCase().includes('polo'))) return true;
+      return false;
+    }),
   }));
 
   const allMenProducts = allProducts.filter(p =>
