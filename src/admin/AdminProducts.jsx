@@ -183,7 +183,12 @@ export default function AdminProducts() {
       }
       setSaving(false);
       closeModal();
-      // Refresh list silently — don't show fetch errors over save success
+      // Clear cached products so frontend gets fresh data
+      localStorage.removeItem('ktex_products_synced_at');
+      localStorage.removeItem('ktex_products');
+      // Notify other tabs/components to refresh
+      window.dispatchEvent(new Event('products-updated'));
+      // Re-fetch products list in admin panel
       fetchProducts().catch(() => {});
     } catch (e) {
       setSaving(false);

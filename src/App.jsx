@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import PromoBar from './components/PromoBar';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -68,13 +68,20 @@ export default App;
 function AppFrame() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  const [dataVersion, setDataVersion] = useState(0);
 
   useEffect(() => {
     if (!isAdmin) {
-      syncProductsFromBackend();
-      syncCategoriesFromBackend();
+      syncProductsFromBackend().then(() => setDataVersion(v => v + 1)).catch(() => {});
+      syncCategoriesFromBackend().catch(() => {});
     }
   }, [isAdmin]);
+
+  useEffect(() => {
+    function handler() { setDataVersion(v => v + 1); }
+    window.addEventListener('products-updated', handler);
+    return () => window.removeEventListener('products-updated', handler);
+  }, []);
 
   return (
     <>
@@ -85,7 +92,7 @@ function AppFrame() {
         </>
       )}
 
-      <Routes>
+      <Routes key={dataVersion}>
         <Route path="/" element={<Suspense fallback={<PageLoader />}><Home /></Suspense>} />
         <Route path="/men" element={<Suspense fallback={<PageLoader />}><Men /></Suspense>} />
         <Route path="/women" element={<Suspense fallback={<PageLoader />}><Women /></Suspense>} />

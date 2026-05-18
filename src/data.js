@@ -484,11 +484,12 @@ function transformCategory(c) {
   };
 }
 
-export async function syncProductsFromBackend() {
+export async function syncProductsFromBackend(force = false) {
   if (typeof window === 'undefined') return;
-  // Only sync if last sync was > 5 minutes ago
-  const lastSync = localStorage.getItem('ktex_products_synced_at');
-  if (lastSync && Date.now() - parseInt(lastSync) < 300000) return;
+  if (!force) {
+    const lastSync = localStorage.getItem('ktex_products_synced_at');
+    if (lastSync && Date.now() - parseInt(lastSync) < 30000) return;
+  }
   try {
     const res = await fetch('/api/products?limit=200&sort=newest');
     if (!res.ok) return;
