@@ -351,14 +351,21 @@ export default function SummerSaleBanner() {
         @media (max-width: 1024px) {
           .video-grid { grid-template-columns: repeat(3, 1fr) !important; }
         }
-        @media (max-width: 820px) {
-          .video-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 14px !important; }
-        }
-        @media (max-width: 640px) {
-          .video-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
-        }
-        @media (max-width: 400px) {
-          .video-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 768px) {
+          .video-grid {
+            display: flex !important;
+            gap: 14px !important;
+            overflow-x: auto !important;
+            scroll-snap-type: x mandatory !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding-bottom: 8px !important;
+            scrollbar-width: none !important;
+          }
+          .video-grid::-webkit-scrollbar { display: none !important; }
+          .video-grid .video-card {
+            flex: 0 0 55% !important;
+            scroll-snap-align: start !important;
+          }
         }
       `}</style>
     </section>
