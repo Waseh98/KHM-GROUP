@@ -199,6 +199,11 @@ export default function FAQs() {
             position: static;
           }
         }
+        @media (max-width: 820px) {
+          .info-grid {
+            grid-template-columns: 1fr;
+          }
+        }
         @media (max-width: 600px) {
           .info-hero {
             padding: 56px 0 42px;

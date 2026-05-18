@@ -1,15 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { setAdminAuth } from './adminAuth';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const [showPass, setShowPass] = useState(false);
   const [email, setEmail] = useState('abdulwasay@khm.ae');
   const [password, setPassword] = useState('Wasay123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPass, setShowPass] = useState(false);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenExpired = urlParams.get('reason') === 'token_expired';
+
+  useEffect(() => {
+    if (tokenExpired && !error) {
+      setError('Your session has expired. Please login again.');
+    }
+  }, [tokenExpired]);
 
   const canSubmit = useMemo(() => Boolean(email.trim() && password), [email, password]);
 

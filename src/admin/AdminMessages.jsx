@@ -3,15 +3,11 @@ import { useState, useEffect } from 'react';
 export default function AdminMessages() {
   const [messages, setMessages] = useState([]);
 
-  useEffect(() => {
-    loadMessages();
-  }, []);
-
   const loadMessages = () => {
     try {
       const data = JSON.parse(localStorage.getItem('ktex_messages') || '[]');
       setMessages(data);
-    } catch (e) {
+    } catch {
       setMessages([]);
     }
   };
@@ -31,6 +27,8 @@ export default function AdminMessages() {
       localStorage.setItem('ktex_messages', JSON.stringify(updated));
     }
   };
+
+  useEffect(() => { loadMessages(); }, []);
 
   return (
     <div>

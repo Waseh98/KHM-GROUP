@@ -1,14 +1,21 @@
 const Product = require('../models/Product.model');
+const { processImageArray } = require('../utils/imageUploader');
 
 // @GET /api/products — Get all products with filter/sort/search/pagination
 exports.getAllProducts = async (req, res) => {
   try {
-    const { category, minPrice, maxPrice, search, sort, page = 1, limit = 12, featured, newArrival } = req.query;
+    const { pageType, category, mainCategory, subCategory, stockStatus, minPrice, maxPrice, search, sort, page = 1, limit = 12, featured, newArrival, compact } = req.query;
     const query = { isActive: true };
 
-    if (category)    query.category = category;
-    if (featured)    query.isFeatured = true;
-    if (newArrival)  query.isNewArrival = true;
+    if (pageType)       query.pageType = pageType;
+    if (category)       query.category = category;
+    if (mainCategory)   query.mainCategory = mainCategory;
+    if (subCategory)    query.subCategory = subCategory;
+    if (featured)       query.isFeatured = true;
+    if (newArrival)     query.isNewArrival = true;
+    if (stockStatus === 'in_stock')      query.stock = { $gt: 5 };
+    if (stockStatus === 'low_stock')     query.stock = { $gt: 0, $lte: 5 };
+    if (stockStatus === 'out_of_stock')  query.stock = { $lte: 0 };
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
@@ -18,6 +25,7 @@ exports.getAllProducts = async (req, res) => {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
+        { sku: { $regex: search, $options: 'i' } },
         { tags: { $in: [new RegExp(search, 'i')] } }
       ];
     }
@@ -33,15 +41,28 @@ exports.getAllProducts = async (req, res) => {
 
     const skip  = (Number(page) - 1) * Number(limit);
     const total = await Product.countDocuments(query);
-    const products = await Product.find(query).sort(sortBy).skip(skip).limit(Number(limit));
+
+    // Always restrict fields for list views to optimize response size
+    // Frontend only needs these fields for the product grid / admin list
+    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews';
+
+    const products = await Product.find(query)
+      .sort(sortBy)
+      .skip(skip)
+      .limit(Number(limit))
+      .select(selectFields);
+
+    // If any legacy base64 images are still here, we'll return them.
+    // However, our migration and new uploader will prevent new base64 strings.
+    const data = products;
 
     res.status(200).json({
       success: true,
-      count: products.length,
+      count: data.length,
       total,
       totalPages: Math.ceil(total / Number(limit)),
       currentPage: Number(page),
-      data: products
+      data
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -68,6 +89,9 @@ exports.getProduct = async (req, res) => {
 exports.createProduct = async (req, res) => {
   try {
     req.body.createdBy = req.user._id;
+    if (req.body.images) {
+      req.body.images = processImageArray(req.body.images);
+    }
     const product = await Product.create(req.body);
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (error) {
@@ -78,6 +102,9 @@ exports.createProduct = async (req, res) => {
 // @PUT /api/products/:id — Admin only
 exports.updateProduct = async (req, res) => {
   try {
+    if (req.body.images) {
+      req.body.images = processImageArray(req.body.images);
+    }
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true, runValidators: true
     });
@@ -102,7 +129,10 @@ exports.deleteProduct = async (req, res) => {
 // @GET /api/products/featured
 exports.getFeaturedProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isFeatured: true, isActive: true }).limit(8);
+    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews';
+    const products = await Product.find({ isFeatured: true, isActive: true })
+      .select(selectFields)
+      .limit(8);
     res.status(200).json({ success: true, count: products.length, data: products });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

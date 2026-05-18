@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const reviews = [
   {
@@ -89,6 +89,8 @@ export default function Testimonials() {
   const [active, setActive] = useState(0);
   const [hovered, setHovered] = useState(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [slideDirection, setSlideDirection] = useState('next');
+  const [animKey, setAnimKey] = useState(0);
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -106,8 +108,10 @@ export default function Testimonials() {
   useEffect(() => {
     if (!isAutoPlaying || hovered !== null) return;
     const timer = setInterval(() => {
+      setSlideDirection('next');
+      setAnimKey(k => k + 1);
       setActive(a => (a + 1) % reviews.length);
-    }, 4000);
+    }, 5000);
     return () => clearInterval(timer);
   }, [isAutoPlaying, hovered]);
 
@@ -122,9 +126,29 @@ export default function Testimonials() {
 
   const [left, center, right] = getVisibleIndexes(active);
 
-  const handlePrev = () => { setHovered(null); setIsAutoPlaying(false); setActive(a => (a - 1 + reviews.length) % reviews.length); };
-  const handleNext = () => { setHovered(null); setIsAutoPlaying(false); setActive(a => (a + 1) % reviews.length); };
-  const handleDot = (i) => { setHovered(null); setIsAutoPlaying(false); setActive(i); };
+  const handlePrev = () => {
+    setHovered(null);
+    setIsAutoPlaying(false);
+    setSlideDirection('prev');
+    setAnimKey(k => k + 1);
+    setActive(a => (a - 1 + reviews.length) % reviews.length);
+  };
+
+  const handleNext = () => {
+    setHovered(null);
+    setIsAutoPlaying(false);
+    setSlideDirection('next');
+    setAnimKey(k => k + 1);
+    setActive(a => (a + 1) % reviews.length);
+  };
+
+  const handleDot = (i) => {
+    setHovered(null);
+    setIsAutoPlaying(false);
+    setSlideDirection(i > active ? 'next' : 'prev');
+    setAnimKey(k => k + 1);
+    setActive(i);
+  };
 
   const cardOrder = [left, center, right];
 
@@ -160,7 +184,7 @@ export default function Testimonials() {
 
       <div className="container">
         {/* Section Header */}
-        <div style={{ textAlign: 'center', marginBottom: 70 }} className={isVisible ? 'fade-up' : ''}>
+        <div style={{ textAlign: 'center', marginBottom: 50 }} className={isVisible ? 'fade-up' : ''}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
             <div style={{ width: 40, height: 1, backgroundColor: 'var(--gold)', opacity: 0.6 }} />
             <span style={{ color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
@@ -194,22 +218,54 @@ export default function Testimonials() {
             <div style={{ width: 1, height: 18, backgroundColor: '#ddd8cd', margin: '0 4px' }} />
             <span style={{ color: 'var(--black)', fontSize: '0.85rem', fontWeight: 600 }}>200+ Reviews</span>
           </div>
+
+          {/* Navigation - Moved Above Cards */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, marginTop: 40 }}>
+            <button onClick={handlePrev} className="testimonial-nav-btn" aria-label="Previous review">
+              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {reviews.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleDot(i)}
+                  className="testimonial-dot"
+                  style={{
+                    width: i === active ? 32 : 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: i === active ? 'var(--gold)' : '#d5d1c8',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    boxShadow: i === active ? '0 2px 8px rgba(184,151,42,0.35)' : 'none',
+                  }}
+                  aria-label={`Go to review ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            <button onClick={handleNext} className="testimonial-nav-btn" aria-label="Next review">
+              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
         </div>
 
         {/* Testimonials Carousel */}
         <div
-          className={isVisible ? 'fade-up-1' : ''}
+          key={animKey}
+          className={`testimonial-carousel fade-${slideDirection === 'next' ? 'right' : 'left'}`}
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 'clamp(8px, 2.5vw, 24px)',
-            marginBottom: 50,
             position: 'relative',
             padding: '20px 0',
           }}
         >
-          {cardOrder.map((reviewIndex, position) => {
+          {cardOrder.map((reviewIndex) => {
             const prominent = isProminent(reviewIndex);
             const review = reviews[reviewIndex];
 
@@ -344,41 +400,31 @@ export default function Testimonials() {
             );
           })}
         </div>
-
-        {/* Navigation */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24 }}>
-          <button onClick={handlePrev} className="testimonial-nav-btn" aria-label="Previous review">
-            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            {reviews.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => handleDot(i)}
-                className="testimonial-dot"
-                style={{
-                  width: i === active ? 32 : 10,
-                  height: 10,
-                  borderRadius: 5,
-                  backgroundColor: i === active ? 'var(--gold)' : '#d5d1c8',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                  boxShadow: i === active ? '0 2px 8px rgba(184,151,42,0.35)' : 'none',
-                }}
-                aria-label={`Go to review ${i + 1}`}
-              />
-            ))}
-          </div>
-
-          <button onClick={handleNext} className="testimonial-nav-btn" aria-label="Next review">
-            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-        </div>
       </div>
 
       <style>{`
+        .testimonial-carousel {
+          animation: slideIn 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes slideIn {
+          0% { opacity: 0; transform: translateX(60px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInLeft {
+          0% { opacity: 0; transform: translateX(-60px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .fade-right {
+          animation: slideIn 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .fade-left {
+          animation: slideInLeft 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
         .testimonial-nav-btn {
           width: 50px; height: 50px; border-radius: 50%;
           border: 2px solid var(--black); background: transparent; color: var(--black);
@@ -400,6 +446,13 @@ export default function Testimonials() {
           .testimonial-card.prominent {
             transform: scale(1) !important;
             flex: 0 0 90% !important;
+          }
+        }
+        @media (max-width: 820px) {
+          .testimonial-card.side { display: none !important; }
+          .testimonial-card.prominent {
+            transform: scale(1) !important;
+            flex: 0 0 95% !important;
           }
         }
         @media (max-width: 600px) {

@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function PromotionalBanner() {
   return (
@@ -202,6 +201,23 @@ export default function PromotionalBanner() {
           }
           .promo-gradient {
             background: linear-gradient(to bottom, transparent 50%, #111 100%) !important;
+          }
+        }
+        @media (max-width: 820px) {
+          .promo-banner {
+            flex-direction: column !important;
+            animation: none !important;
+            transform: none !important;
+          }
+          .promo-content {
+            order: 2;
+            padding: 30px 20px !important;
+            align-items: center;
+            text-align: center;
+          }
+          .promo-image {
+            order: 1;
+            height: 250px;
           }
         }
       `}</style>

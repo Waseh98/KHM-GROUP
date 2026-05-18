@@ -30,6 +30,12 @@ I visited your website and I have a query regarding your products/services. Plea
             height: 56px !important;
           }
         }
+        @media (max-width: 820px) {
+          .whatsapp-btn {
+            width: 52px !important;
+            height: 52px !important;
+          }
+        }
         @media (max-width: 640px) {
           .whatsapp-btn {
             width: 48px !important;

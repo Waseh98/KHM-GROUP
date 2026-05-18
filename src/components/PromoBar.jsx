@@ -1,4 +1,3 @@
-import React from 'react';
 
 const messages = [
   'Free Express Shipping on orders over Rs. 5,000',

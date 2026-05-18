@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
-const links = ['Home', 'Men', 'Women', 'New Arrivals', 'Collections', 'Sale'];
+const links = ['Home', 'Men', 'Women', 'Kids', 'New Arrivals', 'Collections', 'Sale'];
 
 function getPath(link) {
   if (link === 'Home') return '/';
   if (link === 'Men') return '/men';
   if (link === 'Women') return '/women';
+  if (link === 'Kids') return '/kids';
   if (link === 'Collections') return '/collections';
   if (link === 'Sale') return '/sale';
   return `/#${link.toLowerCase().replace(' ', '-')}`;
@@ -281,10 +282,10 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Links */}
-          <ul style={{ ...linkListStyle, display: 'flex' }} className="nav-links-desktop">
+          <ul className="nav-links-desktop" style={linkListStyle}>
             {links.map(link => {
               const toPath = getPath(link);
-              const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
+              const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Kids' || link === 'Collections' || link === 'Sale';
               return (
                 <li key={link}>
                   {isPage ? (
@@ -397,7 +398,8 @@ export default function Navbar() {
         <div
           style={{
             position: 'fixed', inset: 0, zIndex: 9999,
-            backgroundColor: 'rgba(0,0,0,0.6)',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(4px)',
             animation: 'fadeIn 0.2s ease',
           }}
           onClick={() => setMenuOpen(false)}
@@ -405,19 +407,20 @@ export default function Navbar() {
       )}
       <div style={{
         position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 10000,
-        width: 300, backgroundColor: '#0d0d0d',
+        width: 'min(320px, 85vw)', backgroundColor: '#0d0d0d',
         transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)',
         display: 'flex', flexDirection: 'column', padding: '0',
-        boxShadow: '-8px 0 40px rgba(0,0,0,0.4)',
+        boxShadow: '-8px 0 40px rgba(0,0,0,0.5)',
+        borderLeft: '1px solid rgba(184,151,42,0.1)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '20px 24px', borderBottom: '1px solid #1e1e1e',
+          padding: '20px 24px', borderBottom: '1px solid rgba(184,151,42,0.15)',
         }}>
           <span style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '0.12em',
+            fontSize: 22, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.12em',
           }}>K-TEX</span>
           <button
             onClick={() => setMenuOpen(false)}
@@ -428,25 +431,27 @@ export default function Navbar() {
             </svg>
           </button>
         </div>
-        <nav style={{ flex: 1, padding: '24px 0' }}>
+        <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto' }}>
           {links.map((link) => {
             const toPath = getPath(link);
-            const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Collections' || link === 'Sale';
+            const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Kids' || link === 'Collections' || link === 'Sale';
             const commonStyle = {
-              display: 'block', padding: '14px 28px',
+              display: 'flex', alignItems: 'center', padding: '14px 28px',
               fontFamily: "var(--font-body)",
-              fontSize: 15, fontWeight: 500, letterSpacing: '0.1em',
+              fontSize: 14, fontWeight: 500, letterSpacing: '0.1em',
               color: link === 'Sale' ? 'var(--gold)' : '#e8e6e1',
               textTransform: 'uppercase',
-              borderBottom: '1px solid #1a1a1a',
-              transition: 'background 0.2s, color 0.2s',
+              borderBottom: '1px solid rgba(255,255,255,0.04)',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+              minHeight: '48px',
             };
             return isPage ? (
               <Link key={link} to={toPath}
                 onClick={() => setMenuOpen(false)}
                 style={commonStyle}
-                onMouseEnter={e => { e.target.style.backgroundColor = '#1a1a1a'; }}
-                onMouseLeave={e => { e.target.style.backgroundColor = 'transparent'; }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(184,151,42,0.08)'; e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.paddingLeft = '36px'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = link === 'Sale' ? 'var(--gold)' : '#e8e6e1'; e.currentTarget.style.paddingLeft = '28px'; }}
               >
                 {link}
               </Link>
@@ -454,25 +459,40 @@ export default function Navbar() {
               <a key={link} href={toPath}
                 onClick={() => setMenuOpen(false)}
                 style={commonStyle}
-                onMouseEnter={e => { e.target.style.backgroundColor = '#1a1a1a'; }}
-                onMouseLeave={e => { e.target.style.backgroundColor = 'transparent'; }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(184,151,42,0.08)'; e.currentTarget.style.color = 'var(--gold)'; e.currentTarget.style.paddingLeft = '36px'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = link === 'Sale' ? 'var(--gold)' : '#e8e6e1'; e.currentTarget.style.paddingLeft = '28px'; }}
               >
                 {link}
               </a>
             );
           })}
         </nav>
-        <div style={{ padding: '24px 28px', borderTop: '1px solid #1e1e1e' }}>
-          <p style={{ color: '#6b6b6b', fontSize: 12, letterSpacing: '0.06em' }}>
-            📞 0300-1234567 | hello@ktex.com
+        <div style={{ padding: '20px 28px', borderTop: '1px solid rgba(184,151,42,0.15)' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+            {['Instagram', 'Facebook', 'WhatsApp'].map(s => (
+              <a key={s} href="#" style={{
+                padding: '6px 14px', borderRadius: 6,
+                background: 'rgba(184,151,42,0.08)', border: '1px solid rgba(184,151,42,0.15)',
+                color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 600,
+                textTransform: 'uppercase', letterSpacing: '0.05em',
+                textDecoration: 'none', transition: 'all 0.2s',
+              }}>{s}</a>
+            ))}
+          </div>
+          <p style={{ color: '#6b6b6b', fontSize: 11, letterSpacing: '0.06em' }}>
+            0333-0557783 | abdulwasay@khm.ae
           </p>
         </div>
       </div>
 
       <style>{`
-        @media (max-width: 900px) {
-          .nav-links-desktop { display: none !important; }
-          .hamburger-btn { display: flex !important; }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
       `}</style>
     </>

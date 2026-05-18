@@ -21,14 +21,34 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  pageType: {
+    type: String,
+    required: [true, 'Page type is required'],
+    enum: ['Men', 'Women', 'Kids', 'Mens'],
+    trim: true,
+    set: v => v === 'Mens' ? 'Men' : v
+  },
+  mainCategory: {
+    type: String,
+    trim: true
+  },
   category: {
     type: String,
-    required: [true, 'Category is required'],
-    enum: ['Men', 'Women', 'Bridal', 'Kids', 'Accessories', 'Sale']
+    trim: true
   },
   subCategory: {
     type: String,
-    enum: ['Formal', 'Casual', 'Traditional', 'Western', 'Sportswear', 'Outerwear']
+    trim: true
+  },
+  stock: {
+    type: Number,
+    default: 0,
+    min: [0, 'Stock cannot be negative']
+  },
+  productStatus: {
+    type: String,
+    enum: ['active', 'draft', 'archived'],
+    default: 'active'
   },
   images: [{
     public_id: String,

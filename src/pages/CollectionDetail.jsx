@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { categories, products } from '../data';
+import { categories, getProducts } from '../data';
 import { useCart } from '../context/CartContext';
 
 function slugify(name) {
@@ -22,9 +22,19 @@ export default function CollectionDetail() {
 
   const collectionProducts = useMemo(() => {
     const name = (collection?.name || '').toLowerCase();
-    const base = products;
+    const base = getProducts();
 
-    // Category to tag mapping
+    // First check: is this a subcategory (Polo, T-Shirts, etc.)?
+    // Match products by subCategory field across all pageTypes
+    const subMatch = base.filter(p => {
+      if (!p.subCategory) return false;
+      const pSub = (p.subCategory || '').toLowerCase().replace(/[\s-]/g, '');
+      const n = name.replace(/[\s-]/g, '');
+      return pSub === n;
+    });
+    if (subMatch.length > 0) return subMatch;
+
+    // Fallback to existing category-to-tag mapping
     if (name.includes('classic')) return base.filter(p => p.tag === 'Men' && !p.name.toLowerCase().includes('golf') && !p.name.toLowerCase().includes('corporate'));
     if (name.includes('premium')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('signature') || p.name.toLowerCase().includes('premium') || p.name.toLowerCase().includes('mesh') || p.name.toLowerCase().includes('luxury')));
     if (name.includes('corporate')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('corporate') || p.name.toLowerCase().includes('executive') || p.name.toLowerCase().includes('business')));
@@ -100,7 +110,7 @@ export default function CollectionDetail() {
             <span style={{ color: 'var(--mid-gray)' }}>{collectionProducts.length} items</span>
           </div>
 
-          <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 30, marginTop: 26 }}>
+          <div className="product-grid" style={{ display: 'grid', gap: 30, marginTop: 26 }}>
             {collectionProducts.map((p) => (
               <div key={p.id} style={{ background: '#fff', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
                 <Link to={`/product/${p.id}`} style={{ display: 'block', aspectRatio: '3/4', overflow: 'hidden', background: '#eef' }}>
@@ -112,7 +122,9 @@ export default function CollectionDetail() {
                   </Link>
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontWeight: 800 }}>Rs. {p.price.toLocaleString()}</span>
-                    <span style={{ color: 'var(--mid-gray)', textDecoration: 'line-through' }}>Rs. {p.oldPrice.toLocaleString()}</span>
+                    {p.oldPrice && (
+                      <span style={{ color: 'var(--mid-gray)', textDecoration: 'line-through' }}>Rs. {p.oldPrice.toLocaleString()}</span>
+                    )}
                   </div>
                   <button
                     onClick={() => addToCart(p, { size: 'M' })}
@@ -140,8 +152,6 @@ export default function CollectionDetail() {
           </div>
 
           <style>{`
-            @media (max-width: 900px) { .product-grid { grid-template-columns: repeat(3, 1fr) !important; } }
-            @media (max-width: 600px) { .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; } }
           `}</style>
         </div>
       </section>

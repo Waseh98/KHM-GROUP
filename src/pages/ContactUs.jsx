@@ -6,7 +6,7 @@ const contactCards = [
     label: 'Call us',
     title: '0333-0557783',
     text: 'Monday to Saturday, 9:00 AM - 6:00 PM',
-    path: '<tel:0333-0557783',
+    path: 'tel:0333-0557783',
   },
   {
     label: 'Email',
@@ -399,6 +399,15 @@ export default function ContactUs() {
           }
           .contact-card-grid {
             grid-template-columns: 1fr;
+          }
+        }
+        @media (max-width: 820px) {
+          .contact-hero-grid,
+          .contact-main-grid {
+            grid-template-columns: 1fr;
+          }
+          .contact-card-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
         }
         @media (max-width: 600px) {

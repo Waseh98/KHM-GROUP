@@ -1,5 +1,6 @@
 const Order = require('../models/Order.model');
 const Product = require('../models/Product.model');
+const { processImage } = require('../utils/imageUploader');
 
 // @POST /api/orders
 exports.createOrder = async (req, res) => {
@@ -28,6 +29,8 @@ exports.createOrder = async (req, res) => {
       orderItems,
       shippingAddress,
       paymentInfo,
+      paymentMethod: paymentInfo?.method || 'cod',
+      paymentStatus: paymentInfo?.status || 'pending',
       itemsPrice,
       shippingPrice,
       taxPrice,
@@ -44,7 +47,7 @@ exports.createOrder = async (req, res) => {
 // @POST /api/orders/guest — Guest checkout (no login)
 exports.createGuestOrder = async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentInfo, notes, email } = req.body;
+    const { orderItems, shippingAddress, paymentInfo, notes, email, paymentScreenshot } = req.body;
 
     if (!orderItems?.length) {
       return res.status(400).json({ success: false, message: 'No order items provided' });
@@ -64,12 +67,29 @@ exports.createGuestOrder = async (req, res) => {
     const taxPrice      = Math.round(itemsPrice * 0.05);
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
+    // Process payment screenshot if provided (base64 → file)
+    let screenshotUrl = '';
+    if (paymentScreenshot) {
+      try {
+        screenshotUrl = processImage(paymentScreenshot);
+      } catch (e) {
+        console.error('Screenshot upload failed:', e.message);
+      }
+    }
+
     const order = await Order.create({
       user: null,
       guestEmail: email,
       orderItems,
       shippingAddress,
-      paymentInfo: { ...(paymentInfo || {}), method: paymentInfo?.method || 'cod' },
+      paymentInfo: {
+        ...(paymentInfo || {}),
+        method: paymentInfo?.method || 'cod',
+        status: paymentInfo?.status || 'pending',
+        screenshot: screenshotUrl
+      },
+      paymentMethod: paymentInfo?.method || 'cod',
+      paymentStatus: paymentInfo?.status || 'pending',
       itemsPrice,
       shippingPrice,
       taxPrice,

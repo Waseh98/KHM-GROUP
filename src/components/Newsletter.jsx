@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
@@ -138,6 +138,11 @@ export default function Newsletter() {
       </div>
 
       <style>{`
+        @media (max-width: 820px) {
+          .newsletter-form { flex-direction: column !important; border-radius: 8px !important; }
+          .newsletter-form input { border-radius: 8px 8px 0 0 !important; }
+          .newsletter-form button { border-radius: 0 0 8px 8px !important; }
+        }
         @media (max-width: 600px) {
           .newsletter-form { flex-direction: column !important; border-radius: 8px !important; }
           .newsletter-form input { border-radius: 8px 8px 0 0 !important; }

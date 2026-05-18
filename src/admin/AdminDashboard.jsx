@@ -93,7 +93,7 @@ export default function AdminDashboard() {
               ) : (
                 <div style={{ display: 'grid', gap: 12 }}>
                   {stats.recentOrders.map((o) => (
-                    <div key={o._id} style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, display: 'flex', justifyContent: 'space-between', gap: 12, background: 'linear-gradient(135deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.9) 100%)', transition: 'all 0.3s ease', ':hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 25px rgba(0,0,0,0.3)' } }}>
+                    <div key={o._id} className="dashboard-order-item" style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 16, display: 'flex', justifyContent: 'space-between', gap: 12, background: 'linear-gradient(135deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.9) 100%)', transition: 'all 0.3s ease' }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 900, letterSpacing: '0.06em', color: '#d4af5a', fontSize: 14 }}>{o.orderNumber || o._id}</div>
                         <div style={{ color: '#888', fontSize: 13, marginTop: 4 }}>{o.user?.name ? `${o.user.name}` : o.guestEmail || 'Guest'}</div>
@@ -127,6 +127,10 @@ export default function AdminDashboard() {
       )}
       <style>{`
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .dashboard-order-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
         @media (max-width: 768px) {
           div[style*="grid-template-columns: repeat(auto-fit"] { grid-template-columns: 1fr !important; }
         }

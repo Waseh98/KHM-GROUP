@@ -247,6 +247,122 @@ const defaultProducts = [
     image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=80",
     tag: "Round-Neck", colorCount: 3
   },
+
+  // ─── Men's Extended Collection ────────────────────────────
+  {
+    id: "650000000000000000000301", name: "K-TEX Signature Polo - Black Gold", badge: "SIGNATURE", badgeColor: "var(--gold)",
+    colors: ["#000","#B8972A","#fff"],
+    price: 4990, oldPrice: 6990, discount: 29,
+    image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+  {
+    id: "650000000000000000000302", name: "Slim Fit Polo - Burgundy", badge: "NEW", badgeColor: "var(--black)",
+    colors: ["#722f37","#1a1a2e","#fff"],
+    price: 3290, oldPrice: 4490, discount: 27,
+    image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+  {
+    id: "650000000000000000000303", name: "Henley Neck Tee - Olive", badge: "STYLE", badgeColor: "#27ae60",
+    colors: ["#556b2f","#fff","#2c3e50"],
+    price: 2190, oldPrice: 3190, discount: 31,
+    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+  {
+    id: "650000000000000000000304", name: "V-Neck Premium Tee - Grey", badge: "MINIMAL", badgeColor: "#7f8c8d",
+    colors: ["#95a5a6","#fff","#2c3e50"],
+    price: 2490, oldPrice: 3490, discount: 29,
+    image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+  {
+    id: "650000000000000000000305", name: "Striped Rugby Polo - Navy", badge: "CLASSIC", badgeColor: "#2c3e50",
+    colors: ["#1a1a2e","#fff","#c0392b"],
+    price: 3790, oldPrice: 4990, discount: 24,
+    image: "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+  {
+    id: "650000000000000000000306", name: "Long Sleeve Polo - Charcoal", badge: "WINTER", badgeColor: "#34495e",
+    colors: ["#34495e","#fff","#1a1a2e"],
+    price: 3590, oldPrice: 4790, discount: 25,
+    image: "https://images.unsplash.com/photo-1603252109303-2751441dd157?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+  {
+    id: "650000000000000000000307", name: "Pocket Tee - White", badge: "ESSENTIAL", badgeColor: "#e67e22",
+    colors: ["#fff","#f5f5f5","#1a1a2e"],
+    price: 1690, oldPrice: 2490, discount: 32,
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+  {
+    id: "650000000000000000000308", name: "Color Block Polo - Red Navy", badge: "TREND", badgeColor: "#c0392b",
+    colors: ["#c0392b","#1a1a2e","#fff"],
+    price: 3490, oldPrice: 4490, discount: 22,
+    image: "https://images.unsplash.com/photo-1578681994506-b8f463449011?w=600&q=80",
+    tag: "Men", colorCount: 3
+  },
+
+  // ─── Women's Extended Collection ─────────────────────────
+  {
+    id: "650000000000000000000401", name: "Women's Polo - Dusty Rose", badge: "NEW", badgeColor: "var(--black)",
+    colors: ["#dcae96","#fff","#d7bde2"],
+    price: 2690, oldPrice: 3490, discount: 23,
+    image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
+  {
+    id: "650000000000000000000402", name: "Cropped Polo - Lavender", badge: "TREND", badgeColor: "#8e44ad",
+    colors: ["#d7bde2","#fff","#a9cce3"],
+    price: 2490, oldPrice: 3290, discount: 24,
+    image: "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
+  {
+    id: "650000000000000000000403", name: "Oversized Tee - Sage Green", badge: "COMFY", badgeColor: "#27ae60",
+    colors: ["#8fbc8f","#fff","#2d6a4f"],
+    price: 1990, oldPrice: 2790, discount: 29,
+    image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
+  {
+    id: "650000000000000000000404", name: "Fitted V-Neck Tee - Black", badge: "SLIM", badgeColor: "var(--black)",
+    colors: ["#000","#fff","#722f37"],
+    price: 2290, oldPrice: 3190, discount: 28,
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
+  {
+    id: "650000000000000000000405", name: "Striped Polo - Pink White", badge: "CUTE", badgeColor: "#e91e63",
+    colors: ["#f5cba7","#fff","#e91e63"],
+    price: 2790, oldPrice: 3690, discount: 24,
+    image: "https://images.unsplash.com/photo-1625910513648-77e8b62a8e6c?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
+  {
+    id: "650000000000000000000406", name: "Athletic Polo - Coral", badge: "ACTIVE", badgeColor: "#e67e22",
+    colors: ["#ff7f50","#fff","#1a1a2e"],
+    price: 2990, oldPrice: 3990, discount: 25,
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
+  {
+    id: "650000000000000000000407", name: "Round Neck Basic - White", badge: "BASIC", badgeColor: "#95a5a6",
+    colors: ["#fff","#f5f5f5","#e0e0e0"],
+    price: 1490, oldPrice: 2290, discount: 35,
+    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
+  {
+    id: "650000000000000000000408", name: "Premium Polo - Midnight Blue", badge: "PREMIUM", badgeColor: "var(--gold)",
+    colors: ["#191970","#fff","#B8972A"],
+    price: 3490, oldPrice: 4990, discount: 30,
+    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=80",
+    tag: "Women", colorCount: 3
+  },
 ];
 
 const defaultCategories = [
@@ -318,6 +434,93 @@ export const getProducts = () => {
 };
 
 export const products = getProducts();
+
+function transformProduct(p) {
+  const hasDiscount = p.discountPrice > 0;
+  return {
+    id: p._id,
+    name: p.name,
+    description: p.description || '',
+    price: hasDiscount ? p.discountPrice : p.price,
+    oldPrice: hasDiscount ? p.price : undefined,
+    discount: hasDiscount ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
+    image: p.images?.[0]?.url || '',
+    images: (p.images || []).map(img => img.url),
+    tag: p.pageType || p.mainCategory || p.category || 'Men',
+    pageType: p.pageType,
+    subCategory: p.subCategory,
+    mainCategory: p.mainCategory,
+    colors: (p.colors || []).map(c => c.hexCode).filter(Boolean),
+    colorNames: (p.colors || []).map(c => c.name).filter(Boolean),
+    badge: '',
+    badgeColor: '#000000',
+    colorCount: (p.colors || []).length || 1,
+    sku: p.sku,
+    stock: p.stock,
+    fabric: p.fabric || '',
+    brand: p.brand || 'K-TEX',
+    sizes: (p.sizes || []).map(s => ({ size: s.size || s, stock: s.stock })),
+    ratings: p.ratings || 0,
+    numOfReviews: p.numOfReviews || 0,
+    isNewArrival: p.isNewArrival || false,
+    tags: p.tags || [],
+  };
+}
+
+function transformCategory(c) {
+  return {
+    id: c._id,
+    name: c.name,
+    slug: c.slug,
+    subtitle: '',
+    image: c.image || '',
+    pageTypes: c.pageTypes || ['Men'],
+    tall: true,
+    subcategories: (c.subCategories || []).map(s => ({
+      id: s._id,
+      name: s.name,
+      image: s.image || ''
+    }))
+  };
+}
+
+export async function syncProductsFromBackend() {
+  if (typeof window === 'undefined') return;
+  // Only sync if last sync was > 5 minutes ago
+  const lastSync = localStorage.getItem('ktex_products_synced_at');
+  if (lastSync && Date.now() - parseInt(lastSync) < 300000) return;
+  try {
+    const res = await fetch('/api/products?limit=200&sort=newest');
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json.success && json.data) {
+      const transformed = json.data.map(transformProduct);
+      const existing = json.data.length > 0 ? transformed : getProducts();
+      localStorage.setItem('ktex_products', JSON.stringify(existing));
+      localStorage.setItem('ktex_products_synced_at', Date.now().toString());
+    }
+  } catch (e) {
+    console.warn('Product sync from backend failed, using cache', e.message);
+  }
+}
+
+export async function syncCategoriesFromBackend() {
+  if (typeof window === 'undefined') return;
+  const lastSync = localStorage.getItem('ktex_categories_synced_at');
+  if (lastSync && Date.now() - parseInt(lastSync) < 300000) return;
+  try {
+    const res = await fetch('/api/categories');
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json.success && json.data && json.data.length > 0) {
+      const transformed = json.data.map(transformCategory);
+      localStorage.setItem('ktex_categories', JSON.stringify(transformed));
+      localStorage.setItem('ktex_categories_synced_at', Date.now().toString());
+    }
+  } catch (e) {
+    console.warn('Category sync from backend failed, using cache', e.message);
+  }
+}
 
 export const categories = (() => {
   if (typeof window !== 'undefined') {

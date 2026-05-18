@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 const teamValues = [
@@ -225,6 +224,10 @@ export default function AboutUs() {
           .about-stat-item:nth-child(n+3) { border-bottom: none; }
           .about-story-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
           .about-values-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 820px) {
+          .about-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .about-story-grid { grid-template-columns: 1fr !important; gap: 30px !important; }
         }
         @media (max-width: 600px) {
           .about-stats-grid { grid-template-columns: 1fr 1fr !important; }

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getProducts } from '../data';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+
+const DEFAULT_DESC = 'Crafted from premium-quality fabric for unmatched comfort and breathability. Featuring a tailored fit and signature reinforced stitching for lasting durability.';
 
 export default function Product() {
   const { id } = useParams();
@@ -18,26 +20,65 @@ export default function Product() {
   const [activeTab, setActiveTab] = useState('details');
   const [added, setAdded] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [imageZoom, setImageZoom] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const imageRef = useRef(null);
 
-  const productImages = product?.images && product.images.filter(img => img !== '').length > 0 
-    ? product.images.filter(img => img !== '') 
+  const productImages = product?.images && product.images.filter(img => img !== '').length > 0
+    ? product.images.filter(img => img !== '')
     : [product?.image];
+
+  const sizes = product?.sizes && product.sizes.length > 0
+    ? product.sizes.map(s => typeof s === 'string' ? s : s.size).filter(Boolean)
+    : ['S', 'M', 'L', 'XL', 'XXL'];
+
+  const currentColorName = product?.colorNames?.[selectedColor] || 'Selected Option';
+  const description = product?.description || DEFAULT_DESC;
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    setSelectedImageIndex(0);
+    setSelectedColor(0);
+    setSelectedSize(sizes[0] || 'M');
+    setQuantity(1);
+    setActiveTab('details');
+    setAdded(false);
   }, [id]);
+
+  const handleMouseMove = (e) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
 
   if (!product) {
     return (
-      <div style={{ padding: '100px 20px', textAlign: 'center', minHeight: '60vh' }}>
-        <h2>Product not found</h2>
-        <Link to="/" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>Return to Home</Link>
-      </div>
+      <main style={{ padding: '120px 20px', textAlign: 'center', minHeight: '60vh', backgroundColor: 'var(--white)' }}>
+        <div style={{ maxWidth: 420, margin: '0 auto' }}>
+          <svg width="64" height="64" fill="none" stroke="var(--mid-gray)" strokeWidth="1.5" viewBox="0 0 24 24" style={{ marginBottom: 20 }}>
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+          </svg>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', marginBottom: 12 }}>Product Not Found</h2>
+          <p style={{ color: 'var(--mid-gray)', marginBottom: 24, lineHeight: 1.6 }}>
+            The product you are looking for may have been removed or is temporarily unavailable.
+          </p>
+          <Link to="/" style={{
+            display: 'inline-block', padding: '14px 32px',
+            backgroundColor: 'var(--black)', color: 'var(--white)',
+            fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase',
+            letterSpacing: '0.05em', borderRadius: 6, transition: 'background 0.2s',
+          }}>Back to Home</Link>
+        </div>
+      </main>
     );
   }
 
-  const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-  const relatedProducts = allProducts.filter(p => p.id !== product?.id && p.tag === product?.tag).slice(0, 4);
+  const relatedProducts = allProducts
+    .filter(p => p.id !== product?.id && p.tag === product?.tag)
+    .slice(0, 4);
 
   const handleAdd = () => {
     const selectedColorValue = product.colors?.[selectedColor] || null;
@@ -52,16 +93,57 @@ export default function Product() {
     navigate('/checkout');
   };
 
+  const handleImageNav = (dir) => {
+    setSelectedImageIndex(prev => {
+      if (dir === 'prev') return prev === 0 ? productImages.length - 1 : prev - 1;
+      return prev === productImages.length - 1 ? 0 : prev + 1;
+    });
+  };
+
+  const sizeChart = [
+    { size: 'S',  chest: '36-38"', length: '27"', shoulder: '16.5"' },
+    { size: 'M',  chest: '39-41"', length: '28"', shoulder: '17.5"' },
+    { size: 'L',  chest: '42-44"', length: '29"', shoulder: '18.5"' },
+    { size: 'XL', chest: '45-47"', length: '30"', shoulder: '19.5"' },
+    { size: 'XXL', chest: '48-50"', length: '31"', shoulder: '20.5"' },
+  ];
+
+  const stockWarning = product.stock !== undefined && product.stock <= 5 && product.stock > 0;
+  const outOfStock = product.stock !== undefined && product.stock <= 0;
+
+  const renderStars = (rating, count) => {
+    if (!rating && !count) return null;
+    const stars = Math.round(rating || 0);
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 2 }}>
+          {[1, 2, 3, 4, 5].map(i => (
+            <svg key={i} width="16" height="16" fill={i <= stars ? 'var(--gold)' : '#ddd'} viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          ))}
+        </div>
+        {count > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--mid-gray)' }}>({count})</span>}
+      </div>
+    );
+  };
+
   return (
     <main style={{ backgroundColor: 'var(--white)' }}>
       {/* Breadcrumbs */}
       <div className="container" style={{ padding: '16px 24px 0' }}>
         <div style={{ fontSize: '0.8rem', color: 'var(--mid-gray)', fontFamily: 'var(--font-body)', display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-          <Link to="/" style={{ color: 'var(--black)' }}>Home</Link>
+          <Link to="/" style={{ color: 'var(--black)', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.target.style.color = 'var(--gold)'}
+            onMouseLeave={e => e.target.style.color = 'var(--black)'}
+          >Home</Link>
           <span style={{ margin: '0 4px' }}>/</span>
-          <Link to={`/${product.tag.toLowerCase()}`} style={{ color: 'var(--black)' }}>{product.tag}</Link>
+          <Link to={`/${product.tag.toLowerCase()}`} style={{ color: 'var(--black)', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.target.style.color = 'var(--gold)'}
+            onMouseLeave={e => e.target.style.color = 'var(--black)'}
+          >{product.tag}</Link>
           <span style={{ margin: '0 4px' }}>/</span>
-          <span style={{ color: 'var(--mid-gray)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{product.name}</span>
+          <span style={{ color: 'var(--mid-gray)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>{product.name}</span>
         </div>
       </div>
 
@@ -70,63 +152,170 @@ export default function Product() {
           <div className="product-layout">
             {/* Left: Images */}
             <div className="product-images">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ 
-                  backgroundColor: '#f4f3f0', 
-                  borderRadius: '12px', 
-                  overflow: 'hidden',
-                  aspectRatio: '3/4',
-                  position: 'relative'
-                }}>
-                  <img 
-                    src={productImages[selectedImageIndex] || productImages[0]} 
-                    alt={product.name} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                  {product.badge && (
-                    <div style={{
-                      position: 'absolute', top: '20px', left: '20px',
-                      backgroundColor: product.badgeColor, color: '#fff',
-                      fontSize: '0.75rem', fontWeight: 700, padding: '6px 12px',
-                      borderRadius: '2px', letterSpacing: '0.05em'
-                    }}>{product.badge}</div>
-                  )}
-                </div>
-                {/* Thumbnails */}
+              <div style={{ display: 'flex', gap: '14px' }}>
+                {/* Side Thumbnails */}
                 {productImages.length > 1 && (
-                  <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
+                  <div className="thumb-sidebar" style={{
+                    display: 'flex', flexDirection: 'column', gap: '10px',
+                    overflowY: 'auto', maxHeight: '500px', flexShrink: 0,
+                    paddingRight: '4px',
+                  }}>
                     {productImages.map((img, idx) => (
-                      <div 
+                      <div
                         key={idx}
                         onClick={() => setSelectedImageIndex(idx)}
                         style={{
-                          width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden',
-                          border: selectedImageIndex === idx ? '2px solid var(--black)' : '2px solid transparent',
-                          cursor: 'pointer', flexShrink: 0, opacity: selectedImageIndex === idx ? 1 : 0.6,
-                          transition: 'all 0.2s ease'
+                          width: '70px', height: '70px', borderRadius: '8px', overflow: 'hidden',
+                          border: selectedImageIndex === idx ? '2px solid var(--gold)' : '2px solid rgba(0,0,0,0.08)',
+                          cursor: 'pointer', flexShrink: 0,
+                          opacity: selectedImageIndex === idx ? 1 : 0.55,
+                          transition: 'all 0.2s ease',
+                          boxShadow: selectedImageIndex === idx ? '0 0 0 1px var(--gold)' : 'none',
                         }}
+                        onMouseEnter={e => { if (selectedImageIndex !== idx) e.currentTarget.style.opacity = '0.85'; }}
+                        onMouseLeave={e => { if (selectedImageIndex !== idx) e.currentTarget.style.opacity = '0.55'; }}
                       >
-                        <img src={img} alt={`${product.name} thumbnail ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={img} alt={`${product.name} view ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                     ))}
                   </div>
                 )}
+
+                {/* Main Image */}
+                <div
+                  ref={imageRef}
+                  style={{
+                    backgroundColor: '#f4f3f0',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    aspectRatio: '3/4',
+                    position: 'relative',
+                    cursor: imageZoom ? 'zoom-out' : 'zoom-in',
+                    flex: 1,
+                    maxHeight: '500px',
+                  }}
+                  onMouseEnter={() => setImageZoom(true)}
+                  onMouseLeave={() => setImageZoom(false)}
+                  onMouseMove={handleMouseMove}
+                >
+                  <img
+                    src={productImages[selectedImageIndex] || productImages[0]}
+                    alt={product.name}
+                    style={{
+                      width: '100%', height: '100%', objectFit: 'cover',
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      transform: imageZoom ? 'scale(1.8)' : 'scale(1)',
+                      transition: 'transform 0.1s ease-out',
+                    }}
+                    draggable="false"
+                  />
+                  {product.badge && (
+                    <div style={{
+                      position: 'absolute', top: '16px', left: '16px',
+                      backgroundColor: product.badgeColor, color: '#fff',
+                      fontSize: '0.72rem', fontWeight: 700, padding: '5px 10px',
+                      borderRadius: '4px', letterSpacing: '0.05em',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    }}>{product.badge}</div>
+                  )}
+
+                  {/* Image Nav Arrows */}
+                  {productImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleImageNav('prev'); }}
+                        aria-label="Previous image"
+                        style={{
+                          position: 'absolute', top: '50%', left: '10px', transform: 'translateY(-50%)',
+                          width: '36px', height: '36px', borderRadius: '50%',
+                          backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--black)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          zIndex: 3, border: 'none', cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleImageNav('next'); }}
+                        aria-label="Next image"
+                        style={{
+                          position: 'absolute', top: '50%', right: '10px', transform: 'translateY(-50%)',
+                          width: '36px', height: '36px', borderRadius: '50%',
+                          backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--black)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          zIndex: 3, border: 'none', cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                      </button>
+
+                      {/* Dots indicator */}
+                      <div style={{
+                        position: 'absolute', bottom: '12px', left: '50%', transform: 'translateX(-50%)',
+                        display: 'flex', gap: '5px', zIndex: 3,
+                        background: 'rgba(0,0,0,0.3)', padding: '4px 10px', borderRadius: '20px',
+                      }}>
+                        {productImages.map((_, idx) => (
+                          <div key={idx} style={{
+                            width: '7px', height: '7px', borderRadius: '50%',
+                            backgroundColor: selectedImageIndex === idx ? 'var(--gold)' : 'rgba(255,255,255,0.5)',
+                            transition: 'all 0.2s ease',
+                          }} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Out of Stock Overlay */}
+                  {outOfStock && (
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundColor: 'rgba(0,0,0,0.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <span style={{
+                        backgroundColor: 'var(--black)', color: 'var(--white)',
+                        padding: '10px 24px', fontWeight: 700, fontSize: '0.9rem',
+                        textTransform: 'uppercase', letterSpacing: '0.1em', borderRadius: 4,
+                      }}>Out of Stock</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Right: Details */}
             <div className="product-details">
+              {/* Brand / SKU */}
+              {(product.brand || product.sku) && (
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '10px', fontSize: '0.75rem', color: 'var(--mid-gray)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {product.brand && <span>{product.brand}</span>}
+                  {product.brand && product.sku && <span style={{ color: 'var(--border)' }}>|</span>}
+                  {product.sku && <span>SKU: {product.sku}</span>}
+                </div>
+              )}
+
               <h1 style={{
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'clamp(1.8rem, 4vw, 2.75rem)',
                 fontWeight: 600,
                 color: 'var(--black)',
-                margin: '0 0 12px 0',
+                margin: '0 0 10px 0',
                 lineHeight: 1.15
               }}>{product.name}</h1>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                <span style={{ fontWeight: 700, fontSize: 'clamp(1.3rem, 3vw, 1.5rem)' }}>Rs. {product.price.toLocaleString()}</span>
+
+              {/* Ratings */}
+              {renderStars(product.ratings, product.numOfReviews)}
+
+              {/* Price */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, fontSize: 'clamp(1.3rem, 3vw, 1.5rem)', color: 'var(--gold)' }}>
+                  Rs. {product.price.toLocaleString()}
+                </span>
                 {product.oldPrice && (
                   <span style={{ textDecoration: 'line-through', color: 'var(--mid-gray)', fontSize: '1rem' }}>
                     Rs. {product.oldPrice.toLocaleString()}
@@ -139,92 +328,118 @@ export default function Product() {
                 )}
               </div>
 
+              {/* Description */}
               <p style={{
                 color: 'var(--mid-gray)',
-                fontSize: '0.9rem',
+                fontSize: '0.92rem',
                 lineHeight: 1.7,
                 marginBottom: '24px'
-              }}>
-                Crafted from premium Egyptian cotton for unmatched comfort and breathability. Featuring a tailored fit, ribbed collar, and signature reinforced stitching.
-              </p>
+              }}>{description}</p>
 
               {/* Color Selection */}
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-                  Color: <span style={{ color: 'var(--mid-gray)', fontWeight: 400 }}>Selected Option</span>
-                </h3>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  {product.colors.map((color, idx) => {
-                    // Only show color if there's a corresponding image
-                    if (!product.images || !product.images[idx]) return null;
-                    
+              {product.colors && product.colors.length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+                    Color: <span style={{ color: 'var(--mid-gray)', fontWeight: 400, textTransform: 'none' }}>{currentColorName}</span>
+                  </h3>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {product.colors.map((color, idx) => {
+                      if (!product.images || !product.images[idx]) return null;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedColor(idx);
+                            setSelectedImageIndex(idx);
+                          }}
+                          aria-label={`Color: ${product.colorNames?.[idx] || `option ${idx + 1}`}`}
+                          style={{
+                            width: '36px', height: '36px', borderRadius: '50%',
+                            backgroundColor: color,
+                            border: selectedColor === idx ? '2px solid var(--black)' : '1px solid #ddd',
+                            outline: selectedColor === idx ? '2px solid var(--white)' : 'none',
+                            outlineOffset: '-4px',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s',
+                            transform: selectedColor === idx ? 'scale(1.1)' : 'scale(1)',
+                            boxShadow: selectedColor === idx ? '0 0 0 2px var(--black)' : 'none',
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Size Selection */}
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
+                  <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                    Size: <span style={{ color: 'var(--mid-gray)', fontWeight: 400 }}>{selectedSize}</span>
+                  </h3>
+                  <button
+                    onClick={() => setSizeGuideOpen(true)}
+                    style={{ color: 'var(--mid-gray)', fontSize: '0.85rem', textDecoration: 'underline', cursor: 'pointer' }}
+                  >Size Guide</button>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {sizes.map(size => {
+                    const sizeInfo = product.sizes?.find(s => (typeof s === 'string' ? s : s.size) === size);
+                    const sizeOutOfStock = sizeInfo && typeof sizeInfo === 'object' && sizeInfo.stock !== undefined && sizeInfo.stock <= 0;
                     return (
-                      <button 
-                        key={idx}
-                        onClick={() => {
-                          setSelectedColor(idx);
-                          setSelectedImageIndex(idx);
-                        }}
-                        title={`Select color ${idx + 1}`}
+                      <button
+                        key={size}
+                        onClick={() => !sizeOutOfStock && setSelectedSize(size)}
+                        disabled={sizeOutOfStock}
                         style={{
-                          width: '36px', height: '36px', borderRadius: '50%',
-                          backgroundColor: color,
-                          border: selectedColor === idx ? '2px solid var(--black)' : '1px solid #ddd',
-                          outline: selectedColor === idx ? '2px solid var(--white)' : 'none',
-                          outlineOffset: '-4px',
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s',
-                          transform: selectedColor === idx ? 'scale(1.1)' : 'scale(1)'
+                          width: '52px', height: '50px',
+                          border: selectedSize === size ? '2px solid var(--black)' : '1px solid var(--border)',
+                          backgroundColor: selectedSize === size ? 'var(--black)' : 'var(--white)',
+                          color: selectedSize === size ? 'var(--white)' : sizeOutOfStock ? 'var(--mid-gray)' : 'var(--black)',
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          transition: 'all 0.2s ease',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          borderRadius: '6px',
+                          cursor: sizeOutOfStock ? 'not-allowed' : 'pointer',
+                          opacity: sizeOutOfStock ? 0.4 : 1,
+                          textDecoration: sizeOutOfStock ? 'line-through' : 'none',
                         }}
-                      />
+                      >
+                        {size}
+                      </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Size Selection */}
-              <div style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
-                  <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Size</h3>
-                  <button style={{ color: 'var(--mid-gray)', fontSize: '0.85rem', textDecoration: 'underline' }}>Size Guide</button>
+              {/* Stock Warning */}
+              {stockWarning && (
+                <div style={{
+                  padding: '10px 16px', backgroundColor: '#fff8e1', color: '#e67e22',
+                  fontSize: '0.85rem', fontWeight: 600, borderRadius: 6,
+                  marginBottom: '20px', display: 'flex', alignItems: 'center', gap: 8,
+                }}>
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+                  </svg>
+                  Only {product.stock} left in stock — order soon!
                 </div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  {sizes.map(size => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      style={{
-                        width: '50px', height: '50px',
-                        border: selectedSize === size ? '2px solid var(--black)' : '1px solid var(--border)',
-                        backgroundColor: selectedSize === size ? 'var(--black)' : 'var(--white)',
-                        color: selectedSize === size ? 'var(--white)' : 'var(--black)',
-                        fontWeight: 600,
-                        fontSize: '0.95rem',
-                        transition: 'all 0.2s ease',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                      }}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              )}
 
               {/* Actions */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
                 {/* Row 1: Qty + Wishlist */}
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {/* Quantity Selector */}
                   <div style={{
                     display: 'flex', alignItems: 'center', border: '1.5px solid var(--border)',
-                    borderRadius: '6px', height: '50px', overflow: 'hidden'
+                    borderRadius: '6px', height: '50px', overflow: 'hidden',
                   }}>
-                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ padding: '0 16px', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--black)', height: '100%' }}>−</button>
-                    <span style={{ padding: '0 8px', fontWeight: 700, minWidth: '36px', textAlign: 'center', fontSize: '1rem' }}>{quantity}</span>
-                    <button onClick={() => setQuantity(quantity + 1)} style={{ padding: '0 16px', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--black)', height: '100%' }}>+</button>
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ padding: '0 16px', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--black)', height: '100%', border: 'none', backgroundColor: 'transparent' }}>−</button>
+                    <span style={{ padding: '0 4px', fontWeight: 700, minWidth: '32px', textAlign: 'center', fontSize: '1rem' }}>{quantity}</span>
+                    <button onClick={() => setQuantity(quantity + 1)} style={{ padding: '0 16px', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--black)', height: '100%', border: 'none', backgroundColor: 'transparent' }}>+</button>
                   </div>
 
-                  {/* Wishlist Button */}
                   <button
                     onClick={() => toggleWishlist(product)}
                     style={{
@@ -248,73 +463,186 @@ export default function Product() {
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button
                     onClick={handleAdd}
+                    disabled={outOfStock}
                     style={{
                       flex: 1, height: '52px',
-                      backgroundColor: added ? 'var(--black)' : 'transparent',
-                      color: added ? 'var(--white)' : 'var(--black)',
-                      border: '2px solid var(--black)',
+                      backgroundColor: outOfStock ? 'var(--border)' : added ? 'var(--black)' : 'transparent',
+                      color: outOfStock ? 'var(--mid-gray)' : added ? 'var(--white)' : 'var(--black)',
+                      border: `2px solid ${outOfStock ? 'var(--border)' : 'var(--black)'}`,
                       fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                      transition: 'all 0.3s ease', borderRadius: '6px', cursor: 'pointer',
+                      transition: 'all 0.3s ease', borderRadius: '6px', cursor: outOfStock ? 'not-allowed' : 'pointer',
                       whiteSpace: 'nowrap',
                     }}
-                    onMouseEnter={e => { if (!added) { e.currentTarget.style.backgroundColor = 'var(--black)'; e.currentTarget.style.color = 'var(--white)'; }}}
-                    onMouseLeave={e => { if (!added) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--black)'; }}}
+                    onMouseEnter={e => { if (!added && !outOfStock) { e.currentTarget.style.backgroundColor = 'var(--black)'; e.currentTarget.style.color = 'var(--white)'; }}}
+                    onMouseLeave={e => { if (!added && !outOfStock) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--black)'; }}}
                   >
-                    {added ? '✓ Added' : 'Add to Cart'}
+                    {outOfStock ? 'Out of Stock' : added ? 'Added to Cart' : 'Add to Cart'}
                   </button>
 
                   <button
                     onClick={handleBuyNow}
+                    disabled={outOfStock}
                     style={{
                       flex: 1, height: '52px',
-                      backgroundColor: 'var(--gold)', color: 'var(--white)', border: '2px solid var(--gold)',
+                      backgroundColor: outOfStock ? 'var(--border)' : 'var(--gold)',
+                      color: outOfStock ? 'var(--mid-gray)' : 'var(--white)',
+                      border: `2px solid ${outOfStock ? 'var(--border)' : 'var(--gold)'}`,
                       fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                      transition: 'all 0.3s ease', borderRadius: '6px', cursor: 'pointer',
+                      transition: 'all 0.3s ease', borderRadius: '6px', cursor: outOfStock ? 'not-allowed' : 'pointer',
                       whiteSpace: 'nowrap',
-                      boxShadow: '0 4px 15px rgba(184,151,42,0.3)'
+                      boxShadow: outOfStock ? 'none' : '0 4px 15px rgba(184,151,42,0.3)',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--black)'; e.currentTarget.style.borderColor = 'var(--black)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--gold)'; e.currentTarget.style.borderColor = 'var(--gold)'; }}
+                    onMouseEnter={e => { if (!outOfStock) { e.currentTarget.style.backgroundColor = 'var(--black)'; e.currentTarget.style.borderColor = 'var(--black)'; }}}
+                    onMouseLeave={e => { if (!outOfStock) { e.currentTarget.style.backgroundColor = 'var(--gold)'; e.currentTarget.style.borderColor = 'var(--gold)'; }}}
                   >
                     Buy It Now
                   </button>
                 </div>
               </div>
 
-              {/* Accordions */}
-              <div style={{ borderTop: '1px solid var(--border)' }}>
-                {['details', 'shipping', 'returns'].map(tab => (
-                  <div key={tab} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <button 
-                      onClick={() => setActiveTab(activeTab === tab ? '' : tab)}
-                      style={{
-                        width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '20px 0', fontSize: '1rem', fontWeight: 600, textTransform: 'capitalize'
-                      }}
-                    >
-                      {tab === 'details' ? 'Product Details' : tab === 'shipping' ? 'Shipping & Delivery' : 'Returns & Exchanges'}
-                      <span style={{ fontSize: '1.5rem', fontWeight: 300, color: 'var(--mid-gray)' }}>
-                        {activeTab === tab ? '−' : '+'}
-                      </span>
-                    </button>
-                    {activeTab === tab && (
-                      <div style={{ paddingBottom: '20px', color: 'var(--mid-gray)', fontSize: '0.95rem', lineHeight: 1.6, animation: 'fadeIn 0.3s ease' }}>
-                        {tab === 'details' && (
-                          <ul style={{ paddingLeft: '20px', margin: 0 }}>
-                            <li>100% Premium Combed Cotton</li>
-                            <li>Classic Piqué knit texture</li>
-                            <li>Two-button placket with pearlized buttons</li>
-                            <li>Machine wash cold, tumble dry low</li>
-                          </ul>
-                        )}
-                        {tab === 'shipping' && 'Free shipping on all orders over Rs. 2,000. Standard delivery takes 3-5 business days. Cash on Delivery is available across Pakistan.'}
-                        {tab === 'returns' && 'Exchange is available only for size or color change. The item must be unused with original tags attached, and all exchange delivery charges are paid by the customer.'}
-                      </div>
-                    )}
+              {/* Product Meta Info */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg)', borderRadius: '8px' }}>
+                {product.fabric && (
+                  <div style={{ display: 'flex', gap: '10px', fontSize: '0.85rem' }}>
+                    <span style={{ fontWeight: 600, minWidth: 70 }}>Fabric:</span>
+                    <span style={{ color: 'var(--mid-gray)' }}>{product.fabric}</span>
                   </div>
-                ))}
+                )}
+                {product.subCategory && (
+                  <div style={{ display: 'flex', gap: '10px', fontSize: '0.85rem' }}>
+                    <span style={{ fontWeight: 600, minWidth: 70 }}>Category:</span>
+                    <span style={{ color: 'var(--mid-gray)' }}>{product.subCategory}</span>
+                  </div>
+                )}
+                {product.stock !== undefined && product.stock > 0 && (
+                  <div style={{ display: 'flex', gap: '10px', fontSize: '0.85rem' }}>
+                    <span style={{ fontWeight: 600, minWidth: 70 }}>Availability:</span>
+                    <span style={{ color: stockWarning ? '#e67e22' : '#27ae60', fontWeight: 600 }}>
+                      {stockWarning ? `${product.stock} in stock` : 'In Stock'}
+                    </span>
+                  </div>
+                )}
               </div>
 
+              {/* Accordions */}
+              <div style={{ marginTop: '8px' }}>
+                {[
+                  { key: 'details', icon: '📋', label: 'Product Details', color: '#B8972A', bg: 'rgba(184,151,42,0.08)', border: 'rgba(184,151,42,0.25)' },
+                  { key: 'shipping', icon: '🚚', label: 'Shipping & Delivery', color: '#27ae60', bg: 'rgba(39,174,96,0.08)', border: 'rgba(39,174,96,0.25)' },
+                  { key: 'returns', icon: '↩️', label: 'Returns & Exchanges', color: '#2980b9', bg: 'rgba(41,128,185,0.08)', border: 'rgba(41,128,185,0.25)' },
+                ].map((tab) => {
+                  const isOpen = activeTab === tab.key;
+                  return (
+                    <div key={tab.key} style={{
+                      marginBottom: '10px',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      border: isOpen ? `1px solid ${tab.border}` : '1px solid rgba(0,0,0,0.06)',
+                      background: isOpen ? tab.bg : 'transparent',
+                      transition: 'all 0.3s ease',
+                    }}>
+                      <button
+                        onClick={() => setActiveTab(isOpen ? '' : tab.key)}
+                        style={{
+                          width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '16px 18px', fontSize: '0.95rem', fontWeight: 600,
+                          backgroundColor: 'transparent', border: 'none', cursor: 'pointer',
+                          color: isOpen ? tab.color : 'var(--black)',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={e => { if (!isOpen) e.currentTarget.style.color = tab.color; }}
+                        onMouseLeave={e => { if (!isOpen) e.currentTarget.style.color = 'var(--black)'; }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{
+                            width: '32px', height: '32px', borderRadius: '8px',
+                            background: isOpen ? `${tab.color}20` : 'rgba(0,0,0,0.04)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '1rem', transition: 'all 0.3s ease',
+                          }}>{tab.icon}</span>
+                          {tab.label}
+                        </span>
+                        <span style={{
+                          width: '28px', height: '28px', borderRadius: '50%',
+                          background: isOpen ? tab.color : 'rgba(0,0,0,0.05)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: isOpen ? '#fff' : 'var(--mid-gray)',
+                          transition: 'all 0.3s ease',
+                          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        }}>
+                          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                        </span>
+                      </button>
+                      {isOpen && (
+                        <div style={{
+                          padding: '0 18px 18px',
+                          color: 'var(--mid-gray)', fontSize: '0.88rem', lineHeight: 1.8,
+                          animation: 'fadeIn 0.3s ease',
+                          borderTop: `1px solid ${tab.border}`,
+                          marginTop: 0, paddingTop: '16px',
+                        }}>
+                          {tab.key === 'details' && (
+                            <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {product.fabric && <li><span style={{ fontWeight: 600, color: 'var(--black)' }}>Fabric:</span> {product.fabric}</li>}
+                              <li>Classic Piqué knit texture for premium feel</li>
+                              <li>Two-button placket with pearlized buttons</li>
+                              <li>Reinforced stitching for lasting durability</li>
+                              <li>Machine wash cold, tumble dry low</li>
+                              {product.sku && <li style={{ color: '#aaa' }}>SKU: {product.sku}</li>}
+                            </ul>
+                          )}
+                          {tab.key === 'shipping' && (
+                            <div>
+                              <div style={{
+                                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                                gap: '10px', marginBottom: '16px',
+                              }}>
+                                {[
+                                  { icon: '📦', title: 'Standard', time: '3-5 days', price: 'Free over Rs. 2,000' },
+                                  { icon: '⚡', title: 'Express', time: '1-2 days', price: 'Rs. 350' },
+                                  { icon: '💵', title: 'COD', time: 'Nationwide', price: 'Available' },
+                                ].map(opt => (
+                                  <div key={opt.title} style={{
+                                    padding: '12px', borderRadius: '10px',
+                                    background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)',
+                                  }}>
+                                    <div style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{opt.icon}</div>
+                                    <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--black)', marginBottom: '2px' }}>{opt.title}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--mid-gray)' }}>{opt.time} — {opt.price}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              <p style={{ fontSize: '0.82rem', color: '#aaa' }}>Free shipping on all orders over Rs. 2,000 across Pakistan.</p>
+                            </div>
+                          )}
+                          {tab.key === 'returns' && (
+                            <div>
+                              <div style={{
+                                padding: '14px 16px', borderRadius: '10px',
+                                background: `${tab.color}10`, border: `1px solid ${tab.color}20`,
+                                marginBottom: '14px',
+                              }}>
+                                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: tab.color, marginBottom: '6px' }}>
+                                  Exchange Policy
+                                </div>
+                                <div style={{ fontSize: '0.82rem', color: 'var(--mid-gray)', lineHeight: 1.7 }}>
+                                  Exchange available for size or color change only. Item must be unused with original tags attached.
+                                </div>
+                              </div>
+                              <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem' }}>
+                                <li>Initiate exchange within 7 days of delivery</li>
+                                <li>Item must be unworn with original tags</li>
+                                <li>Exchange delivery charges apply</li>
+                                <li>No cash refunds — exchange or store credit only</li>
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -328,7 +656,7 @@ export default function Product() {
           <div className="container">
             <h2 style={{
               fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-              marginBottom: 24, color: 'var(--black)'
+              marginBottom: 24, color: 'var(--black)',
             }}>You May Also Like</h2>
             <div className="product-grid">
               {relatedProducts.map(p => (
@@ -337,6 +665,7 @@ export default function Product() {
                   borderRadius: 10, overflow: 'hidden',
                   boxShadow: 'var(--shadow-sm)', textDecoration: 'none',
                   transition: 'transform 0.3s, box-shadow 0.3s',
+                  position: 'relative',
                 }}
                   onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
@@ -346,12 +675,22 @@ export default function Product() {
                       onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
                       onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                     />
+                    {p.badge && (
+                      <div style={{
+                        position: 'absolute', top: '10px', left: '10px',
+                        backgroundColor: p.badgeColor, color: '#fff',
+                        fontSize: '0.65rem', fontWeight: 700, padding: '4px 10px',
+                        borderRadius: '2px', letterSpacing: '0.05em',
+                      }}>{p.badge}</div>
+                    )}
                   </div>
                   <div style={{ padding: '14px' }}>
                     <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', margin: '0 0 6px', color: 'var(--black)' }}>{p.name}</h3>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Rs. {p.price.toLocaleString()}</span>
-                      <span style={{ textDecoration: 'line-through', color: 'var(--mid-gray)', fontSize: '0.8rem' }}>Rs. {p.oldPrice.toLocaleString()}</span>
+                      {p.oldPrice && (
+                        <span style={{ textDecoration: 'line-through', color: 'var(--mid-gray)', fontSize: '0.8rem' }}>Rs. {p.oldPrice.toLocaleString()}</span>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -359,6 +698,70 @@ export default function Product() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Size Guide Modal */}
+      {sizeGuideOpen && (
+        <div
+          onClick={() => setSizeGuideOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--white)', borderRadius: '12px',
+              maxWidth: '560px', width: '100%', maxHeight: '90vh', overflow: 'auto',
+              padding: '32px', position: 'relative',
+              boxShadow: 'var(--shadow-lg)',
+            }}
+          >
+            <button
+              onClick={() => setSizeGuideOpen(false)}
+              style={{
+                position: 'absolute', top: '16px', right: '16px',
+                width: '32px', height: '32px', borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: 'var(--bg)', border: 'none', cursor: 'pointer',
+                fontSize: '1.2rem', color: 'var(--mid-gray)',
+              }}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '8px' }}>Size Guide</h3>
+            <p style={{ color: 'var(--mid-gray)', fontSize: '0.9rem', marginBottom: '24px' }}>All measurements are in inches. If you are between sizes, we recommend sizing up for a comfortable fit.</p>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--black)' }}>
+                    <th style={{ padding: '10px 8px', textAlign: 'left', fontWeight: 700 }}>Size</th>
+                    <th style={{ padding: '10px 8px', textAlign: 'center', fontWeight: 700 }}>Chest</th>
+                    <th style={{ padding: '10px 8px', textAlign: 'center', fontWeight: 700 }}>Length</th>
+                    <th style={{ padding: '10px 8px', textAlign: 'center', fontWeight: 700 }}>Shoulder</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sizeChart.map((row, idx) => (
+                    <tr key={row.size} style={{ borderBottom: '1px solid var(--border)', backgroundColor: idx % 2 === 0 ? 'var(--bg)' : 'transparent' }}>
+                      <td style={{ padding: '10px 8px', fontWeight: 700 }}>{row.size}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center' }}>{row.chest}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center' }}>{row.length}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center' }}>{row.shoulder}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p style={{ marginTop: '20px', fontSize: '0.8rem', color: 'var(--mid-gray)' }}>
+              Need help with sizing? <Link to="/contact" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>Contact us</Link>
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Sticky Mobile CTA */}
@@ -378,26 +781,44 @@ export default function Product() {
         </div>
         <button
           onClick={handleAdd}
+          disabled={outOfStock}
           style={{
-            padding: '12px 20px', backgroundColor: added ? 'var(--black)' : 'var(--gold)',
-            color: 'var(--white)', border: 'none', borderRadius: 6,
-            fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em',
-            cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+            padding: '12px 20px',
+            backgroundColor: outOfStock ? 'var(--border)' : added ? 'var(--black)' : 'var(--gold)',
+            color: outOfStock ? 'var(--mid-gray)' : 'var(--white)',
+            border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.85rem',
+            textTransform: 'uppercase', letterSpacing: '0.05em',
+            cursor: outOfStock ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
           }}
         >
-          {added ? '✓ Added' : 'Add to Cart'}
+          {outOfStock ? 'Out of Stock' : added ? 'Added' : 'Add to Cart'}
         </button>
       </div>
 
       <style>{`
-        /* Mobile sticky CTA */
-        @media (max-width: 768px) {
+        @media (max-width: 820px) {
           .mobile-sticky-cta { display: flex !important; }
           main { padding-bottom: 80px; }
         }
-        /* Product page thumbnails on mobile */
-        @media (max-width: 480px) {
-          .product-images div[style*="aspectRatio"] { border-radius: 8px; }
+        @media (max-width: 768px) {
+          .mobile-sticky-cta { display: flex !important; }
+          main { padding-bottom: 80px; }
+          .thumb-sidebar {
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            max-height: none !important;
+            order: 2;
+            padding-right: 0 !important;
+          }
+          .thumb-sidebar > div {
+            width: 60px !important;
+            height: 60px !important;
+          }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
       `}</style>
     </main>

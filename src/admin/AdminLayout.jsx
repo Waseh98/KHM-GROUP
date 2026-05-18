@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { clearAdminAuth, getAdminUser } from './adminAuth';
 
@@ -109,7 +109,7 @@ export default function AdminLayout() {
               }}>
                 {(user?.name || 'Admin')[0].toUpperCase()}
               </div>
-              <span style={{ color: '#c9c6bf', fontSize: 'clamp(11px, 2vw, 14px)', display: 'none', '@media (min-width: 600px)': { display: 'block' } }} className="admin-user-name">
+              <span className="admin-user-name" style={{ color: '#c9c6bf', fontSize: 'clamp(11px, 2vw, 14px)' }}>
                 {user?.name || 'Admin'}
               </span>
             </div>
@@ -193,6 +193,10 @@ export default function AdminLayout() {
       )}
 
       <style>{`
+        .admin-user-name { display: none; }
+        @media (min-width: 600px) {
+          .admin-user-name { display: block !important; }
+        }
         @media (max-width: 1024px) {
           .admin-hamburger { display: inline-flex !important; }
           .admin-sidebar {

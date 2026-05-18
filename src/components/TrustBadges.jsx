@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const badges = [
   {
@@ -10,8 +10,8 @@ const badges = [
     ),
     title: "Free Delivery",
     desc: "On orders above Rs. 2,000",
-    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-    accent: '#2980b9',
+    gradient: 'linear-gradient(135deg, #141e28 0%, #1a2a3a 100%)',
+    accent: '#3498db',
   },
   {
     icon: (
@@ -21,8 +21,8 @@ const badges = [
     ),
     title: "Size/Color Exchange",
     desc: "Customer pays delivery charges",
-    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-    accent: '#27ae60',
+    gradient: 'linear-gradient(135deg, #141e18 0%, #1a281f 100%)',
+    accent: '#2ecc71',
   },
   {
     icon: (
@@ -33,7 +33,7 @@ const badges = [
     ),
     title: "100% Authentic",
     desc: "Genuine quality guaranteed",
-    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+    gradient: 'linear-gradient(135deg, #241c14 0%, #2a2018 100%)',
     accent: '#e67e22',
   },
   {
@@ -44,8 +44,8 @@ const badges = [
     ),
     title: "Secure Payment",
     desc: "JazzCash, EasyPaisa, COD, Visa",
-    gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-    accent: '#8e44ad',
+    gradient: 'linear-gradient(135deg, #1a1422 0%, #221a2c 100%)',
+    accent: '#9b59b6',
   },
 ];
 
@@ -66,7 +66,7 @@ export default function TrustBadges() {
     <section
       ref={sectionRef}
       style={{
-        backgroundColor: '#0a0a0a',
+        background: 'linear-gradient(180deg, #0d0d16 0%, #0f0f1a 50%, #0c0c14 100%)',
         padding: '100px 0 110px',
         position: 'relative',
         overflow: 'hidden',
@@ -77,7 +77,7 @@ export default function TrustBadges() {
         position: 'absolute', top: '-30%', left: '50%',
         transform: 'translateX(-50%)',
         width: 700, height: 700, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(184,151,42,0.06) 0%, transparent 60%)',
+        background: 'radial-gradient(circle, rgba(184,151,42,0.08) 0%, transparent 60%)',
         pointerEvents: 'none',
       }} />
 
@@ -97,7 +97,7 @@ export default function TrustBadges() {
         }}>
           Shop With Confidence
         </h2>
-        <p style={{ color: '#666', fontSize: '0.9rem', margin: '10px 0 0', fontWeight: 400 }}>
+        <p style={{ color: '#7a7a85', fontSize: '0.9rem', margin: '10px 0 0', fontWeight: 400 }}>
           Every purchase is backed by our commitment to quality
         </p>
       </div>
@@ -225,6 +225,9 @@ export default function TrustBadges() {
 
         @media (max-width: 900px) {
           .trust-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 820px) {
+          .trust-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
         }
         @media (max-width: 560px) {
           .trust-grid { grid-template-columns: 1fr !important; }

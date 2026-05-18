@@ -196,6 +196,12 @@ export default function ReturnPolicy() {
             position: static;
           }
         }
+        @media (max-width: 820px) {
+          .return-hero-grid,
+          .return-grid {
+            grid-template-columns: 1fr;
+          }
+        }
         @media (max-width: 600px) {
           .return-hero {
             padding: 56px 0 42px;

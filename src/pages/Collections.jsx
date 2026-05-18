@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { categories } from '../data';
 
@@ -31,7 +31,7 @@ export default function Collections() {
 
       <section style={{ padding: '26px 0 90px', backgroundColor: 'var(--light-gray)' }}>
         <div className="container">
-          <div className="collection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 16 }}>
+          <div className="collection-grid" style={{ display: 'grid', gap: 16 }}>
             {categories.slice(0, 6).map((c, idx) => {
               const isRow1 = idx < 3;
               const isTall = isRow1 && (idx === 0);
@@ -58,9 +58,8 @@ export default function Collections() {
         </div>
 
         <style>{`
-          @media (max-width: 1024px) { .collection-grid { grid-template-columns: repeat(3, 1fr) !important; } .collection-grid a { minHeight: 200px !important; } }
-          @media (max-width: 768px) { .collection-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; } .collection-grid a { min-height: 220px !important; } }
-          @media (max-width: 480px) { .collection-grid { grid-template-columns: 1fr !important; } .collection-grid a { min-height: 240px !important; } }
+          @media (max-width: 1024px) { .collection-grid a { min-height: 200px !important; } }
+          @media (max-width: 820px) { .collection-grid { grid-template-columns: repeat(2, 1fr) !important; } .collection-grid a { min-height: 220px !important; } }
         `}</style>
       </section>
     </main>

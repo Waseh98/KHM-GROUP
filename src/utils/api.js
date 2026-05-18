@@ -1,3 +1,7 @@
+import { clearAdminAuth } from '../admin/adminAuth';
+
+const INVALID_TOKEN = 'local-dev-token';
+
 export async function apiRequest(path, { method = 'GET', body, token, headers } = {}) {
   const res = await fetch(path, {
     method,
@@ -8,6 +12,12 @@ export async function apiRequest(path, { method = 'GET', body, token, headers } 
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
+
+  if (res.status === 401 && token === INVALID_TOKEN) {
+    clearAdminAuth();
+    window.location.href = '/admin/login?reason=token_expired';
+    throw new Error('Session expired. Redirecting to login...');
+  }
 
   const isJson = (res.headers.get('content-type') || '').includes('application/json');
   const data = isJson ? await res.json() : await res.text();

@@ -30,11 +30,15 @@ const orderSchema = new mongoose.Schema({
     country:   { type: String, default: 'Pakistan' }
   },
   paymentInfo: {
-    method:        { type: String, enum: ['stripe', 'cod', 'jazzcash', 'easypaisa'], default: 'cod' },
+    method:        { type: String, enum: ['stripe', 'cod', 'jazzcash', 'easypaisa', 'bank_transfer'], default: 'cod' },
     status:        { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
     transactionId: String,
-    paidAt:        Date
+    paidAt:        Date,
+    screenshot:    String
   },
+  // New top-level payment fields for easier access
+  paymentMethod: { type: String, enum: ['cod', 'easypaisa', 'jazzcash', 'bank_transfer'], default: 'cod' },
+  paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
   itemsPrice:    { type: Number, required: true, default: 0 },
   shippingPrice: { type: Number, required: true, default: 0 },
   taxPrice:      { type: Number, required: true, default: 0 },

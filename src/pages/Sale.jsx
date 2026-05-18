@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
@@ -98,7 +98,6 @@ export default function Sale() {
             className="product-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: 30,
             }}
           >
@@ -181,15 +180,17 @@ export default function Sale() {
                     <span style={{ fontWeight: 700, fontSize: 16 }}>
                       Rs. {product.price.toLocaleString()}
                     </span>
-                    <span
-                      style={{
-                        textDecoration: 'line-through',
-                        color: 'var(--mid-gray)',
-                        fontSize: 13,
-                      }}
-                    >
-                      Rs. {product.oldPrice.toLocaleString()}
-                    </span>
+                    {product.oldPrice && (
+                      <span
+                        style={{
+                          textDecoration: 'line-through',
+                          color: 'var(--mid-gray)',
+                          fontSize: 13,
+                        }}
+                      >
+                        Rs. {product.oldPrice.toLocaleString()}
+                      </span>
+                    )}
                   </div>
 
                   <button
@@ -222,12 +223,6 @@ export default function Sale() {
           </div>
 
           <style>{`
-            @media (max-width: 900px) {
-              .product-grid { grid-template-columns: repeat(3, 1fr) !important; }
-            }
-            @media (max-width: 600px) {
-              .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
-            }
           `}</style>
         </div>
       </section>

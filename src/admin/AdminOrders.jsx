@@ -19,6 +19,8 @@ function normalizeOfflineOrder(o) {
     guestEmail: o.email || '—',
     orderItems: (o.items || []).map(i => ({ name: i.name, quantity: i.quantity, size: i.size || 'M', image: i.image })),
     totalPrice: 'COD', orderStatus: o.status || 'pending',
+    paymentScreenshot: o.paymentScreenshot || '',
+    paymentMethod: o.paymentMethod || 'cod',
   };
 }
 
@@ -29,6 +31,7 @@ export default function AdminOrders() {
   const [savingId, setSavingId] = useState('');
   const [isOffline, setIsOffline] = useState(false);
   const [error, setError] = useState('');
+  const [viewScreenshot, setViewScreenshot] = useState(null);
 
   const token = useMemo(() => localStorage.getItem('ktex_admin_token') || '', []);
 
@@ -52,7 +55,6 @@ export default function AdminOrders() {
       setIsOffline(false);
     } catch (e) {
       if (isGatewayErr(e.message) || e.name === 'AbortError') {
-        // Use localStorage offline orders
         const offline = getOfflineOrders().map(normalizeOfflineOrder);
         const filtered = statusFilter ? offline.filter(o => o.orderStatus === statusFilter) : offline;
         setOrders(filtered);
@@ -68,9 +70,7 @@ export default function AdminOrders() {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [statusFilter]);
 
   function updateStatusOffline(orderId, status) {
-    // Update in state
     setOrders(prev => prev.map(o => o._id === orderId ? { ...o, orderStatus: status } : o));
-    // Update in localStorage
     const saved = getOfflineOrders();
     const updated = saved.map(o => o.orderNumber === orderId ? { ...o, status } : o);
     saveOfflineOrders(updated);
@@ -105,73 +105,95 @@ export default function AdminOrders() {
     <div>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
-          <h1 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 900, background: 'linear-gradient(135deg, #fff 0%, #d4af5a 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Orders</h1>
-          <p style={{ margin: '8px 0 0', color: '#888', fontSize: 'clamp(12px, 2vw, 14px)' }}>{isOffline ? '⚡ Offline Mode — Showing locally saved orders' : 'All website orders. Confirm / update status from here.'}</p>
+          <h1 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 900, color: '#0D0D0D' }}>Orders</h1>
+          <p style={{ margin: '8px 0 0', color: '#666', fontSize: 'clamp(12px, 2vw, 14px)' }}>{isOffline ? '⚡ Offline Mode — Showing locally saved orders' : 'All website orders. Confirm / update status from here.'}</p>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          {isOffline && (<span style={{ padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg, rgba(212,175,42,0.2) 0%, rgba(212,175,42,0.1) 100%)', border: '1px solid rgba(212,175,42,0.4)', color: '#d4af5a' }}>⚡ Offline</span>)}
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          {isOffline && (<span style={{ padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 700, background: 'linear-gradient(135deg, rgba(184,151,42,0.15) 0%, rgba(184,151,42,0.05) 100%)', border: '1px solid rgba(184,151,42,0.3)', color: '#B8972A' }}>⚡ Offline</span>)}
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: '1px solid #E2DDD6', background: '#fff', color: '#0D0D0D', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
             <option value="">All statuses</option>
             {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <button onClick={load} style={{ padding: '12px 18px', borderRadius: 12, border: '1px solid rgba(212,175,42,0.4)', background: 'linear-gradient(135deg, rgba(212,175,42,0.2) 0%, rgba(212,175,42,0.1) 100%)', color: '#d4af5a', fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 12, cursor: 'pointer', transition: 'all 0.3s ease' }}>🔄 Refresh</button>
+          <button onClick={load} style={{ padding: '12px 18px', borderRadius: 12, border: '1px solid #B8972A', background: 'linear-gradient(135deg, #B8972A, #D4AF5A)', color: '#fff', fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 12, cursor: 'pointer', transition: 'all 0.3s ease' }}>🔄 Refresh</button>
         </div>
       </div>
 
-      {error && (<div style={{ marginBottom: 16, border: '1px solid rgba(255,100,100,0.3)', background: 'rgba(255,100,100,0.1)', padding: 14, borderRadius: 12, color: '#ff6b6b', fontWeight: 600 }}>{error}</div>)}
+      {error && (<div style={{ marginBottom: 16, border: '1px solid rgba(200,16,46,0.3)', background: 'rgba(200,16,46,0.08)', padding: 14, borderRadius: 12, color: '#C8102E', fontWeight: 600 }}>{error}</div>)}
 
-      <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, overflow: 'hidden', background: 'linear-gradient(180deg, rgba(15,15,15,0.9) 0%, rgba(10,10,10,0.95) 100%)', boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}>
-        <div style={{ background: 'linear-gradient(180deg, #1a1a1a 0%, #111 100%)', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#888', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 12, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <span>{loading ? '⏳ Loading…' : `📦 ${orders.length} order${orders.length !== 1 ? 's' : ''}`}</span>
-          {isOffline && <span style={{ color: '#d4af5a' }}>📡 Local Data</span>}
+      <div style={{ border: '1px solid #E2DDD6', borderRadius: 20, overflow: 'hidden', background: '#fff', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'linear-gradient(180deg, #FAF8F3 0%, #F5F0E8 100%)', padding: '14px 20px', borderBottom: '1px solid #E2DDD6', color: '#666', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 12, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <span>{loading ? '⏳ Loading…' : ` ${orders.length} order${orders.length !== 1 ? 's' : ''}`}</span>
+          {isOffline && <span style={{ color: '#B8972A' }}>📡 Local Data</span>}
         </div>
 
         {loading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#666' }}><div style={{ fontSize: '3rem', marginBottom: 16 }}>⏳</div>Loading orders…</div>
+          <div style={{ padding: '60px', textAlign: 'center', color: '#888' }}><div style={{ fontSize: '3rem', marginBottom: 16 }}>⏳</div>Loading orders…</div>
         ) : orders.length === 0 ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#666' }}>{isOffline ? '📦 No offline orders found. Orders placed when backend is down will appear here.' : '📭 No orders found.'}</div>
+          <div style={{ padding: '60px', textAlign: 'center', color: '#888' }}>{isOffline ? '📦 No offline orders found. Orders placed when backend is down will appear here.' : '📭 No orders found.'}</div>
         ) : (
           <div style={{ width: '100%', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
               <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                  {['Order', 'Customer', 'Items', 'Total', 'Status', 'Update'].map(h => <Th key={h}>{h}</Th>)}
+                <tr style={{ background: '#FAF8F3' }}>
+                  {['Order', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Receipt', 'Status', 'Update'].map(h => <Th key={h}>{h}</Th>)}
                 </tr>
               </thead>
               <tbody>
-                {orders.map(o => (
-                  <tr key={o._id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                {orders.map((o, idx) => (
+                  <tr key={o._id} style={{ borderTop: '1px solid #E2DDD6', background: idx % 2 === 0 ? '#fff' : '#FAF8F3' }}>
                     <Td>
-                      <div style={{ fontWeight: 900, color: o.isLocal ? '#d4af5a' : '#fff', fontSize: 14 }}>{o.orderNumber || o._id}</div>
-                      <div style={{ color: '#666', fontSize: 11, marginTop: 4 }}>{o.isLocal ? '⚡ Offline' : new Date(o.createdAt).toLocaleString('en-PK')}</div>
-                      <div style={{ fontSize: 11, color: '#555', marginTop: 4 }}>{o.shippingAddress?.phone || '—'}</div>
+                      <div style={{ fontWeight: 900, color: o.isLocal ? '#B8972A' : '#0D0D0D', fontSize: 14 }}>{o.orderNumber || o._id}</div>
+                      <div style={{ color: '#888', fontSize: 11, marginTop: 4 }}>{o.isLocal ? '⚡ Offline' : new Date(o.createdAt).toLocaleString('en-PK')}</div>
                     </Td>
                     <Td>
-                      <div style={{ fontWeight: 800, color: '#fff' }}>{o.shippingAddress?.fullName || o.user?.name || '—'}</div>
-                      <div style={{ color: '#666', fontSize: 12, marginTop: 2 }}>{o.user?.email || o.guestEmail || 'Guest'}</div>
+                      <div style={{ fontWeight: 800, color: '#0D0D0D' }}>{o.shippingAddress?.fullName || o.user?.name || '—'}</div>
+                      <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{o.user?.email || o.guestEmail || 'Guest'}</div>
+                    </Td>
+                    <Td>
+                      <div style={{ fontWeight: 700, color: '#B8972A', fontSize: 13 }}>
+                        {o.shippingAddress?.phone || '—'}
+                      </div>
                     </Td>
                     <Td>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {(o.orderItems || []).map((item, idx) => (
                           <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                            {item.image && <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }} />}
-                            <div style={{ fontSize: 12, color: '#aaa' }}>
-                              <span style={{ fontWeight: 600, color: '#fff' }}>{item.name}</span>
-                              <span style={{ color: '#666', marginLeft: 6 }}>×{item.quantity}</span>
-                              <span style={{ color: '#d4af5a', marginLeft: 6, fontWeight: 700 }}>{item.size || ''}</span>
+                            {item.image && <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid #E2DDD6' }} />}
+                            <div style={{ fontSize: 12, color: '#555' }}>
+                              <span style={{ fontWeight: 600, color: '#0D0D0D' }}>{item.name}</span>
+                              <span style={{ color: '#888', marginLeft: 6 }}>×{item.quantity}</span>
+                              <span style={{ color: '#B8972A', marginLeft: 6, fontWeight: 700 }}>{item.size || ''}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                     </Td>
-                    <Td style={{ fontWeight: 900, fontSize: 15, color: '#fff' }}>{typeof o.totalPrice === 'number' ? `PKR ${o.totalPrice.toLocaleString()}` : o.totalPrice}</Td>
+                    <Td style={{ fontWeight: 900, fontSize: 15, color: '#0D0D0D' }}>{typeof o.totalPrice === 'number' ? `PKR ${o.totalPrice.toLocaleString()}` : o.totalPrice}</Td>
+                    <Td style={{ color: '#555', textTransform: 'capitalize' }}>{o.paymentMethod || (o.paymentInfo && o.paymentInfo.method) || 'cod'}</Td>
+                    <Td>
+                      {o.paymentScreenshot || o.paymentInfo?.screenshot ? (
+                        <button
+                          onClick={() => setViewScreenshot(o.paymentScreenshot || o.paymentInfo?.screenshot)}
+                          style={{
+                            padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(184,151,42,0.3)',
+                            background: 'rgba(184,151,42,0.08)', color: '#B8972A',
+                            fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 4,
+                          }}
+                        >
+                          📸 View
+                        </button>
+                      ) : (
+                        <span style={{ color: '#aaa', fontSize: 11 }}>No receipt</span>
+                      )}
+                    </Td>
                     <Td><Badge status={o.orderStatus} /></Td>
                     <Td>
                       <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <select defaultValue={o.orderStatus} onChange={e => updateStatus(o._id, e.target.value)} disabled={savingId === o._id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                        <select defaultValue={o.orderStatus} onChange={e => updateStatus(o._id, e.target.value)} disabled={savingId === o._id} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #E2DDD6', background: '#fff', color: '#0D0D0D', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
                           {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
-                        {savingId === o._id && <span style={{ color: '#d4af5a', fontSize: 11, fontWeight: 600 }}>Saving…</span>}
+                        {savingId === o._id && <span style={{ color: '#B8972A', fontSize: 11, fontWeight: 600 }}>Saving…</span>}
                       </div>
                     </Td>
                   </tr>
@@ -181,30 +203,93 @@ export default function AdminOrders() {
           </div>
         )}
       </div>
+
+      {/* Screenshot Modal */}
+      {viewScreenshot && (
+        <div
+          onClick={() => setViewScreenshot(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 99999,
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#fff', borderRadius: 20, padding: 24,
+              maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto',
+              border: '1px solid #E2DDD6',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, color: '#B8972A', fontSize: 16, fontWeight: 800 }}>📸 Payment Receipt</h3>
+              <button
+                onClick={() => setViewScreenshot(null)}
+                style={{
+                  background: '#f5f5f5', border: '1px solid #E2DDD6', color: '#0D0D0D',
+                  width: 36, height: 36, borderRadius: '50%', cursor: 'pointer',
+                  fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <img
+              src={viewScreenshot}
+              alt="Payment Receipt"
+              style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: 12 }}
+            />
+            <div style={{ marginTop: 16, display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <a
+                href={viewScreenshot}
+                download="payment-receipt.png"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '10px 20px', borderRadius: 10,
+                  background: 'linear-gradient(135deg, #B8972A, #D4AF5A)',
+                  color: '#fff', fontWeight: 700, fontSize: 13,
+                  textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                ⬇️ Download / Open
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function Th({ children }) {
   return (
-    <th style={{ textAlign: 'left', padding: '12px', color: '#c9c6bf', fontSize: 'clamp(10px, 2vw, 11px)', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1f1f1f', fontWeight: 900, whiteSpace: 'nowrap' }}>
+    <th style={{ textAlign: 'left', padding: '12px', color: '#555', fontSize: 'clamp(10px, 2vw, 11px)', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #E2DDD6', fontWeight: 900, whiteSpace: 'nowrap' }}>
       {children}
     </th>
   );
 }
 
 function Td({ children, style }) {
-  return <td style={{ padding: '12px', color: '#fff', verticalAlign: 'middle', ...style }}>{children}</td>;
+  return <td style={{ padding: '12px', color: '#0D0D0D', verticalAlign: 'middle', ...style }}>{children}</td>;
 }
 
 function Badge({ status }) {
   const color =
     status === 'delivered' ? '#2ecc71' :
     status === 'cancelled' ? '#e74c3c' :
-    status === 'confirmed' ? 'var(--gold)' :
-    status === 'shipped' ? '#4da6ff' : '#c9c6bf';
+    status === 'confirmed' ? '#B8972A' :
+    status === 'shipped' ? '#4da6ff' : '#888';
+  const bg =
+    status === 'delivered' ? 'rgba(46,204,113,0.1)' :
+    status === 'cancelled' ? 'rgba(231,76,60,0.1)' :
+    status === 'confirmed' ? 'rgba(184,151,42,0.1)' :
+    status === 'shipped' ? 'rgba(77,166,255,0.1)' : 'rgba(136,136,136,0.1)';
   return (
-    <span style={{ display: 'inline-flex', padding: '5px 10px', borderRadius: 999, border: '1px solid #2a2a2a', background: '#0d0d0d', color, fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11, whiteSpace: 'nowrap' }}>
+    <span style={{ display: 'inline-flex', padding: '5px 10px', borderRadius: 999, border: `1px solid ${color}30`, background: bg, color, fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11, whiteSpace: 'nowrap' }}>
       {status}
     </span>
   );

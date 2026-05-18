@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app = express();
 app.set('trust proxy', 1);
@@ -45,6 +45,7 @@ app.use('/api/orders', require('./routes/order.routes'));
 app.use('/api/payment', require('./routes/payment.routes'));
 app.use('/api/reviews', require('./routes/review.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/categories', require('./routes/category.routes'));
 
 // ─── Health Check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -59,7 +60,8 @@ app.get('/api/health', (req, res) => {
       orders: '/api/orders',
       payment: '/api/payment',
       reviews: '/api/reviews',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      categories: '/api/categories'
     }
   });
 });
@@ -69,8 +71,11 @@ app.use('/api', (req, res) => {
   res.status(404).json({ success: false, message: `API Route ${req.originalUrl} not found` });
 });
 
-// ─── Serve Frontend in Production ──────────────────────────
+// ─── Serve Static Assets ────────────────────────────────────
 const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// ─── Serve Frontend in Production ──────────────────────────
 const clientDistPath = path.join(__dirname, '../dist');
 app.use(express.static(clientDistPath));
 
@@ -93,7 +98,7 @@ const PORT = process.env.PORT || 3000;
 
 
 
-mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 50000 })
+mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
   .then(() => {
     console.log('✅ MongoDB Connected');
     // Start server only after DB is ready
