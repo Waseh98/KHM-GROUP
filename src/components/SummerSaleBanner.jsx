@@ -3,33 +3,33 @@ import { useState, useEffect, useRef } from 'react';
 const videoCards = [
   {
     id: 1,
-    title: 'Summer Collection 2026',
-    thumbnail: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&q=80',
-    video: 'https://videos.pexels.com/video-files/3205916/3205916-uhd_1440_2732_25fps.mp4',
+    title: 'Fashion Editorial',
+    thumbnail: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80',
+    video: 'https://videos.pexels.com/video-files/855563/855563_uhd_1440_2732_25fps.mp4',
   },
   {
     id: 2,
-    title: 'Polo Styling Guide',
-    thumbnail: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&q=80',
-    video: 'https://videos.pexels.com/video-files/4058359/4058359-uhd_1440_2732_30fps.mp4',
+    title: 'New Collection',
+    thumbnail: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80',
+    video: 'https://videos.pexels.com/video-files/8386978/8386978_uhd_1440_2732_25fps.mp4',
   },
   {
     id: 3,
-    title: 'Behind the Brand',
+    title: 'Style Guide',
     thumbnail: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?w=400&q=80',
-    video: 'https://videos.pexels.com/video-files/6939430/6939430-uhd_1440_2732_25fps.mp4',
+    video: 'https://videos.pexels.com/video-files/6474633/6474633_uhd_1440_2732_25fps.mp4',
   },
   {
     id: 4,
-    title: 'Fabric Quality Test',
-    thumbnail: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&q=80',
-    video: 'https://videos.pexels.com/video-files/5682248/5682248-uhd_1440_2732_25fps.mp4',
+    title: 'Premium Look',
+    thumbnail: 'https://images.unsplash.com/photo-1593032454687-e5c9f6e5c8b9?w=400&q=80',
+    video: 'https://videos.pexels.com/video-files/7654152/7654152_uhd_1440_2732_25fps.mp4',
   },
   {
     id: 5,
-    title: 'Customer Favorites',
-    thumbnail: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&q=80',
-    video: 'https://videos.pexels.com/video-files/7696503/7696503-uhd_1440_2732_25fps.mp4',
+    title: 'Shop the Look',
+    thumbnail: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=400&q=80',
+    video: 'https://videos.pexels.com/video-files/5836298/5836298_uhd_1440_2732_25fps.mp4',
   },
 ];
 
