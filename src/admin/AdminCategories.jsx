@@ -79,6 +79,11 @@ export default function AdminCategories() {
         return;
       }
       closeModal();
+      // Clear cached categories so frontend gets fresh data
+      localStorage.removeItem('ktex_categories_synced_at');
+      localStorage.removeItem('ktex_categories');
+      // Notify other tabs/components to refresh
+      window.dispatchEvent(new Event('categories-updated'));
       fetchCategories();
     } catch (e) {
       alert('Save failed: ' + e.message);

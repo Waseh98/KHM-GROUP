@@ -505,10 +505,12 @@ export async function syncProductsFromBackend(force = false) {
   }
 }
 
-export async function syncCategoriesFromBackend() {
+export async function syncCategoriesFromBackend(force = false) {
   if (typeof window === 'undefined') return;
-  const lastSync = localStorage.getItem('ktex_categories_synced_at');
-  if (lastSync && Date.now() - parseInt(lastSync) < 300000) return;
+  if (!force) {
+    const lastSync = localStorage.getItem('ktex_categories_synced_at');
+    if (lastSync && Date.now() - parseInt(lastSync) < 30000) return;
+  }
   try {
     const res = await fetch('/api/categories');
     if (!res.ok) return;

@@ -78,9 +78,19 @@ function AppFrame() {
   }, [isAdmin]);
 
   useEffect(() => {
-    function handler() { setDataVersion(v => v + 1); }
+    function handler() {
+      syncProductsFromBackend(true).then(() => setDataVersion(v => v + 1)).catch(() => {});
+    }
     window.addEventListener('products-updated', handler);
     return () => window.removeEventListener('products-updated', handler);
+  }, []);
+
+  useEffect(() => {
+    function handler() {
+      syncCategoriesFromBackend(true).then(() => setDataVersion(v => v + 1)).catch(() => {});
+    }
+    window.addEventListener('categories-updated', handler);
+    return () => window.removeEventListener('categories-updated', handler);
   }, []);
 
   return (
