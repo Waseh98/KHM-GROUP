@@ -32,6 +32,7 @@ export default function AdminOrders() {
   const [isOffline, setIsOffline] = useState(false);
   const [error, setError] = useState('');
   const [viewScreenshot, setViewScreenshot] = useState(null);
+  const [viewOrder, setViewOrder] = useState(null);
 
   const token = useMemo(() => localStorage.getItem('ktex_admin_token') || '', []);
 
@@ -135,7 +136,7 @@ export default function AdminOrders() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
               <thead>
                 <tr style={{ background: '#FAF8F3' }}>
-                  {['Order', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Receipt', 'Status', 'Update'].map(h => <Th key={h}>{h}</Th>)}
+                  {['Order', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Receipt', 'Status', 'Update', ''].map(h => <Th key={h}>{h}</Th>)}
                 </tr>
               </thead>
               <tbody>
@@ -196,6 +197,11 @@ export default function AdminOrders() {
                         {savingId === o._id && <span style={{ color: '#B8972A', fontSize: 11, fontWeight: 600 }}>Saving…</span>}
                       </div>
                     </Td>
+                    <Td>
+                      <button onClick={() => setViewOrder(o)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #B8972A', background: 'transparent', color: '#B8972A', fontSize: 11, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.background = '#B8972A'; e.currentTarget.style.color = '#fff'; }} onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#B8972A'; }}>
+                        👁️ Details
+                      </button>
+                    </Td>
                   </tr>
                 ))}
               </tbody>
@@ -203,6 +209,79 @@ export default function AdminOrders() {
           </div>
         )}
       </div>
+
+      {/* Order Details Modal */}
+      {viewOrder && (
+        <div onClick={() => setViewOrder(null)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, maxWidth: 700, width: '100%', maxHeight: '90vh', overflow: 'auto', border: '1px solid #E2DDD6', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ position: 'sticky', top: 0, background: '#fff', borderBottom: '1px solid #E2DDD6', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
+              <h3 style={{ margin: 0, color: '#B8972A', fontSize: 16, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                📋 {viewOrder.orderNumber || viewOrder._id}
+              </h3>
+              <button onClick={() => setViewOrder(null)} style={{ background: '#f5f5f5', border: '1px solid #E2DDD6', color: '#0D0D0D', width: 36, height: 36, borderRadius: '50%', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+
+            <div style={{ padding: 24, display: 'grid', gap: 24 }}>
+              {/* Status Badge */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <Badge status={viewOrder.orderStatus} />
+                <span style={{ color: '#888', fontSize: 12 }}>{new Date(viewOrder.createdAt).toLocaleString('en-PK')}</span>
+              </div>
+
+              {/* Customer Details */}
+              <Section title="👤 Customer">
+                <Row label="Name" value={viewOrder.shippingAddress?.fullName || viewOrder.user?.name || '—'} />
+                <Row label="Email" value={viewOrder.user?.email || viewOrder.guestEmail || '—'} />
+                <Row label="Phone" value={viewOrder.shippingAddress?.phone || '—'} />
+              </Section>
+
+              {/* Shipping Address */}
+              <Section title="📍 Shipping Address">
+                <Row label="Street" value={viewOrder.shippingAddress?.street || '—'} />
+                <Row label="City" value={viewOrder.shippingAddress?.city || '—'} />
+                <Row label="State" value={viewOrder.shippingAddress?.state || '—'} />
+                <Row label="Zip Code" value={viewOrder.shippingAddress?.zipCode || viewOrder.shippingAddress?.zip || '—'} />
+                <Row label="Country" value={viewOrder.shippingAddress?.country || '—'} />
+              </Section>
+
+              {/* Order Items */}
+              <Section title="🛒 Items ({viewOrder.orderItems?.length || 0})">
+                {(viewOrder.orderItems || []).map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: idx < viewOrder.orderItems.length - 1 ? '1px solid #f0ede8' : 'none' }}>
+                    {item.image && <img src={item.image} alt={item.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid #E2DDD6' }} />}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: '#0D0D0D', fontSize: 14 }}>{item.name}</div>
+                      <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>
+                        Size: {item.size || 'N/A'} &middot; Qty: {item.quantity} &middot; PKR {item.price || 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </Section>
+
+              {/* Payment Details */}
+              <Section title="💳 Payment">
+                <Row label="Method" value={viewOrder.paymentMethod || (viewOrder.paymentInfo?.method) || 'cod'} />
+                <Row label="Total" value={typeof viewOrder.totalPrice === 'number' ? `PKR ${viewOrder.totalPrice.toLocaleString()}` : (viewOrder.totalPrice || '—')} />
+                {viewOrder.paymentScreenshot && (
+                  <div style={{ marginTop: 8 }}>
+                    <button onClick={() => setViewScreenshot(viewOrder.paymentScreenshot)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid rgba(184,151,42,0.3)', background: 'rgba(184,151,42,0.08)', color: '#B8972A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      📸 View Receipt
+                    </button>
+                  </div>
+                )}
+              </Section>
+
+              {/* Notes */}
+              {viewOrder.notes && (
+                <Section title="📝 Notes">
+                  <p style={{ margin: 0, color: '#555', fontSize: 13, whiteSpace: 'pre-wrap' }}>{viewOrder.notes}</p>
+                </Section>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Screenshot Modal */}
       {viewScreenshot && (
@@ -292,5 +371,25 @@ function Badge({ status }) {
     <span style={{ display: 'inline-flex', padding: '5px 10px', borderRadius: 999, border: `1px solid ${color}30`, background: bg, color, fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11, whiteSpace: 'nowrap' }}>
       {status}
     </span>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div>
+      <h4 style={{ margin: '0 0 12px', color: '#B8972A', fontSize: 13, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{title}</h4>
+      <div style={{ background: '#FAF8F3', borderRadius: 12, padding: '12px 16px', display: 'grid', gap: 8 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
+      <span style={{ color: '#888', fontWeight: 600, flexShrink: 0 }}>{label}</span>
+      <span style={{ color: '#0D0D0D', fontWeight: 700, textAlign: 'right' }}>{value || '—'}</span>
+    </div>
   );
 }
