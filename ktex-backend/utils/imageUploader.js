@@ -8,6 +8,8 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+exports.uploadDir = uploadDir;
+
 /**
  * Converts a base64 image to a file and returns its URL.
  * If the input is already a URL, it returns it unchanged.

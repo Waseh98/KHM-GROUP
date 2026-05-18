@@ -71,9 +71,19 @@ app.use('/api', (req, res) => {
   res.status(404).json({ success: false, message: `API Route ${req.originalUrl} not found` });
 });
 
-// ─── Serve Static Assets ────────────────────────────────────
+// ─── Serve Uploaded Images ─────────────────────────────────
 const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+const fs = require('fs');
+const { uploadDir } = require('./utils/imageUploader');
+app.get('/uploads/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(uploadDir, filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ success: false, message: 'Image not found' });
+  }
+});
 
 // ─── Serve Frontend in Production ──────────────────────────
 const clientDistPath = path.join(__dirname, '../dist');
