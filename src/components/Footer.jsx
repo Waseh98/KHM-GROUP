@@ -48,9 +48,9 @@ export default function Footer() {
   ];
 
   const socials = [
-    { name: 'Instagram', icon: 'instagram', href: '#' },
-    { name: 'Facebook', icon: 'facebook', href: '#' },
-    { name: 'TikTok', icon: 'tiktok', href: '#' },
+    { name: 'Instagram', icon: 'instagram', href: 'https://www.instagram.com/ktexstore.pk/' },
+    { name: 'Facebook', icon: 'facebook', href: 'https://www.facebook.com/ktexofficial' },
+    { name: 'TikTok', icon: 'tiktok', href: 'https://www.tiktok.com/@ktex008' },
     { name: 'WhatsApp', icon: 'whatsapp', href: '#' },
   ];
 
