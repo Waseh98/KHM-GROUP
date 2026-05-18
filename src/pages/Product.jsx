@@ -182,7 +182,7 @@ export default function Product() {
                 )}
 
                 {/* Main Image */}
-                <div
+                <div className="main-image-wrap"
                   ref={imageRef}
                   style={{
                     backgroundColor: '#f4f3f0',
@@ -795,7 +795,7 @@ export default function Product() {
         </button>
       </div>
 
-      <style>{`
+        <style>{`
         @media (max-width: 820px) {
           .mobile-sticky-cta { display: flex !important; }
           main { padding-bottom: 80px; }
@@ -803,6 +803,17 @@ export default function Product() {
         @media (max-width: 768px) {
           .mobile-sticky-cta { display: flex !important; }
           main { padding-bottom: 80px; }
+          .product-images > div {
+            width: 100% !important;
+          }
+          .product-images .main-image-wrap {
+            width: 100% !important;
+            max-height: none !important;
+            min-height: 300px;
+          }
+          .product-images .main-image-wrap img {
+            object-fit: contain !important;
+          }
           .thumb-sidebar {
             flex-direction: row !important;
             overflow-x: auto !important;
