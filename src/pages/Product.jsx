@@ -804,12 +804,15 @@ export default function Product() {
           .mobile-sticky-cta { display: flex !important; }
           main { padding-bottom: 80px; }
           .product-images > div {
+            flex-direction: column !important;
             width: 100% !important;
+            gap: 10px !important;
           }
           .product-images .main-image-wrap {
             width: 100% !important;
             max-height: none !important;
             min-height: 300px;
+            flex: none !important;
           }
           .product-images .main-image-wrap img {
             object-fit: contain !important;
@@ -819,12 +822,14 @@ export default function Product() {
             overflow-x: auto !important;
             overflow-y: visible !important;
             max-height: none !important;
-            order: 2;
+            order: 2 !important;
             padding-right: 0 !important;
+            flex-shrink: 0 !important;
           }
           .thumb-sidebar > div {
             width: 60px !important;
             height: 60px !important;
+            flex-shrink: 0;
           }
         }
         @keyframes fadeIn {
