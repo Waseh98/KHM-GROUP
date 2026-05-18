@@ -133,7 +133,7 @@ export default function AdminOrders() {
           <div style={{ padding: '60px', textAlign: 'center', color: '#888' }}>{isOffline ? '📦 No offline orders found. Orders placed when backend is down will appear here.' : '📭 No orders found.'}</div>
         ) : (
           <div style={{ width: '100%', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1200 }}>
               <thead>
                 <tr style={{ background: '#FAF8F3' }}>
                   {['Order', 'Customer', 'Phone', 'Items', 'Total', 'Payment', 'Receipt', 'Status', 'Update', ''].map(h => <Th key={h}>{h}</Th>)}
@@ -346,14 +346,14 @@ export default function AdminOrders() {
 
 function Th({ children }) {
   return (
-    <th style={{ textAlign: 'left', padding: '12px', color: '#555', fontSize: 'clamp(10px, 2vw, 11px)', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #E2DDD6', fontWeight: 900, whiteSpace: 'nowrap' }}>
+    <th style={{ textAlign: 'left', padding: '14px 12px', color: '#555', fontSize: 'clamp(10px, 2vw, 11px)', letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '2px solid #D4AF5A', fontWeight: 900, whiteSpace: 'nowrap' }}>
       {children}
     </th>
   );
 }
 
 function Td({ children, style }) {
-  return <td style={{ padding: '12px', color: '#0D0D0D', verticalAlign: 'middle', ...style }}>{children}</td>;
+  return <td style={{ padding: '14px 12px', color: '#0D0D0D', verticalAlign: 'middle', borderBottom: '1px solid #E8E3DA', ...style }}>{children}</td>;
 }
 
 function Badge({ status }) {
