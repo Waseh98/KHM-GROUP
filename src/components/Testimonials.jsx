@@ -219,37 +219,6 @@ export default function Testimonials() {
             <span style={{ color: 'var(--black)', fontSize: '0.85rem', fontWeight: 600 }}>200+ Reviews</span>
           </div>
 
-          {/* Navigation - Moved Above Cards */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, marginTop: 40 }}>
-            <button onClick={handlePrev} className="testimonial-nav-btn" aria-label="Previous review">
-              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              {reviews.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleDot(i)}
-                  className="testimonial-dot"
-                  style={{
-                    width: i === active ? 32 : 10,
-                    height: 10,
-                    borderRadius: 5,
-                    backgroundColor: i === active ? 'var(--gold)' : '#d5d1c8',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    boxShadow: i === active ? '0 2px 8px rgba(184,151,42,0.35)' : 'none',
-                  }}
-                  aria-label={`Go to review ${i + 1}`}
-                />
-              ))}
-            </div>
-
-            <button onClick={handleNext} className="testimonial-nav-btn" aria-label="Next review">
-              <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </div>
         </div>
 
         {/* Testimonials Carousel */}
@@ -399,6 +368,38 @@ export default function Testimonials() {
               </div>
             );
           })}
+        </div>
+
+        {/* Navigation - Moved Below Cards */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, marginTop: 50 }}>
+          <button onClick={handlePrev} className="testimonial-nav-btn" aria-label="Previous review">
+            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {reviews.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => handleDot(i)}
+                className="testimonial-dot"
+                style={{
+                  width: i === active ? 32 : 10,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: i === active ? 'var(--gold)' : '#d5d1c8',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                  boxShadow: i === active ? '0 2px 8px rgba(184,151,42,0.35)' : 'none',
+                }}
+                aria-label={`Go to review ${i + 1}`}
+              />
+            ))}
+          </div>
+
+          <button onClick={handleNext} className="testimonial-nav-btn" aria-label="Next review">
+            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
       </div>
 
