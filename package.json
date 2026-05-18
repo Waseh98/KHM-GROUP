@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "postbuild": "cd ktex-backend && npm install",
-    "start": "node ktex-backend/server.js",
+    "start": "node start.cjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
