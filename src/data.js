@@ -525,6 +525,55 @@ export async function syncCategoriesFromBackend(force = false) {
   }
 }
 
+function transformCollection(c) {
+  return {
+    id: c._id,
+    name: c.name,
+    slug: c.slug,
+    description: c.description || '',
+    image: c.image || '',
+    categories: (c.categories || []).map(cat => ({
+      _id: cat._id || cat,
+      name: cat.name || cat,
+      slug: cat.slug || '',
+      image: cat.image || ''
+    })),
+    order: c.order || 0
+  };
+}
+
+export async function syncCollectionsFromBackend(force = false) {
+  if (typeof window === 'undefined') return;
+  if (!force) {
+    const lastSync = localStorage.getItem('ktex_collections_synced_at');
+    if (lastSync && Date.now() - parseInt(lastSync) < 30000) return;
+  }
+  try {
+    const res = await fetch('/api/collections');
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json.success && json.data) {
+      const transformed = json.data.map(transformCollection);
+      localStorage.setItem('ktex_collections', JSON.stringify(transformed));
+      localStorage.setItem('ktex_collections_synced_at', Date.now().toString());
+    }
+  } catch (e) {
+    console.warn('Collection sync from backend failed, using cache', e.message);
+  }
+}
+
+export const collections = (() => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('ktex_collections');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse collections from localStorage', e);
+    }
+  }
+  return [];
+})();
+
 export const categories = (() => {
   if (typeof window !== 'undefined') {
     try {

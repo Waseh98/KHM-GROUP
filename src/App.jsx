@@ -9,6 +9,7 @@ import WishlistDrawer from './components/WishlistDrawer';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { AuthProvider } from './context/AuthContext';
 import { syncProductsFromBackend, syncCategoriesFromBackend } from './data';
 
 // Lazy-loaded pages
@@ -35,6 +36,11 @@ const AdminProducts = lazy(() => import('./admin/AdminProducts'));
 const AdminCategories = lazy(() => import('./admin/AdminCategories'));
 const AdminMessages = lazy(() => import('./admin/AdminMessages'));
 const AdminProtectedRoute = lazy(() => import('./admin/AdminProtectedRoute'));
+const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Login = lazy(() => import('./pages/Login'));
+const Signup = lazy(() => import('./pages/Signup'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 function PageLoader() {
   return (
@@ -49,17 +55,19 @@ function PageLoader() {
 
 function App() {
   return (
-    <CartProvider>
-      <WishlistProvider>
-        <Router>
-          <ScrollToTop />
-          <CartDrawer />
-          <WishlistDrawer />
-          <FloatingWhatsApp />
-          <AppFrame />
-        </Router>
-      </WishlistProvider>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <Router>
+            <ScrollToTop />
+            <CartDrawer />
+            <WishlistDrawer />
+            <FloatingWhatsApp />
+            <AppFrame />
+          </Router>
+        </WishlistProvider>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 
@@ -108,7 +116,6 @@ function AppFrame() {
         <Route path="/women" element={<Suspense fallback={<PageLoader />}><Women /></Suspense>} />
         <Route path="/kids" element={<Suspense fallback={<PageLoader />}><Kids /></Suspense>} />
         <Route path="/product/:id" element={<Suspense fallback={<PageLoader />}><Product /></Suspense>} />
-        <Route path="/checkout" element={<Suspense fallback={<PageLoader />}><Checkout /></Suspense>} />
         <Route path="/order-success" element={<Suspense fallback={<PageLoader />}><OrderSuccess /></Suspense>} />
         <Route path="/track-order" element={<Suspense fallback={<PageLoader />}><TrackOrder /></Suspense>} />
         <Route path="/collections" element={<Suspense fallback={<PageLoader />}><Collections /></Suspense>} />
@@ -119,6 +126,14 @@ function AppFrame() {
         <Route path="/return-policy" element={<Suspense fallback={<PageLoader />}><ReturnPolicy /></Suspense>} />
         <Route path="/returns" element={<Navigate to="/return-policy" replace />} />
         <Route path="/about" element={<Suspense fallback={<PageLoader />}><AboutUs /></Suspense>} />
+        <Route path="/login" element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
+        <Route path="/signup" element={<Suspense fallback={<PageLoader />}><Signup /></Suspense>} />
+        <Route path="/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
+
+        <Route element={<Suspense fallback={<PageLoader />}><ProtectedRoute /></Suspense>}>
+          <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
+          <Route path="/checkout" element={<Suspense fallback={<PageLoader />}><Checkout /></Suspense>} />
+        </Route>
 
         <Route path="/admin/login" element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
         <Route element={<Suspense fallback={<PageLoader />}><AdminProtectedRoute /></Suspense>}>

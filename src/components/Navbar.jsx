@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 
 const links = ['Home', 'Men', 'Women', 'Kids', 'New Arrivals', 'Collections', 'Sale'];
 
@@ -212,6 +213,7 @@ function SearchBar({ open, onClose }) {
 export default function Navbar() {
   const { totalItems, setDrawerOpen } = useCart();
   const { totalItems: wishlistCount, setWishlistOpen } = useWishlist();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -310,6 +312,20 @@ export default function Navbar() {
 
           {/* Icons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {/* User Account */}
+            <Link to={user ? '/dashboard' : '/login'}
+              style={{
+                ...iconBtnStyle,
+                textDecoration: 'none',
+              }}
+              aria-label={user ? 'My Account' : 'Sign In'}
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </Link>
+
             {/* Search Toggle — icon becomes X when open */}
             <button
               style={{ ...iconBtnStyle, color: searchOpen ? 'var(--gold)' : '#fff' }}

@@ -46,6 +46,7 @@ app.use('/api/payment', require('./routes/payment.routes'));
 app.use('/api/reviews', require('./routes/review.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/categories', require('./routes/category.routes'));
+app.use('/api/collections', require('./routes/collection.routes'));
 
 // ─── Health Check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -61,7 +62,8 @@ app.get('/api/health', (req, res) => {
       payment: '/api/payment',
       reviews: '/api/reviews',
       admin: '/api/admin',
-      categories: '/api/categories'
+      categories: '/api/categories',
+      collections: '/api/collections'
     }
   });
 });

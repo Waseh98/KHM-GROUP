@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { categories } from '../data';
+import { collections as cachedCollections, syncCollectionsFromBackend } from '../data';
 
 function slugify(name) {
   return String(name || '')
@@ -12,8 +12,15 @@ function slugify(name) {
 }
 
 export default function Collections() {
+  const [items, setItems] = useState([]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
+    syncCollectionsFromBackend().then(() => {
+      setItems([...cachedCollections]);
+    }).catch(() => {
+      setItems([...cachedCollections]);
+    });
   }, []);
 
   return (
@@ -32,7 +39,7 @@ export default function Collections() {
       <section style={{ padding: '26px 0 90px', backgroundColor: 'var(--light-gray)' }}>
         <div className="container">
           <div className="collection-grid" style={{ display: 'grid', gap: 16 }}>
-            {categories.slice(0, 6).map((c, idx) => {
+            {items.map((c, idx) => {
               const isRow1 = idx < 3;
               const isTall = isRow1 && (idx === 0);
               const colSpan = isTall ? 3 : (isRow1 ? 3 : 3);
@@ -48,7 +55,7 @@ export default function Collections() {
                     <div>
                       <div style={{ color: '#d4af5a', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>Shop Now</div>
                       <div style={{ color: '#fff', fontFamily: 'var(--font-heading)', fontSize: isTall ? 28 : 20, fontWeight: 800 }}>{c.name}</div>
-                      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 4 }}>{c.subtitle}</div>
+                      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 4 }}>{c.description}</div>
                     </div>
                   </div>
                 </Link>
@@ -65,4 +72,3 @@ export default function Collections() {
     </main>
   );
 }
-

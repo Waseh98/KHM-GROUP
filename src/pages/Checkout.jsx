@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 function generateOrderNumber() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -74,6 +75,7 @@ const paymentMethods = [
 export default function Checkout() {
   const navigate = useNavigate();
   const { items: cartItems, totalPrice: cartTotal } = useCart();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('easypaisa');
@@ -84,6 +86,18 @@ export default function Checkout() {
   const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', street: '' });
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  useEffect(() => {
+    if (user) {
+      const rawName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
+      const cleanName = rawName.replace(/^(salam|slam)[,\s]*/i, '');
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || cleanName,
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user]);
 
   function buildOrderItems() {
     if (!cartItems || cartItems.length === 0) return [];

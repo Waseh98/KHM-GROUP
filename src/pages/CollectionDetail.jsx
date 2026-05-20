@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { categories, getProducts } from '../data';
+import { collections as cachedCollections, getProducts, syncCollectionsFromBackend, syncProductsFromBackend } from '../data';
 import { useCart } from '../context/CartContext';
 
 function slugify(name) {
@@ -17,38 +17,31 @@ export default function CollectionDetail() {
   const { slug } = useParams();
 
   const collection = useMemo(() => {
-    return categories.find((c) => slugify(c.name) === slug) || null;
+    return cachedCollections.find((c) => slugify(c.name) === slug) || null;
   }, [slug]);
-
-  const collectionProducts = useMemo(() => {
-    const name = (collection?.name || '').toLowerCase();
-    const base = getProducts();
-
-    // First check: is this a subcategory (Polo, T-Shirts, etc.)?
-    // Match products by subCategory field across all pageTypes
-    const subMatch = base.filter(p => {
-      if (!p.subCategory) return false;
-      const pSub = (p.subCategory || '').toLowerCase().replace(/[\s-]/g, '');
-      const n = name.replace(/[\s-]/g, '');
-      return pSub === n;
-    });
-    if (subMatch.length > 0) return subMatch;
-
-    // Fallback to existing category-to-tag mapping
-    if (name.includes('classic')) return base.filter(p => p.tag === 'Men' && !p.name.toLowerCase().includes('golf') && !p.name.toLowerCase().includes('corporate'));
-    if (name.includes('premium')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('signature') || p.name.toLowerCase().includes('premium') || p.name.toLowerCase().includes('mesh') || p.name.toLowerCase().includes('luxury')));
-    if (name.includes('corporate')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('corporate') || p.name.toLowerCase().includes('executive') || p.name.toLowerCase().includes('business')));
-    if (name.includes('summer')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('summer') || p.name.toLowerCase().includes('linen') || p.name.toLowerCase().includes('breathable') || p.name.toLowerCase().includes('cool')));
-    if (name.includes('golf')) return base.filter(p => p.tag === 'Men' && (p.name.toLowerCase().includes('golf') || p.name.toLowerCase().includes('sport') || p.name.toLowerCase().includes('pro') || p.name.toLowerCase().includes('performance')));
-    if (name.includes('women')) return base.filter(p => p.tag === 'Women');
-    if (name.includes('sale')) return base.filter(p => p.tag === 'Sale');
-
-    return base.filter(p => p.tag !== 'Sale');
-  }, [collection]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    syncCollectionsFromBackend();
+    syncProductsFromBackend();
   }, [slug]);
+
+  const collectionProducts = useMemo(() => {
+    if (!collection) return [];
+    const all = getProducts();
+    const catNames = (collection.categories || []).map(c =>
+      (c.name || '').toLowerCase().replace(/[\s-]/g, '')
+    ).filter(Boolean);
+
+    if (catNames.length === 0) return [];
+
+    return all.filter(p => {
+      const pSub = (p.subCategory || '').toLowerCase().replace(/[\s-]/g, '');
+      const pCat = (p.category || '').toLowerCase().replace(/[\s-]/g, '');
+      const pTag = (p.tag || '').toLowerCase().replace(/[\s-]/g, '');
+      return catNames.some(n => pSub === n || pCat === n || pTag === n);
+    });
+  }, [collection]);
 
   if (!collection) {
     return (
@@ -99,7 +92,7 @@ export default function CollectionDetail() {
           <h1 style={{ margin: '12px 0 6px', fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.4rem, 4vw, 3.6rem)' }}>
             {collection.name}
           </h1>
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.86)', letterSpacing: '0.06em' }}>{collection.subtitle}</p>
+          <p style={{ margin: 0, color: 'rgba(255,255,255,0.86)', letterSpacing: '0.06em' }}>{collection.description}</p>
         </div>
       </section>
 
@@ -109,6 +102,16 @@ export default function CollectionDetail() {
             <h2 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: '2rem' }}>Featured Items</h2>
             <span style={{ color: 'var(--mid-gray)' }}>{collectionProducts.length} items</span>
           </div>
+
+          {(collection.categories || []).length > 0 && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+              {(collection.categories || []).map((cat, i) => (
+                <span key={i} style={{ padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: 'rgba(212,175,90,0.12)', color: '#d4af5a', border: '1px solid rgba(212,175,90,0.25)' }}>
+                  {cat.name || cat}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div className="product-grid" style={{ display: 'grid', gap: 30, marginTop: 26 }}>
             {collectionProducts.map((p) => (
@@ -150,12 +153,8 @@ export default function CollectionDetail() {
               </div>
             ))}
           </div>
-
-          <style>{`
-          `}</style>
         </div>
       </section>
     </main>
   );
 }
-
