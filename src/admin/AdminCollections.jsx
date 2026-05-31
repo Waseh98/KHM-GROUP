@@ -120,6 +120,11 @@ export default function AdminCollections() {
         alert('Error: ' + (data.message || `Server returned ${res.status}`));
         return;
       }
+      // Clear cached collections so frontend gets fresh data
+      localStorage.removeItem('ktex_collections_synced_at');
+      localStorage.removeItem('ktex_collections');
+      // Notify other tabs/components to refresh
+      window.dispatchEvent(new Event('collections-updated'));
       fetchCollections();
     } catch (e) {
       alert('Delete failed: ' + e.message);

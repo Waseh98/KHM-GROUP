@@ -205,6 +205,11 @@ export default function AdminProducts() {
     try {
       const res = await fetch(`${API_PROD}/${p._id}`, { method: 'DELETE', headers: apiHeaders() });
       if (!res.ok) throw new Error(`Error ${res.status}`);
+      // Clear cached products so frontend gets fresh data
+      localStorage.removeItem('ktex_products_synced_at');
+      localStorage.removeItem('ktex_products');
+      // Notify other tabs/components to refresh
+      window.dispatchEvent(new Event('products-updated'));
       fetchProducts();
     } catch (e) {
       alert('Delete failed: ' + e.message);

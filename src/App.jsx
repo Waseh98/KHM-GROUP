@@ -10,7 +10,7 @@ import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider } from './context/AuthContext';
-import { syncProductsFromBackend, syncCategoriesFromBackend } from './data';
+import { syncProductsFromBackend, syncCategoriesFromBackend, syncCollectionsFromBackend } from './data';
 
 // Lazy-loaded pages
 const Home = lazy(() => import('./pages/Home'));
@@ -23,17 +23,22 @@ const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
 const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 const Collections = lazy(() => import('./pages/Collections'));
 const CollectionDetail = lazy(() => import('./pages/CollectionDetail'));
+const NewArrivals = lazy(() => import('./pages/NewArrivals'));
 const Sale = lazy(() => import('./pages/Sale'));
 const ContactUs = lazy(() => import('./pages/ContactUs'));
 const FAQs = lazy(() => import('./pages/FAQs'));
 const ReturnPolicy = lazy(() => import('./pages/ReturnPolicy'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 const AdminLogin = lazy(() => import('./admin/AdminLogin'));
 const AdminLayout = lazy(() => import('./admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
 const AdminOrders = lazy(() => import('./admin/AdminOrders'));
 const AdminProducts = lazy(() => import('./admin/AdminProducts'));
 const AdminCategories = lazy(() => import('./admin/AdminCategories'));
+const AdminCollections = lazy(() => import('./admin/AdminCollections'));
 const AdminMessages = lazy(() => import('./admin/AdminMessages'));
 const AdminProtectedRoute = lazy(() => import('./admin/AdminProtectedRoute'));
 const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
@@ -80,8 +85,9 @@ function AppFrame() {
 
   useEffect(() => {
     if (!isAdmin) {
-      syncProductsFromBackend().then(() => setDataVersion(v => v + 1)).catch(() => {});
+      syncProductsFromBackend(true).then(() => setDataVersion(v => v + 1)).catch(() => {});
       syncCategoriesFromBackend().catch(() => {});
+      syncCollectionsFromBackend().catch(() => {});
     }
   }, [isAdmin]);
 
@@ -99,6 +105,14 @@ function AppFrame() {
     }
     window.addEventListener('categories-updated', handler);
     return () => window.removeEventListener('categories-updated', handler);
+  }, []);
+
+  useEffect(() => {
+    function handler() {
+      syncCollectionsFromBackend(true).then(() => setDataVersion(v => v + 1)).catch(() => {});
+    }
+    window.addEventListener('collections-updated', handler);
+    return () => window.removeEventListener('collections-updated', handler);
   }, []);
 
   return (
@@ -120,12 +134,16 @@ function AppFrame() {
         <Route path="/track-order" element={<Suspense fallback={<PageLoader />}><TrackOrder /></Suspense>} />
         <Route path="/collections" element={<Suspense fallback={<PageLoader />}><Collections /></Suspense>} />
         <Route path="/collections/:slug" element={<Suspense fallback={<PageLoader />}><CollectionDetail /></Suspense>} />
+        <Route path="/new-arrivals" element={<Suspense fallback={<PageLoader />}><NewArrivals /></Suspense>} />
         <Route path="/sale" element={<Suspense fallback={<PageLoader />}><Sale /></Suspense>} />
         <Route path="/contact" element={<Suspense fallback={<PageLoader />}><ContactUs /></Suspense>} />
         <Route path="/faqs" element={<Suspense fallback={<PageLoader />}><FAQs /></Suspense>} />
         <Route path="/return-policy" element={<Suspense fallback={<PageLoader />}><ReturnPolicy /></Suspense>} />
         <Route path="/returns" element={<Navigate to="/return-policy" replace />} />
         <Route path="/about" element={<Suspense fallback={<PageLoader />}><AboutUs /></Suspense>} />
+        <Route path="/shipping-policy" element={<Suspense fallback={<PageLoader />}><ShippingPolicy /></Suspense>} />
+        <Route path="/privacy-policy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
+        <Route path="/terms-conditions" element={<Suspense fallback={<PageLoader />}><TermsConditions /></Suspense>} />
         <Route path="/login" element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
         <Route path="/signup" element={<Suspense fallback={<PageLoader />}><Signup /></Suspense>} />
         <Route path="/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPassword /></Suspense>} />
@@ -143,6 +161,7 @@ function AppFrame() {
             <Route path="orders" element={<Suspense fallback={<PageLoader />}><AdminOrders /></Suspense>} />
             <Route path="products" element={<Suspense fallback={<PageLoader />}><AdminProducts /></Suspense>} />
             <Route path="categories" element={<Suspense fallback={<PageLoader />}><AdminCategories /></Suspense>} />
+            <Route path="collections" element={<Suspense fallback={<PageLoader />}><AdminCollections /></Suspense>} />
             <Route path="messages" element={<Suspense fallback={<PageLoader />}><AdminMessages /></Suspense>} />
           </Route>
         </Route>

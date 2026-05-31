@@ -7,6 +7,7 @@ export default function Sale() {
   const { addToCart } = useCart();
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.title = "Special Sale Collection — Premium Polos | K-TEX";
   }, []);
 
   const saleProducts = getProducts().filter((p) => p.tag === 'Sale');

@@ -7,9 +7,10 @@ import { useWishlist } from '../context/WishlistContext';
 
 function getKidsSubCategories() {
   const defaultSubs = [
-    { id: 'sub_kids_tshirt', name: 'T-Shirts', image: 'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400&q=80' },
-    { id: 'sub_kids_polo', name: 'Polo Shirts', image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&q=80' },
-    { id: 'sub_kids_bottoms', name: 'Bottoms', image: 'https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?w=400&q=80' },
+    { id: 'sub_kids_newborn', name: 'New Born', image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=400&q=80' },
+    { id: 'sub_kids_toddlers', name: 'Toddlers', image: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=400&q=80' },
+    { id: 'sub_kids_boy', name: 'Boy', image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400&q=80' },
+    { id: 'sub_kids_girl', name: 'Girl', image: 'https://images.unsplash.com/photo-1518831959646-742c3a0eb1bb?w=400&q=80' },
   ];
   try {
     const cats = typeof window !== 'undefined'
@@ -183,9 +184,11 @@ function ProductSegment({ title, subtitle, products, toggleWishlist, isWishliste
 export default function Kids() {
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const [selected, setSelected] = useState('all');
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.title = "Kids' Collection — Premium Polo Shirts | K-TEX";
   }, []);
 
   const kidsSubs = getKidsSubCategories();
@@ -206,7 +209,8 @@ export default function Kids() {
           const subName = sub.name.toLowerCase();
           if (pSub === subName || normalize(pSub) === normalize(subName)) return true;
           if (p.name.toLowerCase().includes(subName)) return true;
-          if (idx === 0 && !p.subCategory && p.name.toLowerCase().includes('kids')) return true;
+          if (idx === 2 && !p.subCategory && p.name.toLowerCase().includes('boy')) return true;
+          if (idx === 3 && !p.subCategory && p.name.toLowerCase().includes('girl')) return true;
           return false;
         }),
       }))
@@ -218,7 +222,7 @@ export default function Kids() {
   );
 
   const filterCategories = [
-    { key: 'all', label: 'All Products' },
+    { key: 'all', label: 'Category' },
     ...kidsSubs.map(sub => ({ key: sub.id, label: sub.name })),
   ];
 
@@ -338,29 +342,43 @@ export default function Kids() {
             ))}
           </div>
 
-          <select
-            value={selected}
-            onChange={e => setSelected(e.target.value)}
-            className="category-dropdown"
-            style={{
-              display: 'none',
-              padding: '10px 16px',
-              borderRadius: 6,
-              border: '2px solid var(--black)',
-              backgroundColor: 'var(--white)',
-              color: 'var(--black)',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              outline: 'none',
-              width: '100%',
-              appearance: 'auto',
-            }}
-          >
-            {filterCategories.map(cat => (
-              <option key={cat.key} value={cat.key}>{cat.label}</option>
-            ))}
-          </select>
+          <div className="category-dropdown" style={{ position: 'relative', display: 'none' }}>
+            <button onClick={() => setShowDropdown(!showDropdown)}
+              style={{
+                padding: '10px 16px', borderRadius: 6, fontSize: '0.9rem', fontWeight: 700, width: '100%',
+                border: '2px solid var(--black)', backgroundColor: 'var(--white)', color: 'var(--black)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              }}>
+              <span>{selected === 'all' ? 'Category' : filterCategories.find(c => c.key === selected)?.label}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ transform: showDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            {showDropdown && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 49 }} onClick={() => setShowDropdown(false)} />
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, zIndex: 50,
+                  background: 'var(--white)', border: '2px solid var(--black)', borderRadius: 8,
+                  overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+                }}>
+                  {filterCategories.map(cat => (
+                    <button key={cat.key} onClick={() => { setSelected(cat.key); setShowDropdown(false); document.getElementById('kids-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left', padding: '10px 18px', fontSize: '0.85rem',
+                        fontWeight: selected === cat.key ? 700 : 500, border: 'none', borderBottom: '1px solid var(--border)',
+                        background: selected === cat.key ? 'var(--black)' : 'transparent',
+                        color: selected === cat.key ? 'var(--white)' : 'var(--black)', cursor: 'pointer',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = selected === cat.key ? 'var(--black)' : 'var(--light-gray)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = selected === cat.key ? 'var(--black)' : 'transparent'; }}
+                    >{cat.label}</button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
 
           <span style={{ color: 'var(--mid-gray)', fontSize: '0.85rem', fontWeight: 500 }}>
             {selected === 'all'

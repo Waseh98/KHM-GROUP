@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const teamValues = [
   {
@@ -31,6 +32,11 @@ const stats = [
 ];
 
 export default function AboutUs() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "About Us — Our Story & Textile Heritage | K-TEX";
+  }, []);
+
   return (
     <main style={{ backgroundColor: 'var(--bg)' }}>
 

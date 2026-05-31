@@ -1,26 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { getProducts, categories } from '../data';
+import { Link } from 'react-router-dom';
+import { getProducts } from '../data';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-
-function getMenSubCategories() {
-  const defaultSubs = [
-    { id: 'sub_men_polo', name: 'Polo Shirts', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&q=80' },
-    { id: 'sub_men_tshirt', name: 'T-Shirts', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&q=80' },
-    { id: 'sub_men_roundneck', name: 'Round Neck', image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&q=80' },
-  ];
-  try {
-    const cats = typeof window !== 'undefined'
-      ? (() => { try { const s = localStorage.getItem('ktex_categories'); return s ? JSON.parse(s) : null; } catch { return null; } })()
-      : null;
-    const source = cats || categories;
-    const menSubs = source.filter(c => (c.pageTypes || []).includes('Men') || (!c.pageTypes && c.name));
-    if (menSubs.length > 0) return menSubs.map(c => ({ id: c.id || c.slug, name: c.name, image: c.image || '' }));
-    return defaultSubs;
-  } catch { return defaultSubs; }
-}
 
 function DarkProductCard({ product, onWishlist, isWishlisted }) {
   const { addToCart } = useCart();
@@ -131,68 +114,56 @@ function ProductSegment({ title, products, toggleWishlist, isWishlisted }) {
   );
 }
 
-export default function Men() {
-  const location = useLocation();
+export default function NewArrivals() {
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const [selected, setSelected] = useState('all');
-  const [showDropdown, setShowDropdown] = useState(false);
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "Men's Collection — Premium Polo Shirts | K-TEX";
+    document.title = "New Arrivals — Fresh Drops & Polos | K-TEX";
   }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const cat = params.get('cat');
-    if (cat) {
-      setSelected(cat);
-      setTimeout(() => {
-        document.getElementById('men-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    } else {
-      setSelected('all');
-    }
-  }, [location.search]);
-
-  const menSubs = getMenSubCategories();
   const allProducts = getProducts();
-  const normalize = s => (s || '').toLowerCase().replace(/[\s-]/g, '');
 
-  const segmentProducts = menSubs.length > 0
-    ? menSubs.map((sub, idx) => ({
-        id: sub.id, name: sub.name, image: sub.image || '',
-        products: allProducts.filter(p => {
-          const isMen = p.pageType === 'Men' || p.tag === 'Men' || p.tag === 'men';
-          if (!isMen) return false;
-          const pSub = (p.subCategory || '').toLowerCase();
-          const subName = sub.name.toLowerCase();
-          if (pSub === subName || normalize(pSub) === normalize(subName)) return true;
-          if (p.name.toLowerCase().includes(subName)) return true;
-          if (idx === 0 && !p.subCategory && p.name.toLowerCase().includes('polo')) return true;
-          return false;
-        }),
-      }))
-    : [{ id: 'all-men', name: "Men's Collection", image: '', products: allProducts.filter(p => p.tag === 'Men' || p.tag === 'men') }];
+  const categories = [
+    { key: 'all', label: 'All Products' },
+    { key: 'Men', label: "Men's" },
+    { key: 'Women', label: "Women's" },
+    { key: 'Kids', label: "Kids'" },
+    { key: 'Sale', label: 'Sale' },
+  ];
 
-  const allMenProducts = allProducts.filter(p =>
-    p.pageType === 'Men' || p.tag === 'Men' || p.tag === 'men' ||
-    segmentProducts.some(seg => seg.products.some(sp => sp.id === p.id))
-  );
+  const newProducts = allProducts.filter(p => {
+    const tag = (p.tag || '').toLowerCase();
+    return ['men', 'women', 'kids', 'sale', 't-shirt', 'round-neck', 'new'].includes(tag) || p.badge === 'NEW' || p.isNewArrival;
+  });
 
-  const filterCategories = [{ key: 'all', label: 'Category' }, ...menSubs.map(s => ({ key: s.id, label: s.name }))];
+  const allNew = newProducts;
+
+  const menNew = allNew.filter(p => p.tag === 'Men');
+  const womenNew = allNew.filter(p => p.tag === 'Women');
+  const kidsNew = allNew.filter(p => p.tag === 'Kids' || p.tag === 'kids');
+  const saleNew = allNew.filter(p => p.tag === 'Sale');
+
+  const segmentProducts = [
+    { id: 'Men', name: "Men's Collection", products: menNew },
+    { id: 'Women', name: "Women's Collection", products: womenNew },
+    { id: 'Kids', name: "Kids' Collection", products: kidsNew },
+    { id: 'Sale', name: 'Sale', products: saleNew },
+  ].filter(s => s.products.length > 0);
+
   const filtered = selected === 'all' ? null : (() => { const seg = segmentProducts.find(s => s.id === selected); return seg ? { title: seg.name, products: seg.products } : null; })();
 
   return (
     <main style={{ background: 'linear-gradient(180deg, #0d0d12, #151318, #0d0d12)' }}>
       {/* Hero */}
       <section style={{ position: 'relative', width: '100%', height: '40vh', minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=1600&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4 }} />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(13,13,18,0.3), rgba(13,13,18,0.9))' }} />
         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', color: '#fff' }}>
-          <span className="fade-up" style={{ display: 'inline-block', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14, padding: '6px 20px', background: 'rgba(184,151,42,0.1)', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 20 }}>K-TEX Men</span>
-          <h1 className="fade-up" style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 12px' }}>Men's Collection</h1>
+          <span className="fade-up" style={{ display: 'inline-block', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14, padding: '6px 20px', background: 'rgba(184,151,42,0.1)', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 20 }}>K-TEX New Arrivals</span>
+          <h1 className="fade-up" style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 12px' }}>New Arrivals</h1>
           <p className="fade-up-1" style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', maxWidth: 500, margin: '0 auto', color: 'rgba(255,255,255,0.6)' }}>
-            Premium polos, tees & round necks — crafted for the modern gentleman.
+            Discover the latest drops — fresh styles, premium quality, just arrived.
           </p>
         </div>
       </section>
@@ -204,8 +175,8 @@ export default function Men() {
       }}>
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '12px 24px' }}>
           <div className="cat-tabs" style={{ display: 'flex', gap: 6 }}>
-            {filterCategories.map(cat => (
-              <button key={cat.key} onClick={() => { setSelected(cat.key); document.getElementById('men-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+            {categories.map(cat => (
+              <button key={cat.key} onClick={() => { setSelected(cat.key); document.getElementById('new-arrivals-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
                 style={{
                   padding: '8px 20px', borderRadius: 8, fontSize: '0.82rem', fontWeight: selected === cat.key ? 700 : 500,
                   border: selected === cat.key ? '1px solid var(--gold)' : '1px solid rgba(255,255,255,0.1)',
@@ -219,52 +190,18 @@ export default function Men() {
               >{cat.label}</button>
             ))}
           </div>
-          <div className="category-dropdown" style={{ position: 'relative', display: 'none' }}>
-            <button onClick={() => setShowDropdown(!showDropdown)}
-              style={{
-                padding: '10px 16px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 700, width: '100%',
-                border: '1px solid rgba(184,151,42,0.3)', background: 'rgba(255,255,255,0.05)', color: '#fff',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-              }}>
-              <span>{selected === 'all' ? 'Category' : filterCategories.find(c => c.key === selected)?.label}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                style={{ transform: showDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-                <path d="M6 9l6 6 6-6"/>
-              </svg>
-            </button>
-            {showDropdown && (
-              <>
-                <div style={{ position: 'fixed', inset: 0, zIndex: 49 }} onClick={() => setShowDropdown(false)} />
-                <div style={{
-                  position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, zIndex: 50,
-                  background: '#1a1a2e', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 10,
-                  overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-                }}>
-                  {filterCategories.map(cat => (
-                    <button key={cat.key} onClick={() => { setSelected(cat.key); setShowDropdown(false); document.getElementById('men-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left', padding: '10px 18px', fontSize: '0.82rem',
-                        fontWeight: selected === cat.key ? 700 : 500, border: 'none',
-                        background: selected === cat.key ? 'rgba(184,151,42,0.12)' : 'transparent',
-                        color: selected === cat.key ? 'var(--gold)' : '#a89b7d', cursor: 'pointer',
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(184,151,42,0.08)'; e.currentTarget.style.color = 'var(--gold)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = selected === cat.key ? 'rgba(184,151,42,0.12)' : 'transparent'; e.currentTarget.style.color = selected === cat.key ? 'var(--gold)' : '#a89b7d'; }}
-                    >{cat.label}</button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <select value={selected} onChange={e => setSelected(e.target.value)} className="category-dropdown"
+            style={{ display: 'none', padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(184,151,42,0.3)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', outline: 'none', width: '100%' }}>
+            {categories.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
           <span style={{ color: '#8a7d65', fontSize: '0.82rem', fontWeight: 600 }}>
-            {selected === 'all' ? `${allMenProducts.length} Products` : `${filtered?.products.length ?? 0} Products`}
+            {selected === 'all' ? `${allNew.length} Products` : `${filtered?.products.length ?? 0} Products`}
           </span>
         </div>
       </div>
 
       {/* Products */}
-      <div id="men-products" style={{ padding: '10px 0 40px' }}>
+      <div id="new-arrivals-products" style={{ padding: '10px 0 40px' }}>
         {selected === 'all'
           ? segmentProducts.map(seg => <ProductSegment key={seg.id} title={seg.name} products={seg.products} toggleWishlist={toggleWishlist} isWishlisted={isWishlisted} />)
           : filtered && <ProductSegment title={filtered.title} products={filtered.products} toggleWishlist={toggleWishlist} isWishlisted={isWishlisted} />

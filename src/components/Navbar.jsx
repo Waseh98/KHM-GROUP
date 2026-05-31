@@ -12,6 +12,7 @@ function getPath(link) {
   if (link === 'Men') return '/men';
   if (link === 'Women') return '/women';
   if (link === 'Kids') return '/kids';
+  if (link === 'New Arrivals') return '/new-arrivals';
   if (link === 'Collections') return '/collections';
   if (link === 'Sale') return '/sale';
   return `/#${link.toLowerCase().replace(' ', '-')}`;
@@ -217,6 +218,14 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
+
+  const mobileSearchResults = mobileSearchQuery.trim().length > 0
+    ? getProducts().filter(p =>
+        p.name.toLowerCase().includes(mobileSearchQuery.toLowerCase()) ||
+        p.tag?.toLowerCase().includes(mobileSearchQuery.toLowerCase())
+      )
+    : [];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -287,7 +296,7 @@ export default function Navbar() {
           <ul className="nav-links-desktop" style={linkListStyle}>
             {links.map(link => {
               const toPath = getPath(link);
-              const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Kids' || link === 'Collections' || link === 'Sale';
+              const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Kids' || link === 'New Arrivals' || link === 'Collections' || link === 'Sale';
               return (
                 <li key={link}>
                   {isPage ? (
@@ -447,10 +456,66 @@ export default function Navbar() {
             </svg>
           </button>
         </div>
+        {/* Mobile search bar */}
+        <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666', pointerEvents: 'none', display: 'flex' }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+            </span>
+            <input
+              type="text"
+              value={mobileSearchQuery}
+              onChange={e => setMobileSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              style={{
+                width: '100%', padding: '8px 12px 8px 30px',
+                backgroundColor: '#161616', border: '1px solid #2e2e2e',
+                borderRadius: '6px', color: '#fff', fontSize: '0.85rem',
+                fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box'
+              }}
+            />
+            {mobileSearchQuery && (
+              <button
+                onClick={() => setMobileSearchQuery('')}
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: '#888', cursor: 'pointer', padding: 2, display: 'flex' }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Search Results in Drawer */}
+          {mobileSearchResults.length > 0 && (
+            <div style={{
+              marginTop: '10px', backgroundColor: '#161616', borderRadius: '6px',
+              border: '1px solid #2a2a2a', overflow: 'hidden', maxHeight: '180px', overflowY: 'auto'
+            }}>
+              {mobileSearchResults.slice(0, 4).map(product => (
+                <Link
+                  key={product.id}
+                  to={`/product/${product.id}`}
+                  onClick={() => { setMenuOpen(false); setMobileSearchQuery(''); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+                    borderBottom: '1px solid #222', textDecoration: 'none'
+                  }}
+                >
+                  <img src={product.image} alt={product.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '4px' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: '#fff', fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</div>
+                    <div style={{ color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 700 }}>Rs. {product.price.toLocaleString()}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
         <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto' }}>
           {links.map((link) => {
             const toPath = getPath(link);
-            const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Kids' || link === 'Collections' || link === 'Sale';
+            const isPage = link === 'Home' || link === 'Men' || link === 'Women' || link === 'Kids' || link === 'New Arrivals' || link === 'Collections' || link === 'Sale';
             const commonStyle = {
               display: 'flex', alignItems: 'center', padding: '14px 28px',
               fontFamily: "var(--font-body)",

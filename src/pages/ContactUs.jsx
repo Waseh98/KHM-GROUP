@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const contactCards = [
@@ -37,6 +37,11 @@ function ContactIcon() {
 }
 
 export default function ContactUs() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "Contact Us — Customer Support | K-TEX";
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',

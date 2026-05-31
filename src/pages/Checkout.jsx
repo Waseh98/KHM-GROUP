@@ -42,35 +42,8 @@ async function submitOrderToBackend(payload) {
   }
 }
 
-const paymentMethods = [
-  {
-    id: 'easypaisa',
-    name: 'EasyPaisa',
-    icon: '🟢',
-    color: '#00A651',
-    gradient: 'linear-gradient(135deg, #00A651 0%, #00C853 100%)',
-    details: { title: 'EasyPaisa Account', lines: ['Account Title: KHM Group', 'Number: 0300-0000000'] },
-  },
-  {
-    id: 'jazzcash',
-    name: 'JazzCash',
-    icon: '🔴',
-    color: '#E30613',
-    gradient: 'linear-gradient(135deg, #E30613 0%, #FF1744 100%)',
-    details: { title: 'JazzCash Account', lines: ['Account Title: KHM Group', 'Number: 0300-1111111'] },
-  },
-  {
-    id: 'bank_transfer',
-    name: 'Bank Transfer',
-    icon: '🏦',
-    color: '#1A73E8',
-    gradient: 'linear-gradient(135deg, #1A73E8 0%, #448AFF 100%)',
-    details: {
-      title: 'Bank Details',
-      lines: ['Bank: Meezan Bank', 'Account Title: KHM Group', 'Account #: 1234567890', 'IBAN: PK00MEZN0000001234567890'],
-    },
-  },
-];
+import { PAYMENT_METHODS_CONFIG as paymentMethods } from '../config';
+
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -85,7 +58,10 @@ export default function Checkout() {
   const [dragOver, setDragOver] = useState(false);
   const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', street: '' });
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "Secure Checkout | K-TEX";
+  }, []);
 
   useEffect(() => {
     if (user) {

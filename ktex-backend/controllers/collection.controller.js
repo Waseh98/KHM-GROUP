@@ -36,13 +36,20 @@ exports.getCollectionBySlug = async (req, res) => {
 
 exports.getCollectionProducts = async (req, res) => {
   try {
-    const collection = await Collection.findOne({ slug: req.params.slug, isActive: true });
+    const collection = await Collection.findById(req.params.id).populate('categories');
     if (!collection) return res.status(404).json({ success: false, message: 'Not found' });
 
     const catIds = collection.categories || [];
     const filter = { isActive: true };
     if (catIds.length > 0) {
-      filter.subCategory = { $in: catIds };
+      const catNames = catIds.map(c => c.name).filter(Boolean);
+      if (catNames.length > 0) {
+        filter.$or = [
+          { subCategory: { $in: catNames } },
+          { category: { $in: catNames } },
+          { pageType: { $in: catNames } },
+        ];
+      }
     }
 
     const products = await Product.find(filter)

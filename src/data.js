@@ -496,7 +496,7 @@ export async function syncProductsFromBackend(force = false) {
     const json = await res.json();
     if (json.success && json.data) {
       const transformed = json.data.map(transformProduct);
-      const existing = json.data.length > 0 ? transformed : getProducts();
+      const existing = transformed;
       localStorage.setItem('ktex_products', JSON.stringify(existing));
       localStorage.setItem('ktex_products_synced_at', Date.now().toString());
     }
@@ -515,7 +515,7 @@ export async function syncCategoriesFromBackend(force = false) {
     const res = await fetch('/api/categories');
     if (!res.ok) return;
     const json = await res.json();
-    if (json.success && json.data && json.data.length > 0) {
+    if (json.success && json.data) {
       const transformed = json.data.map(transformCategory);
       localStorage.setItem('ktex_categories', JSON.stringify(transformed));
       localStorage.setItem('ktex_categories_synced_at', Date.now().toString());
@@ -562,7 +562,38 @@ export async function syncCollectionsFromBackend(force = false) {
   }
 }
 
-export const collections = (() => {
+const defaultCollections = [
+  {
+    id: "col_men", name: "Men's Collection", slug: "mens-collection",
+    description: "Premium polo shirts and t-shirts for the modern gentleman",
+    image: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=800&q=80",
+    categories: [{ _id: "cat_men", name: "Men", slug: "men" }, { _id: "cat_001", name: "Classic Polo", slug: "classic-polo" }, { _id: "cat_002", name: "Premium Piqué", slug: "premium-pique" }, { _id: "cat_003", name: "Corporate Wear", slug: "corporate-wear" }, { _id: "cat_005", name: "Golf Edition", slug: "golf-edition" }],
+    order: 1
+  },
+  {
+    id: "col_women", name: "Women's Collection", slug: "womens-collection",
+    description: "Elegant and comfortable apparel for every occasion",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
+    categories: [{ _id: "cat_women", name: "Women", slug: "women" }, { _id: "cat_006", name: "Women's Collection", slug: "womens-collection" }],
+    order: 2
+  },
+  {
+    id: "col_summer", name: "Summer Collection", slug: "summer-collection",
+    description: "Light & breathable comfort for the warm months ahead",
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80",
+    categories: [{ _id: "cat_004", name: "Summer Collection", slug: "summer-collection" }],
+    order: 3
+  },
+  {
+    id: "col_sale", name: "Sale", slug: "sale",
+    description: "Up to 50% off on selected items — grab them before they're gone",
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&q=80",
+    categories: [{ _id: "cat_007", name: "Sale", slug: "sale" }],
+    order: 4
+  }
+];
+
+export const getCollections = () => {
   if (typeof window !== 'undefined') {
     try {
       const saved = localStorage.getItem('ktex_collections');
@@ -571,8 +602,10 @@ export const collections = (() => {
       console.error('Failed to parse collections from localStorage', e);
     }
   }
-  return [];
-})();
+  return defaultCollections;
+};
+
+export const collections = getCollections();
 
 export const categories = (() => {
   if (typeof window !== 'undefined') {

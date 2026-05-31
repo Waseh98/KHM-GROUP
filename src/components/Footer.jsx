@@ -38,13 +38,16 @@ export default function Footer() {
     { label: 'Sale', to: '/sale' },
     { label: 'About Us', to: '/about' },
     { label: 'Collections', to: '/collections' },
+    { label: 'FAQs', to: '/faqs' },
+    { label: 'Contact Us', to: '/contact' },
   ];
 
   const helpLinks = [
     { label: 'Track Order', to: '/track-order' },
     { label: 'Return Policy', to: '/return-policy' },
-    { label: 'FAQs', to: '/faqs' },
-    { label: 'Contact Us', to: '/contact' },
+    { label: 'Shipping Policy', to: '/shipping-policy' },
+    { label: 'Privacy Policy', to: '/privacy-policy' },
+    { label: 'Terms &amp; Conditions', to: '/terms-conditions' },
   ];
 
   const socials = [
@@ -168,9 +171,8 @@ export default function Footer() {
           {/* Col 3 - Help */}
           <div>
             <h4 className="footer-heading">Help</h4>
-            <ul style={{
+            <ul className="quick-links-grid" style={{
               listStyle: 'none', padding: 0, margin: 0,
-              display: 'flex', flexDirection: 'column', gap: '12px',
             }}>
               {helpLinks.map(link => (
                 <li key={link.label}>

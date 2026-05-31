@@ -18,12 +18,13 @@ app.use(helmet({
 }));
 app.use(morgan('dev'));
 const corsAllowed = new Set(
-  ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL].filter(Boolean)
+  ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL, 'https://ktexstore.com', 'http://ktexstore.com'].filter(Boolean)
 );
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (corsAllowed.has(origin)) return cb(null, true);
+    if (origin && (origin.endsWith('.ktexstore.com') || origin.includes('ktexstore.com'))) return cb(null, true);
     return cb(null, false);
   },
   credentials: true
@@ -88,11 +89,33 @@ app.get('/uploads/:filename', (req, res) => {
 });
 
 // ─── Serve Frontend in Production ──────────────────────────
-const clientDistPath = path.join(__dirname, '../dist');
+function findDistPath() {
+  const candidates = [
+    path.join(__dirname, '..', 'dist'),
+    path.join(__dirname, '..', '..', 'dist'),
+    path.join(__dirname, 'dist'),
+    path.join(__dirname, '..', 'public', 'dist'),
+    path.join(process.cwd(), 'dist'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(path.join(p, 'index.html'))) {
+      console.log('📁 Serving frontend from:', p);
+      return p;
+    }
+  }
+  console.warn('⚠️  dist/index.html not found. Attempted paths:', candidates);
+  return candidates[0];
+}
+const clientDistPath = findDistPath();
 app.use(express.static(clientDistPath));
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(clientDistPath, 'index.html'));
+  const htmlPath = path.join(clientDistPath, 'index.html');
+  if (fs.existsSync(htmlPath)) {
+    res.sendFile(htmlPath);
+  } else {
+    res.status(200).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>K-TEX</title></head><body><div id="root"></div><script>console.warn('dist/index.html not found at ${htmlPath.replace(/\\/g, '\\\\')}');</script></body></html>`);
+  }
 });
 
 // ─── Global Error Handler ─────────────────────────────────

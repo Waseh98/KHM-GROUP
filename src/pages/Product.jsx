@@ -4,6 +4,7 @@ import { getProducts } from '../data';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 
 const DEFAULT_DESC = 'Crafted from premium-quality fabric for unmatched comfort and breathability. Featuring a tailored fit and signature reinforced stitching for lasting durability.';
 
@@ -14,6 +15,7 @@ export default function Product() {
   const product = allProducts.find(p => String(p.id) === String(id));
   const { addToCart } = useCart();
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
+  const { user } = useAuth();
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedSize, setSelectedSize] = useState('M');
   const [quantity, setQuantity] = useState(1);
@@ -24,6 +26,18 @@ export default function Product() {
   const [imageZoom, setImageZoom] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const imageRef = useRef(null);
+
+  // Reviews integration states
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewName, setReviewName] = useState('');
+  const [reviewEmail, setReviewEmail] = useState('');
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSuccessMsg, setReviewSuccessMsg] = useState('');
+  const [reviewErrorMsg, setReviewErrorMsg] = useState('');
 
   const productImages = product?.images && product.images.filter(img => img !== '').length > 0
     ? product.images.filter(img => img !== '')
@@ -36,6 +50,21 @@ export default function Product() {
   const currentColorName = product?.colorNames?.[selectedColor] || 'Selected Option';
   const description = product?.description || DEFAULT_DESC;
 
+  const fetchReviews = async () => {
+    setReviewsLoading(true);
+    try {
+      const res = await fetch(`/api/reviews/${id}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setReviews(data.data);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch reviews:", e.message);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     setSelectedImageIndex(0);
@@ -44,7 +73,75 @@ export default function Product() {
     setQuantity(1);
     setActiveTab('details');
     setAdded(false);
+    setReviewComment('');
+    setReviewTitle('');
+    setReviewSuccessMsg('');
+    setReviewErrorMsg('');
+    
+    if (product) {
+      document.title = `${product.name} — Premium Polo Shirts | K-TEX`;
+    }
+
+    fetchReviews();
   }, [id]);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (submittingReview) return;
+    setReviewSuccessMsg('');
+    setReviewErrorMsg('');
+
+    if (!reviewComment.trim()) {
+      setReviewErrorMsg('Review comment cannot be empty.');
+      return;
+    }
+
+    const reviewerEmail = user ? user.email : reviewEmail;
+    const reviewerName = user ? (user.user_metadata?.full_name || user.email.split('@')[0]) : reviewName;
+
+    if (!reviewerEmail || !reviewerName) {
+      setReviewErrorMsg('Your name and email are required to submit a review.');
+      return;
+    }
+
+    setSubmittingReview(true);
+
+    try {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: reviewRating,
+          title: reviewTitle || '',
+          comment: reviewComment.trim(),
+          name: reviewerName,
+          email: reviewerEmail,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReviewSuccessMsg('Thank you! Your review has been submitted successfully.');
+        setReviewComment('');
+        setReviewTitle('');
+        setReviewName('');
+        setReviewEmail('');
+        fetchReviews(); // Refresh reviews list
+      } else {
+        setReviewErrorMsg(data.message || 'Failed to submit review.');
+      }
+    } catch (err) {
+      setReviewErrorMsg(err.message || 'Error occurred while submitting review.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const activeReviewsCount = reviews.length;
+  const activeAvgRating = activeReviewsCount > 0
+    ? Math.round((reviews.reduce((acc, r) => acc + r.rating, 0) / activeReviewsCount) * 10) / 10
+    : (product?.ratings || 0);
+  const activeReviewsDisplayCount = activeReviewsCount > 0 ? activeReviewsCount : (product?.numOfReviews || 0);
 
   const handleMouseMove = (e) => {
     if (!imageRef.current) return;
@@ -110,6 +207,7 @@ export default function Product() {
 
   const stockWarning = product.stock !== undefined && product.stock <= 5 && product.stock > 0;
   const outOfStock = product.stock !== undefined && product.stock <= 0;
+  const sellingFast = product.stock !== undefined && product.stock <= 3 && product.stock > 0;
 
   const renderStars = (rating, count) => {
     if (!rating && !count) return null;
@@ -218,6 +316,17 @@ export default function Product() {
                       boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                     }}>{product.badge}</div>
                   )}
+                  {sellingFast && (
+                    <div style={{
+                      position: 'absolute', top: '16px', right: '16px',
+                      background: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                      color: '#fff', fontSize: '0.65rem', fontWeight: 800,
+                      padding: '5px 10px', borderRadius: '4px',
+                      letterSpacing: '0.05em', textTransform: 'uppercase',
+                      boxShadow: '0 2px 12px rgba(231,76,60,0.4)',
+                      animation: 'pulse 2s infinite',
+                    }}>Selling Fast</div>
+                  )}
 
                   {/* Image Nav Arrows */}
                   {productImages.length > 1 && (
@@ -309,7 +418,7 @@ export default function Product() {
               }}>{product.name}</h1>
 
               {/* Ratings */}
-              {renderStars(product.ratings, product.numOfReviews)}
+              {renderStars(activeAvgRating, activeReviewsDisplayCount)}
 
               {/* Price */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -530,6 +639,8 @@ export default function Product() {
                   { key: 'details', icon: '📋', label: 'Product Details', color: '#B8972A', bg: 'rgba(184,151,42,0.08)', border: 'rgba(184,151,42,0.25)' },
                   { key: 'shipping', icon: '🚚', label: 'Shipping & Delivery', color: '#27ae60', bg: 'rgba(39,174,96,0.08)', border: 'rgba(39,174,96,0.25)' },
                   { key: 'returns', icon: '↩️', label: 'Returns & Exchanges', color: '#2980b9', bg: 'rgba(41,128,185,0.08)', border: 'rgba(41,128,185,0.25)' },
+                  { key: 'faq', icon: '❓', label: 'FAQs', color: '#8e44ad', bg: 'rgba(142,68,173,0.08)', border: 'rgba(142,68,173,0.25)' },
+                  { key: 'reviews', icon: '⭐', label: `Reviews (${activeReviewsDisplayCount})`, color: '#f39c12', bg: 'rgba(243,156,18,0.08)', border: 'rgba(243,156,18,0.25)' },
                 ].map((tab) => {
                   const isOpen = activeTab === tab.key;
                   return (
@@ -582,14 +693,33 @@ export default function Product() {
                           marginTop: 0, paddingTop: '16px',
                         }}>
                           {tab.key === 'details' && (
-                            <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              {product.fabric && <li><span style={{ fontWeight: 600, color: 'var(--black)' }}>Fabric:</span> {product.fabric}</li>}
-                              <li>Classic Piqué knit texture for premium feel</li>
-                              <li>Two-button placket with pearlized buttons</li>
-                              <li>Reinforced stitching for lasting durability</li>
-                              <li>Machine wash cold, tumble dry low</li>
-                              {product.sku && <li style={{ color: '#aaa' }}>SKU: {product.sku}</li>}
-                            </ul>
+                            <div>
+                              <ul style={{ paddingLeft: '20px', margin: '0 0 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {product.fabric && <li><span style={{ fontWeight: 600, color: 'var(--black)' }}>Fabric:</span> {product.fabric}</li>}
+                                <li>Classic Piqué knit texture for premium feel and breathability</li>
+                                <li>Two-button placket with pearlized buttons</li>
+                                <li>Reinforced stitching for lasting durability</li>
+                                {product.sku && <li style={{ color: '#aaa' }}>SKU: {product.sku}</li>}
+                              </ul>
+
+                              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--black)', marginBottom: '10px' }}>🧺 Care Instructions</div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                                {[
+                                  { icon: '🚿', label: 'Machine Wash', detail: 'Cold wash with similar colors' },
+                                  { icon: '🧴', label: 'Detergent', detail: 'Mild detergent, avoid bleach' },
+                                  { icon: '🌀', label: 'Drying', detail: 'Tumble dry low or air dry' },
+                                  { icon: '🔥', label: 'Ironing', detail: 'Medium heat, avoid prints' },
+                                  { icon: '🚫', label: 'Do Not', detail: 'Dry clean or use fabric softener' },
+                                  { icon: '☀️', label: 'Storage', detail: 'Fold neatly, avoid wire hangers' },
+                                ].map(c => (
+                                  <div key={c.label} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)' }}>
+                                    <div style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{c.icon}</div>
+                                    <div style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--black)', marginBottom: '2px' }}>{c.label}</div>
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--mid-gray)' }}>{c.detail}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
                           {tab.key === 'shipping' && (
                             <div>
@@ -635,6 +765,212 @@ export default function Product() {
                                 <li>Exchange delivery charges apply</li>
                                 <li>No cash refunds — exchange or store credit only</li>
                               </ul>
+                            </div>
+                          )}
+
+                          {tab.key === 'faq' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                              {[
+                                { q: 'What fabric are K-TEX polo shirts made of?', a: 'Our polos are crafted from premium-quality cotton piqué fabric, known for its breathability, durability, and structured look. Selected styles also feature a touch of elastane for a comfortable stretch.' },
+                                { q: 'How do I choose the right size?', a: 'Refer to our Size Guide above for detailed chest, length, and shoulder measurements. If you are between sizes, we recommend sizing up for a relaxed fit or down for a slim fit.' },
+                                { q: 'How should I wash my K-TEX polo?', a: 'Machine wash cold with similar colors, do not bleach, tumble dry low, and iron on medium heat. Avoid fabric softeners to maintain the fabric\'s piqué texture.' },
+                                { q: 'Can I exchange my order?', a: 'Yes! Exchanges are accepted for size or color changes within 7 days of delivery. Item must be unused with original tags. Customer pays delivery charges for exchange.' },
+                                { q: 'How long does delivery take?', a: 'Orders are processed within 24 hours. Delivery takes 1-2 days within Rawalpindi/Islamabad, 2-4 days to major cities, and 4-7 days to remote areas.' },
+                                { q: 'Is Cash on Delivery available?', a: 'Yes, COD is available nationwide. You can pay in full when your order arrives.' },
+                              ].map((faq, i) => (
+                                <div key={i} style={{ padding: '14px 16px', borderRadius: '10px', background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--black)', marginBottom: '6px' }}>{faq.q}</div>
+                                  <div style={{ fontSize: '0.82rem', color: 'var(--mid-gray)', lineHeight: 1.7 }}>{faq.a}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {tab.key === 'reviews' && (
+                            <div>
+                              {/* Submit Review Form */}
+                              <div style={{
+                                padding: '20px', borderRadius: '12px',
+                                background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)',
+                                marginBottom: '24px',
+                              }}>
+                                <h4 style={{ color: 'var(--black)', fontWeight: 700, fontSize: '0.95rem', marginBottom: '14px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                  Write a Customer Review
+                                </h4>
+                                <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                  {/* Stars selection */}
+                                  <div>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--black)', display: 'block', marginBottom: '6px' }}>Your Rating:</span>
+                                    <div style={{ display: 'flex', gap: '6px' }}>
+                                      {[1, 2, 3, 4, 5].map((num) => (
+                                        <button
+                                          key={num}
+                                          type="button"
+                                          onClick={() => setReviewRating(num)}
+                                          style={{ cursor: 'pointer', display: 'flex', padding: 0, border: 'none', background: 'none' }}
+                                        >
+                                          <svg width="24" height="24" fill={num <= reviewRating ? '#f39c12' : '#ddd'} viewBox="0 0 24 24">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                          </svg>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {!user && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                                      <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--black)', display: 'block', marginBottom: '4px' }}>Your Name *</label>
+                                        <input
+                                          type="text"
+                                          required
+                                          placeholder="e.g. Ali Ahmed"
+                                          value={reviewName}
+                                          onChange={e => setReviewName(e.target.value)}
+                                          style={{
+                                            width: '100%', padding: '10px 14px', borderRadius: '8px',
+                                            border: '1.5px solid var(--border)', fontSize: '0.88rem',
+                                            fontFamily: 'var(--font-body)', outline: 'none', background: 'var(--white)',
+                                            boxSizing: 'border-box'
+                                          }}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--black)', display: 'block', marginBottom: '4px' }}>Email Address *</label>
+                                        <input
+                                          type="email"
+                                          required
+                                          placeholder="you@example.com"
+                                          value={reviewEmail}
+                                          onChange={e => setReviewEmail(e.target.value)}
+                                          style={{
+                                            width: '100%', padding: '10px 14px', borderRadius: '8px',
+                                            border: '1.5px solid var(--border)', fontSize: '0.88rem',
+                                            fontFamily: 'var(--font-body)', outline: 'none', background: 'var(--white)',
+                                            boxSizing: 'border-box'
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div>
+                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--black)', display: 'block', marginBottom: '4px' }}>Review Title</label>
+                                    <input
+                                      type="text"
+                                      placeholder="Summarize your review"
+                                      value={reviewTitle}
+                                      onChange={e => setReviewTitle(e.target.value)}
+                                      style={{
+                                        width: '100%', padding: '10px 14px', borderRadius: '8px',
+                                        border: '1.5px solid var(--border)', fontSize: '0.88rem',
+                                        fontFamily: 'var(--font-body)', outline: 'none', background: 'var(--white)',
+                                        boxSizing: 'border-box'
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--black)', display: 'block', marginBottom: '4px' }}>Review Comment *</label>
+                                    <textarea
+                                      required
+                                      rows="3"
+                                      placeholder="What did you think of the fabric, color, or fit?"
+                                      value={reviewComment}
+                                      onChange={e => setReviewComment(e.target.value)}
+                                      style={{
+                                        width: '100%', padding: '10px 14px', borderRadius: '8px',
+                                        border: '1.5px solid var(--border)', fontSize: '0.88rem',
+                                        fontFamily: 'var(--font-body)', outline: 'none', background: 'var(--white)',
+                                        resize: 'vertical', boxSizing: 'border-box'
+                                      }}
+                                    />
+                                  </div>
+
+                                  {reviewSuccessMsg && (
+                                    <div style={{ color: '#27ae60', fontSize: '0.85rem', fontWeight: 600, background: '#e8f7f0', padding: '10px 14px', borderRadius: '6px' }}>
+                                      ✓ {reviewSuccessMsg}
+                                    </div>
+                                  )}
+
+                                  {reviewErrorMsg && (
+                                    <div style={{ color: 'var(--red)', fontSize: '0.85rem', fontWeight: 600, background: '#fdf2f2', padding: '10px 14px', borderRadius: '6px' }}>
+                                      ⚠ {reviewErrorMsg}
+                                    </div>
+                                  )}
+
+                                  <button
+                                    type="submit"
+                                    disabled={submittingReview}
+                                    style={{
+                                      alignSelf: 'flex-start', padding: '12px 28px',
+                                      backgroundColor: 'var(--black)', color: 'var(--white)',
+                                      border: 'none', borderRadius: '8px', fontWeight: 700,
+                                      fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em',
+                                      cursor: submittingReview ? 'not-allowed' : 'pointer',
+                                      transition: 'all 0.2s',
+                                    }}
+                                    onMouseEnter={e => { if(!submittingReview) e.currentTarget.style.backgroundColor = 'var(--gold)'; }}
+                                    onMouseLeave={e => { if(!submittingReview) e.currentTarget.style.backgroundColor = 'var(--black)'; }}
+                                  >
+                                    {submittingReview ? 'Submitting...' : 'Submit Review'}
+                                  </button>
+                                </form>
+                              </div>
+
+                              {/* Review List */}
+                              <div>
+                                <h4 style={{ color: 'var(--black)', fontWeight: 700, fontSize: '0.95rem', marginBottom: '16px', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                  Customer Reviews ({reviews.length})
+                                </h4>
+                                {reviewsLoading ? (
+                                  <div style={{ color: 'var(--mid-gray)', fontSize: '0.88rem', padding: '10px 0' }}>Loading reviews...</div>
+                                ) : reviews.length === 0 ? (
+                                  <div style={{ color: 'var(--mid-gray)', fontSize: '0.88rem', fontStyle: 'italic', padding: '10px 0' }}>
+                                    No reviews yet. Be the first to share your experience with K-TEX!
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                                    {reviews.map((rev) => (
+                                      <div key={rev._id} style={{
+                                        padding: '16px', border: '1px solid rgba(0,0,0,0.04)',
+                                        borderRadius: '10px', backgroundColor: 'rgba(0,0,0,0.01)'
+                                      }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                          <span style={{ fontWeight: 700, color: 'var(--black)', fontSize: '0.88rem' }}>
+                                            {rev.user?.name || 'Customer'}
+                                          </span>
+                                          <span style={{ color: 'var(--mid-gray)', fontSize: '0.78rem' }}>
+                                            {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                                          </span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '4px', marginBottom: '8px', alignItems: 'center' }}>
+                                          <div style={{ display: 'flex', gap: '2px' }}>
+                                            {[1, 2, 3, 4, 5].map(i => (
+                                              <svg key={i} width="14" height="14" fill={i <= rev.rating ? '#f39c12' : '#ddd'} viewBox="0 0 24 24">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                              </svg>
+                                            ))}
+                                          </div>
+                                          {rev.isVerifiedPurchase && (
+                                            <span style={{ color: '#27ae60', fontSize: '0.72rem', fontWeight: 700, marginLeft: '8px', backgroundColor: '#e8f7f0', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                              ✓ Verified Purchase
+                                            </span>
+                                          )}
+                                        </div>
+                                        {rev.title && (
+                                          <div style={{ fontWeight: 700, color: 'var(--black)', fontSize: '0.9rem', marginBottom: '6px' }}>
+                                            {rev.title}
+                                          </div>
+                                        )}
+                                        <p style={{ color: 'var(--mid-gray)', fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
+                                          {rev.comment}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -835,6 +1171,11 @@ export default function Product() {
         @keyframes fadeIn {
           from { opacity: 0; }
           to   { opacity: 1; }
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(231,76,60,0); }
+          100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); }
         }
       `}</style>
     </main>

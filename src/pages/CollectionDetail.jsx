@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { collections as cachedCollections, getProducts, syncCollectionsFromBackend, syncProductsFromBackend } from '../data';
+import { getCollections, getProducts, syncCollectionsFromBackend, syncProductsFromBackend } from '../data';
 import { useCart } from '../context/CartContext';
 
 function slugify(name) {
@@ -15,14 +15,16 @@ function slugify(name) {
 export default function CollectionDetail() {
   const { addToCart } = useCart();
   const { slug } = useParams();
-
-  const collection = useMemo(() => {
-    return cachedCollections.find((c) => slugify(c.name) === slug) || null;
-  }, [slug]);
+  const [collection, setCollection] = useState(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    syncCollectionsFromBackend();
+    const col = getCollections().find((c) => slugify(c.name) === slug) || null;
+    setCollection(col);
+    syncCollectionsFromBackend().then(() => {
+      const updated = getCollections().find((c) => slugify(c.name) === slug) || null;
+      setCollection(updated);
+    }).catch(() => {});
     syncProductsFromBackend();
   }, [slug]);
 
@@ -39,7 +41,9 @@ export default function CollectionDetail() {
       const pSub = (p.subCategory || '').toLowerCase().replace(/[\s-]/g, '');
       const pCat = (p.category || '').toLowerCase().replace(/[\s-]/g, '');
       const pTag = (p.tag || '').toLowerCase().replace(/[\s-]/g, '');
-      return catNames.some(n => pSub === n || pCat === n || pTag === n);
+      const pName = (p.name || '').toLowerCase().replace(/[\s-]/g, '');
+      const pMainCat = (p.mainCategory || '').toLowerCase().replace(/[\s-]/g, '');
+      return catNames.some(n => pSub === n || pCat === n || pTag === n || pName === n || pMainCat === n);
     });
   }, [collection]);
 
@@ -113,46 +117,53 @@ export default function CollectionDetail() {
             </div>
           )}
 
-          <div className="product-grid" style={{ display: 'grid', gap: 30, marginTop: 26 }}>
-            {collectionProducts.map((p) => (
-              <div key={p.id} style={{ background: '#fff', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
-                <Link to={`/product/${p.id}`} style={{ display: 'block', aspectRatio: '3/4', overflow: 'hidden', background: '#eef' }}>
-                  <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
-                </Link>
-                <div style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <Link to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, fontWeight: 700 }}>{p.name}</div>
+          {collectionProducts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--mid-gray)' }}>
+              <p style={{ fontSize: '1.1rem' }}>No products found in this collection yet.</p>
+              <p style={{ fontSize: '0.9rem', marginTop: 8 }}>Link categories to this collection in the admin panel to show matching products.</p>
+            </div>
+          ) : (
+            <div className="product-grid" style={{ display: 'grid', gap: 30, marginTop: 26 }}>
+              {collectionProducts.map((p) => (
+                <div key={p.id} style={{ background: '#fff', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+                  <Link to={`/product/${p.id}`} style={{ display: 'block', aspectRatio: '3/4', overflow: 'hidden', background: '#eef' }}>
+                    <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
                   </Link>
-                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontWeight: 800 }}>Rs. {p.price.toLocaleString()}</span>
-                    {p.oldPrice && (
-                      <span style={{ color: 'var(--mid-gray)', textDecoration: 'line-through' }}>Rs. {p.oldPrice.toLocaleString()}</span>
-                    )}
+                  <div style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <Link to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, fontWeight: 700 }}>{p.name}</div>
+                    </Link>
+                    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontWeight: 800 }}>Rs. {p.price.toLocaleString()}</span>
+                      {p.oldPrice && (
+                        <span style={{ color: 'var(--mid-gray)', textDecoration: 'line-through' }}>Rs. {p.oldPrice.toLocaleString()}</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => addToCart(p, { size: 'M' })}
+                      style={{
+                        marginTop: 'auto',
+                        width: '100%',
+                        backgroundColor: 'var(--black)',
+                        color: '#fff',
+                        padding: '12px',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        borderRadius: 8,
+                        transition: 'background-color 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => (e.target.style.backgroundColor = 'var(--red)')}
+                      onMouseLeave={(e) => (e.target.style.backgroundColor = 'var(--black)')}
+                    >
+                      Add to Cart
+                    </button>
                   </div>
-                  <button
-                    onClick={() => addToCart(p, { size: 'M' })}
-                    style={{
-                      marginTop: 'auto',
-                      width: '100%',
-                      backgroundColor: 'var(--black)',
-                      color: '#fff',
-                      padding: '12px',
-                      fontSize: '0.85rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      borderRadius: 8,
-                      transition: 'background-color 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => (e.target.style.backgroundColor = 'var(--red)')}
-                    onMouseLeave={(e) => (e.target.style.backgroundColor = 'var(--black)')}
-                  >
-                    Add to Cart
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </main>

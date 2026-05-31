@@ -6,13 +6,12 @@ import { useAuth } from '../context/AuthContext'
  * Login page with:
  * - Email & password login
  * - Google OAuth
- * - Facebook OAuth
  * - Link to signup & forgot password
  * - Loading states on all buttons
  * - Error handling via toast
  */
 export default function Login() {
-  const { signIn, signInWithGoogle, signInWithFacebook, user } = useAuth()
+  const { signIn, signInWithGoogle, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -22,6 +21,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
 
   // If already logged in, redirect to dashboard or original route
   if (user) {
@@ -32,21 +32,20 @@ export default function Login() {
   // ── Email/Password Login Handler ────────────────────────
   const handleEmailLogin = async (e) => {
     e.preventDefault()
+    setLoginError('')
     setLoading(true)
     const result = await signIn(email, password)
     setLoading(false)
     if (!result.error) {
       navigate(from)
+    } else {
+      setLoginError(result.error.message || 'Login failed. Please try again.')
     }
   }
 
   // ── OAuth Handlers ──────────────────────────────────────
   const handleGoogleLogin = async () => {
     await signInWithGoogle(from)
-  }
-
-  const handleFacebookLogin = async () => {
-    await signInWithFacebook(from)
   }
 
   // ── Shared Styles ───────────────────────────────────────
@@ -186,18 +185,6 @@ export default function Login() {
           Continue with Google
         </button>
 
-        <button
-          style={{ ...oauthBtn, marginTop: 10 }}
-          onClick={handleFacebookLogin}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.background = '#fdfbf7' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = '#fff' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-          </svg>
-          Continue with Facebook
-        </button>
-
         {/* ── Divider ── */}
         <div style={dividerStyle}>
           <span style={dividerLine} />
@@ -242,6 +229,20 @@ export default function Login() {
               Forgot Password?
             </Link>
           </div>
+
+          {loginError && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#b91c1c',
+              fontSize: 13,
+              padding: '10px 14px',
+              borderRadius: 8,
+              fontFamily: 'var(--font-body)',
+            }}>
+              {loginError}
+            </div>
+          )}
 
           <button
             type="submit"

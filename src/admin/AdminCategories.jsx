@@ -101,6 +101,11 @@ export default function AdminCategories() {
         alert('Error: ' + (data.message || `Server returned ${res.status}`));
         return;
       }
+      // Clear cached categories so frontend gets fresh data
+      localStorage.removeItem('ktex_categories_synced_at');
+      localStorage.removeItem('ktex_categories');
+      // Notify other tabs/components to refresh
+      window.dispatchEvent(new Event('categories-updated'));
       fetchCategories();
     } catch (e) {
       alert('Delete failed: ' + e.message);

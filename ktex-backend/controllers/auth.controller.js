@@ -82,6 +82,29 @@ exports.logout = async (req, res) => {
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
+// @POST /api/auth/admin-oauth
+exports.adminOauthLogin = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'No account found with this email' });
+    }
+    if (user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'This account is not an admin' });
+    }
+    if (!user.isActive) {
+      return res.status(401).json({ success: false, message: 'Account deactivated. Contact support.' });
+    }
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @PUT /api/auth/wishlist/:productId
 exports.toggleWishlist = async (req, res) => {
   try {

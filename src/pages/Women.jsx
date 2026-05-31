@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getProducts, categories } from '../data';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
@@ -132,9 +132,27 @@ function ProductSegment({ title, products, toggleWishlist, isWishlisted }) {
 }
 
 export default function Women() {
+  const location = useLocation();
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const [selected, setSelected] = useState('all');
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  const [showDropdown, setShowDropdown] = useState(false);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "Women's Collection — Premium Polo Shirts | K-TEX";
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('cat');
+    if (cat) {
+      setSelected(cat);
+      setTimeout(() => {
+        document.getElementById('women-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else {
+      setSelected('all');
+    }
+  }, [location.search]);
 
   const womenSubs = getWomenSubCategories();
   const allProducts = getProducts();
@@ -161,7 +179,7 @@ export default function Women() {
     segmentProducts.some(seg => seg.products.some(sp => sp.id === p.id))
   );
 
-  const filterCategories = [{ key: 'all', label: 'All Products' }, ...womenSubs.map(s => ({ key: s.id, label: s.name }))];
+  const filterCategories = [{ key: 'all', label: 'Category' }, ...womenSubs.map(s => ({ key: s.id, label: s.name }))];
   const filtered = selected === 'all' ? null : (() => { const seg = segmentProducts.find(s => s.id === selected); return seg ? { title: seg.name, products: seg.products } : null; })();
 
   return (
@@ -201,10 +219,44 @@ export default function Women() {
               >{cat.label}</button>
             ))}
           </div>
-          <select value={selected} onChange={e => setSelected(e.target.value)} className="category-dropdown"
-            style={{ display: 'none', padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(184,151,42,0.3)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', outline: 'none', width: '100%' }}>
-            {filterCategories.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-          </select>
+          <div className="category-dropdown" style={{ position: 'relative', display: 'none' }}>
+            <button onClick={() => setShowDropdown(!showDropdown)}
+              style={{
+                padding: '10px 16px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 700, width: '100%',
+                border: '1px solid rgba(184,151,42,0.3)', background: 'rgba(255,255,255,0.05)', color: '#fff',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              }}>
+              <span>{selected === 'all' ? 'Category' : filterCategories.find(c => c.key === selected)?.label}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ transform: showDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            {showDropdown && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 49 }} onClick={() => setShowDropdown(false)} />
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, zIndex: 50,
+                  background: '#1a1a2e', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 10,
+                  overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                }}>
+                  {filterCategories.map(cat => (
+                    <button key={cat.key} onClick={() => { setSelected(cat.key); setShowDropdown(false); document.getElementById('women-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left', padding: '10px 18px', fontSize: '0.82rem',
+                        fontWeight: selected === cat.key ? 700 : 500, border: 'none',
+                        background: selected === cat.key ? 'rgba(184,151,42,0.12)' : 'transparent',
+                        color: selected === cat.key ? 'var(--gold)' : '#a89b7d', cursor: 'pointer',
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(184,151,42,0.08)'; e.currentTarget.style.color = 'var(--gold)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = selected === cat.key ? 'rgba(184,151,42,0.12)' : 'transparent'; e.currentTarget.style.color = selected === cat.key ? 'var(--gold)' : '#a89b7d'; }}
+                    >{cat.label}</button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           <span style={{ color: '#8a7d65', fontSize: '0.82rem', fontWeight: 600 }}>
             {selected === 'all' ? `${allWomenProducts.length} Products` : `${filtered?.products.length ?? 0} Products`}
           </span>
