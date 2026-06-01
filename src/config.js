@@ -2,7 +2,7 @@ export const PAYMENT_METHODS_CONFIG = [
   {
     id: 'easypaisa',
     name: 'EasyPaisa',
-    icon: '💚',
+    icon: '/images/easypaisa-logo.jfif',
     color: '#00A651',
     gradient: 'linear-gradient(135deg, #00A651 0%, #00C853 100%)',
     details: { 

@@ -602,7 +602,7 @@ export default function Checkout() {
                             flexShrink: 0,
                             overflow: 'hidden',
                           }}>
-                            {method.icon.startsWith('http') ? (
+                            {method.icon.startsWith('http') || method.icon.startsWith('/') || method.icon.startsWith('data:') ? (
                               <img src={method.icon} alt={method.name} style={{ width: '36px', height: '36px', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
                             ) : (
                               method.icon
