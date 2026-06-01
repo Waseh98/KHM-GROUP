@@ -44,7 +44,7 @@ export default function ForgotPassword() {
   }
 
   const titleStyle = {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "var(--font-heading)",
     fontSize: 28,
     fontWeight: 700,
     color: 'var(--black)',

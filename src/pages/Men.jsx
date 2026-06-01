@@ -158,24 +158,31 @@ export default function Men() {
   const allProducts = getProducts();
   const normalize = s => (s || '').toLowerCase().replace(/[\s-]/g, '');
 
+  const matchesSubcategory = (p, subName) => {
+    const name = p.name.toLowerCase();
+    if (name.includes(subName)) return true;
+    if (subName.endsWith('s') && name.includes(subName.slice(0, -1))) return true;
+    return false;
+  };
+
   const segmentProducts = menSubs.length > 0
     ? menSubs.map((sub, idx) => ({
         id: sub.id, name: sub.name, image: sub.image || '',
         products: allProducts.filter(p => {
-          const isMen = p.pageType === 'Men' || p.tag === 'Men' || p.tag === 'men';
+          const isMen = p.pageType === 'Men' || p.tag === 'Men' || p.tag === 'men' || p.tag === 'T-Shirt';
           if (!isMen) return false;
           const pSub = (p.subCategory || '').toLowerCase();
           const subName = sub.name.toLowerCase();
           if (pSub === subName || normalize(pSub) === normalize(subName)) return true;
-          if (p.name.toLowerCase().includes(subName)) return true;
+          if (matchesSubcategory(p, subName)) return true;
           if (idx === 0 && !p.subCategory && p.name.toLowerCase().includes('polo')) return true;
           return false;
         }),
       }))
-    : [{ id: 'all-men', name: "Men's Collection", image: '', products: allProducts.filter(p => p.tag === 'Men' || p.tag === 'men') }];
+    : [{ id: 'all-men', name: "Men's Collection", image: '', products: allProducts.filter(p => p.tag === 'Men' || p.tag === 'men' || p.tag === 'T-Shirt') }];
 
   const allMenProducts = allProducts.filter(p =>
-    p.pageType === 'Men' || p.tag === 'Men' || p.tag === 'men' ||
+    p.pageType === 'Men' || p.tag === 'Men' || p.tag === 'men' || p.tag === 'T-Shirt' ||
     segmentProducts.some(seg => seg.products.some(sp => sp.id === p.id))
   );
 
@@ -198,11 +205,11 @@ export default function Men() {
       </section>
 
       {/* Filter Bar */}
-      <div style={{
+      <div className="filter-bar" style={{
         background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)',
         position: 'sticky', top: 'var(--navbar-h)', zIndex: 40, backdropFilter: 'blur(20px)',
       }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '12px 24px' }}>
+        <div className="filter-bar-wrapper container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, padding: '12px 24px' }}>
           <div className="cat-tabs" style={{ display: 'flex', gap: 6 }}>
             {filterCategories.map(cat => (
               <button key={cat.key} onClick={() => { setSelected(cat.key); document.getElementById('men-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
@@ -257,7 +264,7 @@ export default function Men() {
               </>
             )}
           </div>
-          <span style={{ color: '#8a7d65', fontSize: '0.82rem', fontWeight: 600 }}>
+          <span className="product-count" style={{ color: '#8a7d65', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
             {selected === 'all' ? `${allMenProducts.length} Products` : `${filtered?.products.length ?? 0} Products`}
           </span>
         </div>
@@ -273,9 +280,16 @@ export default function Men() {
 
       <TrustBadges />
       <style>{`
-        @media (max-width: 820px) { .cat-tabs { display: none !important; } .category-dropdown { display: block !important; } }
-        @media (max-width: 768px) { .cat-tabs { display: none !important; } .category-dropdown { display: block !important; } }
-        @media (max-width: 600px) { .wishlist-btn { opacity: 1 !important; transform: translateY(0) !important; } }
+        @media (max-width: 1024px) { .cat-tabs { gap: 4px !important; } .cat-tabs button { padding: 8px 14px !important; font-size: 0.78rem !important; } }
+        @media (max-width: 768px) {
+          .cat-tabs { display: none !important; }
+          .category-dropdown { display: block !important; width: 100% !important; max-width: 220px !important; }
+          .filter-bar-wrapper { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+          .filter-bar-wrapper .container { flex-direction: column !important; align-items: stretch !important; }
+        }
+        @media (max-width: 600px) {
+          .wishlist-btn { opacity: 1 !important; transform: translateY(0) !important; }
+        }
       `}</style>
     </main>
   );

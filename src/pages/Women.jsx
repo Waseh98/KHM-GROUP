@@ -158,6 +158,13 @@ export default function Women() {
   const allProducts = getProducts();
   const normalize = s => (s || '').toLowerCase().replace(/[\s-]/g, '');
 
+  const matchesSubcategory = (p, subName) => {
+    const name = p.name.toLowerCase();
+    if (name.includes(subName)) return true;
+    if (subName.endsWith('s') && name.includes(subName.slice(0, -1))) return true;
+    return false;
+  };
+
   const segmentProducts = womenSubs.length > 0
     ? womenSubs.map((sub, idx) => ({
         id: sub.id, name: sub.name, image: sub.image || '',
@@ -167,8 +174,10 @@ export default function Women() {
           const pSub = (p.subCategory || '').toLowerCase();
           const subName = sub.name.toLowerCase();
           if (pSub === subName || normalize(pSub) === normalize(subName)) return true;
-          if (p.name.toLowerCase().includes(subName)) return true;
+          if (matchesSubcategory(p, subName)) return true;
           if (idx === 0 && !p.subCategory && p.name.toLowerCase().includes('polo')) return true;
+          if (idx === 1 && !p.subCategory && p.name.toLowerCase().includes('tee')) return true;
+          if (idx === 2 && !p.subCategory && (p.name.toLowerCase().includes('top') || p.name.toLowerCase().includes('v-neck') || p.name.toLowerCase().includes('round neck'))) return true;
           return false;
         }),
       }))

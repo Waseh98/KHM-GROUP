@@ -22,7 +22,7 @@ const videoCards = [
   {
     id: 4,
     title: 'Fashion Edit',
-    thumbnail: 'https://images.unsplash.com/photo-1593032454687-e5c9f6e5c8b9?w=400&q=80',
+    thumbnail: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
     video: 'https://videos.pexels.com/video-files/8431886/8431886-uhd_1440_2732_25fps.mp4',
   },
   {

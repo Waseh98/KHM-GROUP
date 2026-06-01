@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 
 const shopCategories = [
-  { id: 'polo', name: 'Polo Shirts', subtitle: 'Timeless Classic', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&q=80', link: '/men?cat=sub_men_polo' },
-  { id: 'tshirt', name: 'T-Shirts', subtitle: 'Everyday Essential', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&q=80', link: '/men?cat=sub_men_tshirt' },
-  { id: 'roundneck', name: 'Round Neck', subtitle: 'Casual Comfort', image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&q=80', link: '/men?cat=sub_men_roundneck' },
-  { id: 'women-tops', name: "Women's Tops", subtitle: 'Elegant Fits', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80', link: '/women?cat=sub_women_tops' },
-  { id: 'women-polo', name: "Women's Polo", subtitle: 'Premium Range', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80', link: '/women?cat=sub_women_polo' },
+  { id: 'polo', name: 'Polo Shirts', subtitle: 'Timeless Classic', image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80', link: '/men?cat=sub_men_polo' },
+  { id: 'tshirt', name: 'T-Shirts', subtitle: 'Everyday Essential', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80', link: '/men?cat=sub_men_tshirt' },
+  { id: 'roundneck', name: 'Round Neck', subtitle: 'Casual Comfort', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80', link: '/men?cat=sub_men_roundneck' },
+  { id: 'women-kurti', name: "Women's Kurti", subtitle: 'Elegant Style', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=80', link: '/women?cat=sub_women_kurti' },
+  { id: 'mens-casual', name: "Men's Casual", subtitle: 'Modern Comfort', image: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=600&q=80', link: '/men' },
   { id: 'sale', name: 'Sale', subtitle: 'Up to 50% Off', image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80', link: '/sale' },
 ];
 
@@ -165,17 +165,13 @@ export default function CategoryGrid() {
         }
         @media (max-width: 820px) {
           .category-grid { grid-template-columns: repeat(2, 1fr) !important; grid-template-rows: repeat(3, 260px) !important; gap: 14px !important; }
-          .cat-img { object-fit: contain !important; background: #1a1a1a !important; }
         }
         @media (max-width: 768px) {
           .category-grid { 
             grid-template-columns: repeat(2, 1fr) !important; 
-            grid-template-rows: 240px !important; 
+            grid-template-rows: repeat(3, 220px) !important; 
             gap: 12px !important; 
           }
-          .cat-card { min-height: 240px !important; }
-          .cat-card:nth-child(n+3) { display: none !important; }
-          .cat-img { object-fit: cover !important; width: 100% !important; height: 100% !important; }
         }
         @media (max-width: 480px) {
           .category-grid { 
@@ -183,9 +179,7 @@ export default function CategoryGrid() {
             grid-template-rows: 180px !important; 
             gap: 10px !important; 
           }
-          .cat-card { min-height: 180px !important; }
           .cat-card:nth-child(n+3) { display: none !important; }
-          .cat-img { object-fit: cover !important; width: 100% !important; height: 100% !important; }
         }
       `}</style>
     </section>

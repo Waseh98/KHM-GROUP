@@ -24,12 +24,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
-            return 'vendor';
-          }
+          if (id.includes('node_modules/react-dom')) return 'vendor-dom';
+          if (id.includes('node_modules/react-router')) return 'vendor-router';
+          if (id.includes('node_modules/react')) return 'vendor-react';
+          if (id.includes('node_modules/@supabase')) return 'vendor-supabase';
+          if (id.includes('node_modules/mongoose')) return 'vendor-mongoose';
         },
       },
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 400,
   },
 })

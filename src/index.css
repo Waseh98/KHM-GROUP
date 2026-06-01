@@ -3,6 +3,8 @@
    Mobile-first, cross-browser compatible
 ═══════════════════════════════════════════════════════════ */
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;600;700&display=swap');
+
 :root {
   --black: #0D0D0D;
   --gold: #B8972A;
@@ -13,8 +15,8 @@
   --mid-gray: #888888;
   --border: #E2DDD6;
   --white: #ffffff;
-  --font-heading: 'Cormorant Garamond', serif;
-  --font-body: 'Montserrat', sans-serif;
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
   --shadow-md: 0 4px 20px rgba(0,0,0,0.15);
@@ -377,8 +379,9 @@ input, textarea, select {
   .footer-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
   .footer-bottom { flex-direction: column !important; text-align: center !important; }
 
-  /* Category grid → single column */
-  .category-grid { grid-template-columns: 1fr !important; grid-template-rows: repeat(6, 220px) !important; }
+  /* Category grid → 2 columns, only 2 items */
+  .category-grid { grid-template-columns: repeat(2, 1fr) !important; grid-template-rows: 180px !important; gap: 10px !important; }
+  .cat-card:nth-child(n+3) { display: none !important; }
 
   /* Checkout step indicator compact */
   .checkout-steps { gap: 4px !important; }
@@ -396,10 +399,14 @@ input, textarea, select {
 
   html { font-size: 13px; }
 
-  .product-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
 
   /* Payment cards stack */
   .payment-cards { flex-direction: column !important; }
+
+  /* Better mobile product cards */
+  .product-card h3 { font-size: 0.85rem !important; }
+  .product-card .prod-img { min-height: 200px !important; }
 }
 
 /* ── Extra Small (≤ 320px) ── */
@@ -408,7 +415,7 @@ input, textarea, select {
 
   html { font-size: 12px; }
 
-  .product-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+  .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   
   h1 { font-size: 1.5rem !important; }
   h2 { font-size: 1.3rem !important; }
@@ -434,5 +441,25 @@ input, textarea, select {
   body {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* ── Mobile Product Card Enhancements ── */
+@media (max-width: 768px) {
+  .product-card h3 {
+    font-size: 0.9rem !important;
+  }
+  .product-card .wishlist-btn {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .product-card button {
+    min-height: 44px !important;
+    font-size: 0.75rem !important;
+  }
+  .product-card > a {
+    min-height: 220px !important;
   }
 }

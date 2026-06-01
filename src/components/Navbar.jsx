@@ -258,8 +258,8 @@ export default function Navbar() {
   };
 
   const logoStyle = {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 26, fontWeight: 700, letterSpacing: '0.12em',
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 26, fontWeight: 700, letterSpacing: '0.08em',
     color: '#fff', cursor: 'pointer', userSelect: 'none',
   };
 
@@ -288,9 +288,11 @@ export default function Navbar() {
       <nav style={navStyle} role="navigation" aria-label="Main navigation">
         <div style={innerStyle}>
           {/* Logo */}
-          <div style={logoStyle} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            K-TEX
-          </div>
+          <Link to="/" style={{ textDecoration: 'none' }} aria-label="K-TEX Home">
+            <div style={logoStyle}>
+              K-TEX
+            </div>
+          </Link>
 
           {/* Desktop Links */}
           <ul className="nav-links-desktop" style={linkListStyle}>
@@ -443,10 +445,12 @@ export default function Navbar() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '20px 24px', borderBottom: '1px solid rgba(184,151,42,0.15)',
         }}>
-          <span style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 22, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.12em',
-          }}>K-TEX</span>
+            <Link to="/" style={{ textDecoration: 'none' }} onClick={() => setMenuOpen(false)}>
+            <span style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 22, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.08em',
+            }}>K-TEX</span>
+          </Link>
           <button
             onClick={() => setMenuOpen(false)}
             style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}
