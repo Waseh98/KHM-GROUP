@@ -3,7 +3,7 @@ import { getAdminToken } from './adminAuth';
 
 const API_PROD = '/api/products';
 const API_CATS = '/api/categories';
-const PAGES = ['Men', 'Women', 'Kids'];
+const PAGES = ['Men', 'Women', 'Kids', 'Sale'];
 
 function apiHeaders() {
   return {
