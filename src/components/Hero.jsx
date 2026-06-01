@@ -35,7 +35,7 @@ export default function Hero() {
             alt={`K-TEX Premium Collection ${index + 1}`}
             className="hero-image"
             loading={index === 0 ? 'eager' : 'lazy'}
-            fetchpriority={index === 0 ? 'high' : 'low'}
+            fetchPriority={index === 0 ? 'high' : 'low'}
             style={{
               opacity: currentImageIndex === index ? 1 : 0,
               animation: currentImageIndex === index ? 'slowZoom 10s ease-out forwards' : 'none',
@@ -263,6 +263,7 @@ export default function Hero() {
         .hero-btn-primary {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 10px;
           font-family: 'Inter', sans-serif;
           background: linear-gradient(135deg, #D4AF5A 0%, #F5D98B 40%, #C9A227 70%, #E8C86B 100%);
@@ -306,6 +307,7 @@ export default function Hero() {
         .hero-btn-secondary {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
           font-family: 'Inter', sans-serif;
           background: transparent;
@@ -475,20 +477,30 @@ export default function Hero() {
             inset: 0 !important;
           }
           .hero-btn-primary {
-            padding: 18px 40px !important;
-            font-size: 0.85rem !important;
-            min-height: 56px !important;
-            min-width: 180px !important;
+            flex: 1;
+            min-width: 140px !important;
+            max-width: 180px !important;
+            min-height: 54px !important;
+            font-size: 0.8rem !important;
             border-radius: 50px !important;
+            padding: 12px 24px !important;
           }
           .hero-btn-secondary {
-            padding: 18px 32px !important;
+            flex: 1;
+            min-width: 140px !important;
+            max-width: 180px !important;
+            min-height: 54px !important;
             font-size: 0.8rem !important;
-            min-height: 56px !important;
             border-radius: 50px !important;
+            padding: 12px 24px !important;
           }
           .hero-actions {
             gap: 12px !important;
+            width: 100% !important;
+            max-width: 380px !important;
+            margin: 0 auto !important;
+            display: flex !important;
+            justify-content: center !important;
           }
         }
       `}</style>
