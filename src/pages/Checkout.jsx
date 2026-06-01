@@ -597,15 +597,28 @@ export default function Checkout() {
                             width: '52px', height: '52px', borderRadius: '12px',
                             background: method.gradient,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.5rem',
                             boxShadow: `0 4px 16px ${method.color}30`,
                             flexShrink: 0,
                             overflow: 'hidden',
                           }}>
                             {method.icon.startsWith('http') || method.icon.startsWith('/') || method.icon.startsWith('data:') ? (
-                              <img src={method.icon} alt={method.name} style={{ width: '36px', height: '36px', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                            ) : (
-                              method.icon
+                              <img 
+                                src={method.icon} 
+                                alt={method.name} 
+                                style={{ 
+                                  width: '100%', 
+                                  height: '100%', 
+                                  objectFit: 'cover',
+                                  borderRadius: '10px'
+                                }} 
+                                onError={(e) => { 
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                                }} 
+                              />
+                            ) : null}
+                            {!method.icon.startsWith('http') && !method.icon.startsWith('/') && !method.icon.startsWith('data:') && (
+                              <span style={{ fontSize: '1.5rem' }}>{method.icon}</span>
                             )}
                           </div>
                           <div style={{ flex: 1 }}>
