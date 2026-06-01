@@ -78,15 +78,7 @@ app.use('/api', (req, res) => {
 const path = require('path');
 const fs = require('fs');
 const { uploadDir } = require('./utils/imageUploader');
-app.get('/uploads/:filename', (req, res) => {
-  const filename = path.basename(req.params.filename);
-  const filePath = path.join(uploadDir, filename);
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).json({ success: false, message: 'Image not found' });
-  }
-});
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ─── Serve Frontend in Production ──────────────────────────
 function findDistPath() {
