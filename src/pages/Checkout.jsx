@@ -600,8 +600,13 @@ export default function Checkout() {
                             fontSize: '1.5rem',
                             boxShadow: `0 4px 16px ${method.color}30`,
                             flexShrink: 0,
+                            overflow: 'hidden',
                           }}>
-                            {method.icon}
+                            {method.icon.startsWith('http') ? (
+                              <img src={method.icon} alt={method.name} style={{ width: '36px', height: '36px', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                            ) : (
+                              method.icon
+                            )}
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{
