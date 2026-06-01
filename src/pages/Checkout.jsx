@@ -594,10 +594,10 @@ export default function Checkout() {
                           }}
                         >
                           <div style={{
-                            width: '52px', height: '52px', borderRadius: '12px',
+                            width: '40px', height: '40px', borderRadius: '10px',
                             background: method.gradient,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: `0 4px 16px ${method.color}30`,
+                            boxShadow: `0 4px 12px ${method.color}30`,
                             flexShrink: 0,
                             overflow: 'hidden',
                           }}>
@@ -609,7 +609,7 @@ export default function Checkout() {
                                   width: '100%', 
                                   height: '100%', 
                                   objectFit: 'cover',
-                                  borderRadius: '10px'
+                                  borderRadius: '8px'
                                 }} 
                                 onError={(e) => { 
                                   e.target.style.display = 'none';
@@ -618,7 +618,7 @@ export default function Checkout() {
                               />
                             ) : null}
                             {!method.icon.startsWith('http') && !method.icon.startsWith('/') && !method.icon.startsWith('data:') && (
-                              <span style={{ fontSize: '1.5rem' }}>{method.icon}</span>
+                              <span style={{ fontSize: '1.2rem' }}>{method.icon}</span>
                             )}
                           </div>
                           <div style={{ flex: 1 }}>
