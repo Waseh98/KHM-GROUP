@@ -24,7 +24,7 @@ const productSchema = new mongoose.Schema({
   pageType: {
     type: String,
     required: [true, 'Page type is required'],
-    enum: ['Men', 'Women', 'Kids', 'Mens'],
+    enum: ['Men', 'Women', 'Kids', 'Mens', 'Sale'],
     trim: true,
     set: v => v === 'Mens' ? 'Men' : v
   },
