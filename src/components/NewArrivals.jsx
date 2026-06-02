@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { getImageUrl } from '../utils/api';
 
 export default function NewArrivals() {
   const [activeTab, setActiveTab] = useState('All');
@@ -187,18 +188,14 @@ export default function NewArrivals() {
                 background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
                 display: 'block',
               }}>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="prod-img"
-                  loading="lazy"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transition: 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                  }}
-                />
+                <img src={getImageUrl(product.image)} alt={product.name} className="prod-img" loading="lazy"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          }}
+        />
 
                 {/* Badge */}
                 {product.badge && (

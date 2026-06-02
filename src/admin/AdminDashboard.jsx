@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getProducts } from '../data';
 
+const API_BASE = 'https://khm-group-production.up.railway.app';
+
 function getOfflineOrders() {
   try { return JSON.parse(localStorage.getItem('ktex_offline_orders') || '[]'); } catch { return []; }
 }
@@ -40,7 +42,7 @@ export default function AdminDashboard() {
         const token = localStorage.getItem('ktex_admin_token') || '';
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 6000);
-        const res = await fetch('/api/admin/dashboard', { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
+        const res = await fetch(`${API_BASE}/api/admin/dashboard`, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
         clearTimeout(timeout);
         if ([502, 503, 504].includes(res.status)) throw new Error('502');
         if (!res.ok) throw new Error(`Server error ${res.status}`);

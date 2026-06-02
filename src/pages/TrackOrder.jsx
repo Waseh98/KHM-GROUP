@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+const API_BASE = 'https://khm-group-production.up.railway.app';
+
 // Check localStorage for offline orders
 function findOfflineOrder(id) {
   try {
@@ -72,7 +74,7 @@ export default function TrackOrder() {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
 
-      const res = await fetch(`/api/orders/track/${encodeURIComponent(value)}`, {
+      const res = await fetch(`${API_BASE}/api/orders/track/${encodeURIComponent(value)}`, {
         signal: controller.signal,
       });
       clearTimeout(timeout);

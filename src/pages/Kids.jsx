@@ -4,6 +4,7 @@ import { getProducts, categories } from '../data';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { getImageUrl } from '../utils/api';
 
 function getKidsSubCategories() {
   const defaultSubs = [
@@ -67,7 +68,7 @@ function ProductCard({ product, onWishlist, isWishlisted }) {
     >
       <Link to={`/product/${product.id}`} style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', backgroundColor: '#eef', display: 'block' }}>
         <img
-          src={product.image}
+          src={getImageUrl(product.image)}
           alt={product.name}
           className="prod-img"
           loading="lazy"

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getCollections, getProducts, syncCollectionsFromBackend, syncProductsFromBackend } from '../data';
 import { useCart } from '../context/CartContext';
+import { getImageUrl } from '../utils/api';
 
 function slugify(name) {
   return String(name || '')
@@ -78,7 +79,7 @@ export default function CollectionDetail() {
         }}
       >
         <img
-          src={collection.image}
+          src={getImageUrl(collection.image)}
           alt={collection.name}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }}
         />
@@ -127,7 +128,7 @@ export default function CollectionDetail() {
               {collectionProducts.map((p) => (
                 <div key={p.id} style={{ background: '#fff', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
                   <Link to={`/product/${p.id}`} style={{ display: 'block', aspectRatio: '3/4', overflow: 'hidden', background: '#eef' }}>
-                    <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                    <img src={getImageUrl(p.image)} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
                   </Link>
                   <div style={{ padding: 16, display: 'flex', flexDirection: 'column', flex: 1 }}>
                     <Link to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>

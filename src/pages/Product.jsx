@@ -5,6 +5,7 @@ import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { getImageUrl } from '../utils/api';
 
 const DEFAULT_DESC = 'Crafted from premium-quality fabric for unmatched comfort and breathability. Featuring a tailored fit and signature reinforced stitching for lasting durability.';
 
@@ -40,8 +41,8 @@ export default function Product() {
   const [reviewErrorMsg, setReviewErrorMsg] = useState('');
 
   const productImages = product?.images && product.images.filter(img => img !== '').length > 0
-    ? product.images.filter(img => img !== '')
-    : [product?.image];
+    ? product.images.filter(img => img !== '').map(img => getImageUrl(img))
+    : [getImageUrl(product?.image)];
 
   const sizes = product?.sizes && product.sizes.length > 0
     ? product.sizes.map(s => typeof s === 'string' ? s : s.size).filter(Boolean)
@@ -50,10 +51,12 @@ export default function Product() {
   const currentColorName = product?.colorNames?.[selectedColor] || 'Selected Option';
   const description = product?.description || DEFAULT_DESC;
 
+  const API_BASE = 'https://khm-group-production.up.railway.app';
+
   const fetchReviews = async () => {
     setReviewsLoading(true);
     try {
-      const res = await fetch(`/api/reviews/${id}`);
+      const res = await fetch(`${API_BASE}/api/reviews/${id}`);
       const data = await res.json();
       if (data.success && data.data) {
         setReviews(data.data);
@@ -107,7 +110,7 @@ export default function Product() {
     setSubmittingReview(true);
 
     try {
-      const res = await fetch(`/api/reviews/${id}`, {
+      const res = await fetch(`${API_BASE}/api/reviews/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1007,7 +1010,7 @@ export default function Product() {
                   onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
                 >
                   <div style={{ aspectRatio: '3/4', overflow: 'hidden' }}>
-                    <img src={p.image} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
+                    <img src={getImageUrl(p.image)} alt={p.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
                       onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
                       onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                     />

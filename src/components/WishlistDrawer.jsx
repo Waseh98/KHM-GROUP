@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../context/WishlistContext';
+import { getImageUrl } from '../utils/api';
 
 export default function WishlistDrawer() {
   const { items, wishlistOpen, setWishlistOpen, toggle } = useWishlist();
@@ -88,7 +89,7 @@ export default function WishlistDrawer() {
               }}>
                 <Link to={`/product/${item.id}`} onClick={() => setWishlistOpen(false)}>
                   <img
-                    src={item.image}
+                    src={getImageUrl(item.image)}
                     alt={item.name}
                     style={{
                       width: 72, height: 96, objectFit: 'cover',

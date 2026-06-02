@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { getImageUrl } from '../utils/api';
 
 function generateOrderNumber() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -10,11 +11,13 @@ function generateOrderNumber() {
   return `KTX-${suffix}`;
 }
 
+const API_BASE = 'https://khm-group-production.up.railway.app';
+
 async function submitOrderToBackend(payload) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await fetch('/api/orders/guest', {
+    const res = await fetch(`${API_BASE}/api/orders/guest`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -313,7 +316,7 @@ export default function Checkout() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {item.image && (
                       <img
-                        src={item.image}
+                        src={getImageUrl(item.image)}
                         alt={item.name}
                         style={{
                           width: '44px', height: '44px', objectFit: 'cover',

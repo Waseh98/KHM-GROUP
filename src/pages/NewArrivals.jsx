@@ -37,7 +37,7 @@ function DarkProductCard({ product, onWishlist, isWishlisted }) {
       }}
     >
       <Link to={`/product/${product.id}`} style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: 'linear-gradient(135deg, #1a1a2e, #16213e)', display: 'block' }}>
-        <img src={product.image} alt={product.name} className="prod-img" loading="lazy"
+        <img src={getImageUrl(product.image)} alt={product.name} className="prod-img" loading="lazy"
           style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.8s ease' }} />
         {product.badge && (
           <div style={{

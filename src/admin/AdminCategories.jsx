@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
+import { getImageUrl } from '../utils/api';
 
-const API = '/api/categories';
+const API_BASE = 'https://khm-group-production.up.railway.app';
+const API = `${API_BASE}/api/categories`;
 
 function apiHeaders() {
   return {
@@ -164,7 +166,7 @@ export default function AdminCategories() {
                 categories.map(c => (
                   <tr key={c._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <td style={{ padding: 12 }}>
-                      {c.image ? <img src={c.image} alt={c.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} /> : <div style={{ width: 44, height: 44, borderRadius: 8, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 18 }}>🏷️</div>}
+                      {getImageUrl(c.image) ? <img src={getImageUrl(c.image)} alt={c.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} /> : <div style={{ width: 44, height: 44, borderRadius: 8, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 18 }}>🏷️</div>}
                     </td>
                     <td style={{ padding: 12, fontWeight: 700, color: '#d4af5a', fontSize: 14 }}>{c.name}</td>
                     <td style={{ padding: 12, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -227,7 +229,7 @@ export default function AdminCategories() {
               <div>
                 <label style={labelStyle}>Image URL (optional)</label>
                 <input type="url" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder="https://..." />
-                {formData.image && <img src={formData.image} alt="preview" style={{ marginTop: 8, width: 80, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />}
+                {getImageUrl(formData.image) && <img src={getImageUrl(formData.image)} alt="preview" style={{ marginTop: 8, width: 80, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />}
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
                 {modal !== 'new' && (

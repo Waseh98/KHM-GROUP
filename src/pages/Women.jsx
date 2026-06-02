@@ -4,12 +4,14 @@ import { getProducts, categories } from '../data';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { getImageUrl } from '../utils/api';
 
 function getWomenSubCategories() {
   const defaultSubs = [
     { id: 'sub_women_polo', name: 'Polo Tops', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80' },
     { id: 'sub_women_tees', name: 'T-Shirts', image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=400&q=80' },
     { id: 'sub_women_tops', name: 'Elegant Tops', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80' },
+    { id: 'sub_women_kurti', name: "Women's Kurti", image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&q=80' },
   ];
   try {
     const cats = typeof window !== 'undefined'
@@ -54,7 +56,7 @@ function DarkProductCard({ product, onWishlist, isWishlisted }) {
       }}
     >
       <Link to={`/product/${product.id}`} style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', background: 'linear-gradient(135deg, #1a1a2e, #16213e)', display: 'block' }}>
-        <img src={product.image} alt={product.name} className="prod-img" loading="lazy"
+        <img src={getImageUrl(product.image)} alt={product.name} className="prod-img" loading="lazy"
           style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.8s ease' }} />
         {product.badge && (
           <div style={{
@@ -145,7 +147,22 @@ export default function Women() {
     const params = new URLSearchParams(location.search);
     const cat = params.get('cat');
     if (cat) {
-      setSelected(cat);
+      let matchedId = cat;
+      const womenSubs = getWomenSubCategories();
+      const seg = womenSubs.find(s => s.id === cat);
+      if (!seg) {
+        const catLower = cat.toLowerCase();
+        const found = womenSubs.find(s => {
+          const idLower = s.id.toLowerCase();
+          const nameLower = s.name.toLowerCase();
+          return idLower.includes(catLower) || 
+                 catLower.includes(idLower) || 
+                 nameLower.includes(catLower.replace('sub_men_', '').replace('sub_women_', '')) ||
+                 catLower.includes(nameLower.replace(' shirts', '').replace(' tops', ''));
+        });
+        if (found) matchedId = found.id;
+      }
+      setSelected(matchedId);
       setTimeout(() => {
         document.getElementById('women-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -178,6 +195,7 @@ export default function Women() {
           if (idx === 0 && !p.subCategory && p.name.toLowerCase().includes('polo')) return true;
           if (idx === 1 && !p.subCategory && p.name.toLowerCase().includes('tee')) return true;
           if (idx === 2 && !p.subCategory && (p.name.toLowerCase().includes('top') || p.name.toLowerCase().includes('v-neck') || p.name.toLowerCase().includes('round neck'))) return true;
+          if (idx === 3 && !p.subCategory && p.name.toLowerCase().includes('kurti')) return true;
           return false;
         }),
       }))
@@ -189,7 +207,22 @@ export default function Women() {
   );
 
   const filterCategories = [{ key: 'all', label: 'Category' }, ...womenSubs.map(s => ({ key: s.id, label: s.name }))];
-  const filtered = selected === 'all' ? null : (() => { const seg = segmentProducts.find(s => s.id === selected); return seg ? { title: seg.name, products: seg.products } : null; })();
+  
+  const filtered = selected === 'all' ? null : (() => {
+    let seg = segmentProducts.find(s => s.id === selected);
+    if (!seg) {
+      const selLower = selected.toLowerCase();
+      seg = segmentProducts.find(s => {
+        const idLower = s.id.toLowerCase();
+        const nameLower = s.name.toLowerCase();
+        return idLower.includes(selLower) || 
+               selLower.includes(idLower) || 
+               nameLower.includes(selLower.replace('sub_men_', '').replace('sub_women_', '')) ||
+               selLower.includes(nameLower.replace(' shirts', '').replace(' tops', ''));
+      });
+    }
+    return seg ? { title: seg.name, products: seg.products } : null;
+  })();
 
   return (
     <main style={{ background: 'linear-gradient(180deg, #0d0d12, #151318, #0d0d12)' }}>

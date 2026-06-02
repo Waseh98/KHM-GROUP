@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 
 const shopCategories = [
-  { id: 'polo', name: 'Polo Shirts', subtitle: 'Timeless Classic', image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80', link: '/men?cat=sub_men_polo' },
-  { id: 'tshirt', name: 'T-Shirts', subtitle: 'Everyday Essential', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80', link: '/men?cat=sub_men_tshirt' },
+  { id: 'polo', name: 'Polo Shirts', subtitle: 'Timeless Classic', image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&q=80', link: '/men?cat=sub_men_polo' },
+  { id: 'tshirt', name: 'T-Shirts', subtitle: 'Everyday Essential', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&q=80', link: '/men?cat=sub_men_tshirt' },
   { id: 'roundneck', name: 'Round Neck', subtitle: 'Casual Comfort', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80', link: '/men?cat=sub_men_roundneck' },
   { id: 'women-kurti', name: "Women's Kurti", subtitle: 'Elegant Style', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=80', link: '/women?cat=sub_women_kurti' },
   { id: 'mens-casual', name: "Men's Casual", subtitle: 'Modern Comfort', image: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=600&q=80', link: '/men' },
@@ -169,17 +169,53 @@ export default function CategoryGrid() {
         @media (max-width: 768px) {
           .category-grid { 
             grid-template-columns: repeat(2, 1fr) !important; 
-            grid-template-rows: repeat(3, 220px) !important; 
+            grid-template-rows: repeat(3, 240px) !important; 
             gap: 12px !important; 
+          }
+          .cat-overlay {
+            padding: 16px !important;
+          }
+          .cat-content h3 {
+            font-size: 1.25rem !important;
+            margin-bottom: 10px !important;
+          }
+          .shop-btn {
+            padding: 7px 14px !important;
+            font-size: 0.72rem !important;
           }
         }
         @media (max-width: 480px) {
           .category-grid { 
             grid-template-columns: repeat(2, 1fr) !important; 
-            grid-template-rows: 180px !important; 
-            gap: 10px !important; 
+            grid-template-rows: 240px !important; 
+            gap: 12px !important; 
           }
           .cat-card:nth-child(n+3) { display: none !important; }
+          
+          .cat-overlay {
+            padding: 14px !important;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%, transparent 100%) !important;
+          }
+          .cat-content p {
+            font-size: 0.62rem !important;
+            margin-bottom: 4px !important;
+            letter-spacing: 0.12em !important;
+          }
+          .cat-content h3 {
+            font-size: 1.12rem !important;
+            margin-bottom: 10px !important;
+          }
+          .shop-btn {
+            padding: 6px 12px !important;
+            font-size: 0.68rem !important;
+            border-radius: 6px !important;
+            gap: 4px !important;
+          }
+          .shop-btn svg {
+            width: 10px !important;
+            height: 10px !important;
+            stroke-width: 3px !important;
+          }
         }
       `}</style>
     </section>

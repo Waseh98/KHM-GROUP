@@ -187,7 +187,7 @@ export default function NewArrivals() {
                 display: 'block',
               }}>
                 <img
-                  src={product.image}
+                  src={getImageUrl(product.image)}
                   alt={product.name}
                   className="prod-img"
                   loading="lazy"

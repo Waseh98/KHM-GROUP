@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { getImageUrl } from '../utils/api';
 
 export default function CartDrawer() {
   const { items, drawerOpen, setDrawerOpen, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
@@ -87,7 +88,7 @@ export default function CartDrawer() {
                   {/* Image */}
                   <Link to={`/product/${item.id}`} onClick={() => setDrawerOpen(false)}>
                     <img
-                      src={item.image} alt={item.name}
+                      src={getImageUrl(item.image)} alt={item.name}
                       style={{ width: 80, height: 100, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
                     />
                   </Link>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { getImageUrl } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const links = ['Home', 'Men', 'Women', 'Kids', 'New Arrivals', 'Collections', 'Sale'];
@@ -128,7 +129,7 @@ function SearchBar({ open, onClose }) {
               >
                 {/* Product Thumbnail */}
                 <img
-                  src={product.image}
+                  src={getImageUrl(product.image)}
                   alt={product.name}
                   style={{
                     width: 46, height: 46, objectFit: 'cover',
@@ -506,7 +507,7 @@ export default function Navbar() {
                     borderBottom: '1px solid #222', textDecoration: 'none'
                   }}
                 >
-                  <img src={product.image} alt={product.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '4px' }} />
+                  <img src={getImageUrl(product.image)} alt={product.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '4px' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ color: '#fff', fontSize: '0.78rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</div>
                     <div style={{ color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 700 }}>Rs. {product.price.toLocaleString()}</div>

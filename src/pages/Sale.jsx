@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
+import { getImageUrl } from '../utils/api';
 
 export default function Sale() {
   const { addToCart } = useCart();
@@ -125,7 +126,7 @@ export default function Sale() {
                   }}
                 >
                   <img
-                    src={product.image}
+                    src={getImageUrl(product.image)}
                     alt={product.name}
                     loading="lazy"
                     style={{

@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
+import { getImageUrl } from '../utils/api';
 
-const API_PROD = '/api/products';
-const API_CATS = '/api/categories';
+const API_BASE = 'https://khm-group-production.up.railway.app';
+const API_PROD = `${API_BASE}/api/products`;
+const API_CATS = `${API_BASE}/api/categories`;
 const PAGES = ['Men', 'Women', 'Kids', 'Sale'];
 
 function apiHeaders() {
@@ -330,7 +332,7 @@ export default function AdminProducts() {
                       <td style={{ padding: 10 }}>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           {(p.images || []).slice(0, 4).map((img, i) => {
-                            const src = img?.url || img || '';
+                            const src = getImageUrl(img?.url || img || '');
                             if (!src || src.endsWith('...')) return null;
                             return (
                               <img key={i} src={src} alt={`${p.name} ${i + 1}`}

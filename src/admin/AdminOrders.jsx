@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getImageUrl } from '../utils/api';
+
+const API_BASE = 'https://khm-group-production.up.railway.app';
 
 const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 
@@ -43,7 +46,7 @@ export default function AdminOrders() {
       const q = statusFilter ? `?status=${encodeURIComponent(statusFilter)}&limit=100` : '?limit=100';
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 7000);
-      const res = await fetch(`/api/orders${q}`, {
+      const res = await fetch(`${API_BASE}/api/orders${q}`, {
         headers: { Authorization: `Bearer ${token}` },
         signal: controller.signal,
       });
@@ -86,7 +89,7 @@ export default function AdminOrders() {
       return;
     }
     try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
+      const res = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status }),
@@ -159,7 +162,7 @@ export default function AdminOrders() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {(o.orderItems || []).map((item, idx) => (
                           <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                            {item.image && <img src={item.image} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid #E2DDD6' }} />}
+                            {getImageUrl(item.image) && <img src={getImageUrl(item.image)} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid #E2DDD6' }} />}
                             <div style={{ fontSize: 12, color: '#555' }}>
                               <span style={{ fontWeight: 600, color: '#0D0D0D' }}>{item.name}</span>
                               <span style={{ color: '#888', marginLeft: 6 }}>×{item.quantity}</span>
@@ -248,7 +251,7 @@ export default function AdminOrders() {
               <Section title="🛒 Items ({viewOrder.orderItems?.length || 0})">
                 {(viewOrder.orderItems || []).map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: idx < viewOrder.orderItems.length - 1 ? '1px solid #f0ede8' : 'none' }}>
-                    {item.image && <img src={item.image} alt={item.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid #E2DDD6' }} />}
+                    {item.image && <img src={getImageUrl(item.image)} alt={item.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid #E2DDD6' }} />}
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, color: '#0D0D0D', fontSize: 14 }}>{item.name}</div>
                       <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>

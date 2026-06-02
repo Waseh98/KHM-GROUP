@@ -1,3 +1,21 @@
+const API_BASE = 'https://khm-group-production.up.railway.app';
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80';
+
+function fixImageUrl(url) {
+  if (!url) return FALLBACK_IMAGE;
+  if (typeof url === 'object' && url !== null) {
+    if (url.url) return fixImageUrl(url.url);
+    return FALLBACK_IMAGE;
+  }
+  if (typeof url !== 'string') return FALLBACK_IMAGE;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+    return `${API_BASE}${url.startsWith('/') ? url : '/' + url}`;
+  }
+  if (url.startsWith('/') && !url.startsWith('/api/')) return `${API_BASE}${url}`;
+  return url;
+}
+
 const defaultProducts = [
   // Classic Polo - Men
   {
@@ -444,8 +462,8 @@ function transformProduct(p) {
     price: hasDiscount ? p.discountPrice : p.price,
     oldPrice: hasDiscount ? p.price : undefined,
     discount: hasDiscount ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
-    image: p.images?.[0]?.url || '',
-    images: (p.images || []).map(img => img.url),
+    image: fixImageUrl(p.images?.[0]?.url || p.images?.[0] || ''),
+    images: (p.images || []).map(img => fixImageUrl(img?.url || img)),
     tag: p.pageType || p.mainCategory || p.category || 'Men',
     pageType: p.pageType,
     subCategory: p.subCategory,
@@ -473,13 +491,13 @@ function transformCategory(c) {
     name: c.name,
     slug: c.slug,
     subtitle: '',
-    image: c.image || '',
+    image: fixImageUrl(c.image || ''),
     pageTypes: c.pageTypes || ['Men'],
     tall: true,
     subcategories: (c.subCategories || []).map(s => ({
       id: s._id,
       name: s.name,
-      image: s.image || ''
+      image: fixImageUrl(s.image || '')
     }))
   };
 }
@@ -491,7 +509,7 @@ export async function syncProductsFromBackend(force = false) {
     if (lastSync && Date.now() - parseInt(lastSync) < 30000) return;
   }
   try {
-    const res = await fetch('/api/products?limit=200&sort=newest');
+    const res = await fetch(`${API_BASE}/api/products?limit=200&sort=newest`);
     if (!res.ok) return;
     const json = await res.json();
     if (json.success && json.data) {
@@ -512,7 +530,7 @@ export async function syncCategoriesFromBackend(force = false) {
     if (lastSync && Date.now() - parseInt(lastSync) < 30000) return;
   }
   try {
-    const res = await fetch('/api/categories');
+    const res = await fetch(`${API_BASE}/api/categories`);
     if (!res.ok) return;
     const json = await res.json();
     if (json.success && json.data) {
@@ -531,12 +549,12 @@ function transformCollection(c) {
     name: c.name,
     slug: c.slug,
     description: c.description || '',
-    image: c.image || '',
+    image: fixImageUrl(c.image || ''),
     categories: (c.categories || []).map(cat => ({
       _id: cat._id || cat,
       name: cat.name || cat,
       slug: cat.slug || '',
-      image: cat.image || ''
+      image: fixImageUrl(cat.image || '')
     })),
     order: c.order || 0
   };
@@ -549,7 +567,7 @@ export async function syncCollectionsFromBackend(force = false) {
     if (lastSync && Date.now() - parseInt(lastSync) < 30000) return;
   }
   try {
-    const res = await fetch('/api/collections');
+    const res = await fetch(`${API_BASE}/api/collections`);
     if (!res.ok) return;
     const json = await res.json();
     if (json.success && json.data) {
