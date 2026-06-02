@@ -1,21 +1,20 @@
 const Product = require('../models/Product.model');
 const { processImageArray } = require('../utils/imageUploader');
 
-// @GET /api/products — Get all products with filter/sort/search/pagination
 exports.getAllProducts = async (req, res) => {
   try {
-    const { pageType, category, mainCategory, subCategory, stockStatus, minPrice, maxPrice, search, sort, page = 1, limit = 12, featured, newArrival, compact } = req.query;
+    const { pageType, category, mainCategory, subCategory, stockStatus, minPrice, maxPrice, search, sort, page = 1, limit = 12, featured, newArrival } = req.query;
     const query = { isActive: true };
 
-    if (pageType)       query.pageType = pageType;
-    if (category)       query.category = category;
-    if (mainCategory)   query.mainCategory = mainCategory;
-    if (subCategory)    query.subCategory = subCategory;
-    if (featured)       query.isFeatured = true;
-    if (newArrival)     query.isNewArrival = true;
-    if (stockStatus === 'in_stock')      query.stock = { $gt: 5 };
-    if (stockStatus === 'low_stock')     query.stock = { $gt: 0, $lte: 5 };
-    if (stockStatus === 'out_of_stock')  query.stock = { $lte: 0 };
+    if (pageType) query.pageType = pageType;
+    if (category) query.category = category;
+    if (mainCategory) query.mainCategory = mainCategory;
+    if (subCategory) query.subCategory = subCategory;
+    if (featured) query.isFeatured = true;
+    if (newArrival) query.isNewArrival = true;
+    if (stockStatus === 'in_stock') query.stock = { $gt: 5 };
+    if (stockStatus === 'low_stock') query.stock = { $gt: 0, $lte: 5 };
+    if (stockStatus === 'out_of_stock') query.stock = { $lte: 0 };
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
@@ -31,19 +30,16 @@ exports.getAllProducts = async (req, res) => {
     }
 
     const sortOptions = {
-      'newest':       { createdAt: -1 },
-      'price-low':    { price: 1 },
-      'price-high':   { price: -1 },
-      'top-rated':    { ratings: -1 },
-      'popular':      { numOfReviews: -1 }
+      'newest': { createdAt: -1 },
+      'price-low': { price: 1 },
+      'price-high': { price: -1 },
+      'top-rated': { ratings: -1 },
+      'popular': { numOfReviews: -1 }
     };
     const sortBy = sortOptions[sort] || { createdAt: -1 };
 
-    const skip  = (Number(page) - 1) * Number(limit);
+    const skip = (Number(page) - 1) * Number(limit);
     const total = await Product.countDocuments(query);
-
-    // Always restrict fields for list views to optimize response size
-    // Frontend only needs these fields for the product grid / admin list
     const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews';
 
     const products = await Product.find(query)
@@ -52,24 +48,19 @@ exports.getAllProducts = async (req, res) => {
       .limit(Number(limit))
       .select(selectFields);
 
-    // If any legacy base64 images are still here, we'll return them.
-    // However, our migration and new uploader will prevent new base64 strings.
-    const data = products;
-
     res.status(200).json({
       success: true,
-      count: data.length,
+      count: products.length,
       total,
       totalPages: Math.ceil(total / Number(limit)),
       currentPage: Number(page),
-      data
+      data: products
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @GET /api/products/:id
 exports.getProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate({
@@ -85,12 +76,11 @@ exports.getProduct = async (req, res) => {
   }
 };
 
-// @POST /api/products — Admin only
 exports.createProduct = async (req, res) => {
   try {
     req.body.createdBy = req.user._id;
     if (req.body.images) {
-      req.body.images = processImageArray(req.body.images);
+      req.body.images = await processImageArray(req.body.images);
     }
     const product = await Product.create(req.body);
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
@@ -99,11 +89,10 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// @PUT /api/products/:id — Admin only
 exports.updateProduct = async (req, res) => {
   try {
     if (req.body.images) {
-      req.body.images = processImageArray(req.body.images);
+      req.body.images = await processImageArray(req.body.images);
     }
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true, runValidators: true
@@ -115,7 +104,6 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// @DELETE /api/products/:id — Admin only (soft delete)
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
@@ -126,7 +114,6 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// @GET /api/products/featured
 exports.getFeaturedProducts = async (req, res) => {
   try {
     const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews';
