@@ -1,21 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { isSupabaseConfigured } from '../lib/supabaseClient'
+import toast from 'react-hot-toast'
 
-/**
- * Login page with:
- * - Email & password login
- * - Google OAuth
- * - Link to signup & forgot password
- * - Loading states on all buttons
- * - Error handling via toast
- */
 export default function Login() {
   const { signIn, signInWithGoogle, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Find original location or fallback to /dashboard
   const from = location.state?.from?.pathname || '/dashboard'
 
   const [email, setEmail] = useState('')
@@ -23,13 +16,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
 
-  // If already logged in, redirect to dashboard or original route
   if (user) {
     navigate(from, { replace: true })
     return null
   }
 
-  // ── Email/Password Login Handler ────────────────────────
   const handleEmailLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
@@ -43,12 +34,14 @@ export default function Login() {
     }
   }
 
-  // ── OAuth Handlers ──────────────────────────────────────
   const handleGoogleLogin = async () => {
+    if (!isSupabaseConfigured) {
+      toast.error('Google login is not configured')
+      return
+    }
     await signInWithGoogle(from)
   }
 
-  // ── Shared Styles ───────────────────────────────────────
   const pageStyle = {
     minHeight: '100vh',
     display: 'flex',
@@ -165,11 +158,9 @@ export default function Login() {
   return (
     <div style={pageStyle} className="auth-page-container">
       <div style={cardStyle} className="auth-card">
-        {/* ── Title ── */}
         <h1 style={titleStyle} className="auth-title">Welcome Back</h1>
         <p style={subtitleStyle}>Sign in to your K-TEX account</p>
 
-        {/* ── OAuth Buttons ── */}
         <button
           style={oauthBtn}
           onClick={handleGoogleLogin}
@@ -185,14 +176,12 @@ export default function Login() {
           Continue with Google
         </button>
 
-        {/* ── Divider ── */}
         <div style={dividerStyle}>
           <span style={dividerLine} />
           <span>or sign in with email</span>
           <span style={dividerLine} />
         </div>
 
-        {/* ── Email Form ── */}
         <form onSubmit={handleEmailLogin}>
           <div style={{ marginBottom: 16 }}>
             <label style={labelStyle}>Email</label>
@@ -268,7 +257,6 @@ export default function Login() {
           </button>
         </form>
 
-        {/* ── Signup Link ── */}
         <p style={{
           textAlign: 'center',
           marginTop: 20,
@@ -289,23 +277,13 @@ export default function Login() {
 
       <style>{`
         @media (max-width: 480px) {
-          .auth-page-container {
-            padding: 80px 16px 40px !important;
-          }
-          .auth-card {
-            padding: 30px 20px !important;
-          }
-          .auth-title {
-            font-size: 24px !important;
-          }
+          .auth-page-container { padding: 80px 16px 40px !important; }
+          .auth-card { padding: 30px 20px !important; }
+          .auth-title { font-size: 24px !important; }
         }
         @media (max-width: 360px) {
-          .auth-page-container {
-            padding: 60px 12px 30px !important;
-          }
-          .auth-card {
-            padding: 24px 16px !important;
-          }
+          .auth-page-container { padding: 60px 12px 30px !important; }
+          .auth-card { padding: 24px 16px !important; }
         }
       `}</style>
     </div>
