@@ -20,6 +20,16 @@ export function getImageUrl(image) {
   return image;
 }
 
+export function getProductImageUrl(product) {
+  if (!product) return FALLBACK_IMAGE;
+  const images = product.images || [];
+  for (const img of images) {
+    const url = typeof img === 'string' ? img : (img?.url || '');
+    if (url && url !== FALLBACK_IMAGE) return getImageUrl(url);
+  }
+  return getImageUrl(product.image || '');
+}
+
 const INVALID_TOKEN = 'local-dev-token';
 
 export async function apiRequest(path, { method = 'GET', body, token, headers } = {}) {
@@ -53,4 +63,3 @@ export async function apiRequest(path, { method = 'GET', body, token, headers } 
 
   return data;
 }
-

@@ -1,31 +1,24 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient'
 import toast from 'react-hot-toast'
 
-// Create the auth context
 const AuthContext = createContext(null)
 
-/**
- * AuthProvider wraps the entire app and provides:
- * - User session state
- * - Login/signup/logout methods
- * - OAuth methods (Google, Facebook)
- * - Password reset functionality
- * - Automatic session persistence on refresh
- */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // ── On mount: check for existing session ─────────────────
   useEffect(() => {
-    // Check if a session already exists (e.g. page refresh)
+    if (!isSupabaseConfigured) {
+      setLoading(false)
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
-    // Listen for auth state changes (login, logout, token refresh)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
@@ -33,8 +26,11 @@ export function AuthProvider({ children }) {
     return () => listener?.subscription.unsubscribe()
   }, [])
 
-  // ── Email & Password Signup ──────────────────────────────
   const signUp = async (email, password) => {
+    if (!isSupabaseConfigured) {
+      toast.error('Auth is not configured')
+      return { error: { message: 'Auth not configured' } }
+    }
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) {
       toast.error(error.message)
@@ -44,8 +40,11 @@ export function AuthProvider({ children }) {
     return { data }
   }
 
-  // ── Email & Password Login ───────────────────────────────
   const signIn = async (email, password) => {
+    if (!isSupabaseConfigured) {
+      toast.error('Auth is not configured')
+      return { error: { message: 'Auth not configured' } }
+    }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       toast.error(error.message)
@@ -55,8 +54,11 @@ export function AuthProvider({ children }) {
     return { data }
   }
 
-  // ── OAuth Login (Google, Facebook, etc.) ─────────────────
   const signInWithGoogle = async (redirectToPath = '/dashboard') => {
+    if (!isSupabaseConfigured) {
+      toast.error('Auth is not configured')
+      return
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -69,6 +71,10 @@ export function AuthProvider({ children }) {
   }
 
   const signInWithFacebook = async (redirectToPath = '/dashboard') => {
+    if (!isSupabaseConfigured) {
+      toast.error('Auth is not configured')
+      return
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: {
@@ -80,18 +86,16 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ── Logout ───────────────────────────────────────────────
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      toast.error(error.message)
-      return
-    }
-    toast.success('Logged out successfully')
+    if (!isSupabaseConfigured) return
+    await supabase.auth.signOut()
   }
 
-  // ── Forgot Password ──────────────────────────────────────
   const resetPassword = async (email) => {
+    if (!isSupabaseConfigured) {
+      toast.error('Auth is not configured')
+      return { error: { message: 'Auth not configured' } }
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/login`,
     })
@@ -119,5 +123,4 @@ export function AuthProvider({ children }) {
   )
 }
 
-// Custom hook for consuming auth context
 export const useAuth = () => useContext(AuthContext)

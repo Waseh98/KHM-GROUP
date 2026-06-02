@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { apiRequest } from '../utils/api';
 import { setAdminAuth } from './adminAuth';
 
@@ -23,11 +23,14 @@ export default function AdminLogin() {
   }, [tokenExpired]);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         handleOauthAdminCheck(session.user.email);
       }
     });
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         handleOauthAdminCheck(session.user.email);
@@ -46,14 +49,12 @@ export default function AdminLogin() {
       setAdminAuth({ token: data.token, user: data.user });
       navigate('/admin/dashboard', { replace: true });
     } catch (err) {
-      await supabase.auth.signOut();
+      if (isSupabaseConfigured) await supabase.auth.signOut().catch(() => {});
       setError(err.message || 'This email is not registered as admin');
     } finally {
       setOauthLoading(false);
     }
   }
-
-  const canSubmit = useMemo(() => Boolean(email.trim() && password), [email, password]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -81,6 +82,10 @@ export default function AdminLogin() {
   }
 
   async function handleGoogleLogin() {
+    if (!isSupabaseConfigured) {
+      setError('Auth is not configured');
+      return;
+    }
     setOauthLoading(true);
     setError('');
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
