@@ -26,8 +26,7 @@ const corsAllowed = new Set([
   'https://ktexstore.com',
   'http://ktexstore.com',
   'https://www.ktexstore.com',
-  'http://www.ktexstore.com',
-  'https://khm-group-production.up.railway.app'
+  'http://www.ktexstore.com'
 ].filter(Boolean));
 
 app.use(cors({

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getProducts } from '../data';
+import { API_BASE } from '../utils/api';
 
-const API_BASE = 'https://khm-group-production.up.railway.app';
+const INVALID_TOKEN = 'local-dev-token';
 
 function getOfflineOrders() {
   try { return JSON.parse(localStorage.getItem('ktex_offline_orders') || '[]'); } catch { return []; }
