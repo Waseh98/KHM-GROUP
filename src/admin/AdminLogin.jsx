@@ -13,6 +13,7 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState('');
+  const canSubmit = email.trim() && password;
 
   const urlParams = new URLSearchParams(window.location.search);
   const tokenExpired = urlParams.get('reason') === 'token_expired';
