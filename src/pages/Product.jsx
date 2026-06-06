@@ -5,7 +5,7 @@ import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
-import { getImageUrl } from '../utils/api';
+import { API_BASE, getImageUrl } from '../utils/api';
 
 const DEFAULT_DESC = 'Crafted from premium-quality fabric for unmatched comfort and breathability. Featuring a tailored fit and signature reinforced stitching for lasting durability.';
 
@@ -50,8 +50,6 @@ export default function Product() {
 
   const currentColorName = product?.colorNames?.[selectedColor] || 'Selected Option';
   const description = product?.description || DEFAULT_DESC;
-
-  const API_BASE = 'https://khm-group-production.up.railway.app';
 
   const fetchReviews = async () => {
     setReviewsLoading(true);

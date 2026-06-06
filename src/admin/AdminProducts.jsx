@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
-import { getImageUrl } from '../utils/api';
+import { API_BASE, getImageUrl } from '../utils/api';
 
-const API_BASE = 'https://khm-group-production.up.railway.app';
 const API_PROD = `${API_BASE}/api/products`;
 const API_CATS = `${API_BASE}/api/categories`;
 const PAGES = ['Men', 'Women', 'Kids', 'Sale'];

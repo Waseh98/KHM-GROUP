@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { getImageUrl } from '../utils/api';
+import { API_BASE, getImageUrl } from '../utils/api';
 
 function generateOrderNumber() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -10,8 +10,6 @@ function generateOrderNumber() {
   for (let i = 0; i < 6; i++) suffix += chars[Math.floor(Math.random() * chars.length)];
   return `KTX-${suffix}`;
 }
-
-const API_BASE = 'https://khm-group-production.up.railway.app';
 
 async function submitOrderToBackend(payload) {
   const controller = new AbortController();

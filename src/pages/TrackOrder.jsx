@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-
-const API_BASE = 'https://khm-group-production.up.railway.app';
+import { API_BASE } from '../utils/api';
 
 // Check localStorage for offline orders
 function findOfflineOrder(id) {

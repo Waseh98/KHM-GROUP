@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getImageUrl } from '../utils/api';
-
-const API_BASE = 'https://khm-group-production.up.railway.app';
+import { API_BASE, getImageUrl } from '../utils/api';
 
 const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 

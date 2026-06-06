@@ -1,4 +1,4 @@
-const API_BASE = 'https://khm-group-production.up.railway.app';
+import { API_BASE } from './utils/api';
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80';
 
 function fixImageUrl(url) {

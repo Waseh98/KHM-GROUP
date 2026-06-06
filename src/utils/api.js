@@ -1,6 +1,6 @@
 import { clearAdminAuth } from '../admin/adminAuth';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://khm-group-production.up.railway.app';
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 export { API_BASE };
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80';
@@ -52,6 +52,13 @@ export async function apiRequest(path, { method = 'GET', body, token, headers } 
 
   const isJson = (res.headers.get('content-type') || '').includes('application/json');
   const data = isJson ? await res.json() : await res.text();
+
+  if (!isJson) {
+    const err = new Error(`API returned ${res.headers.get('content-type') || 'an unknown content type'} instead of JSON`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
 
   if (!res.ok) {
     const message = typeof data === 'object' && data?.message ? data.message : `Request failed (${res.status})`;

@@ -8,8 +8,8 @@ import { setAdminAuth } from './adminAuth';
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
-  const [email, setEmail] = useState('abdulwasay@khm.ae');
-  const [password, setPassword] = useState('Wasay123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState('');
@@ -63,17 +63,7 @@ export default function AdminLogin() {
       setAdminAuth({ token: data.token, user: data.user });
       navigate('/admin/dashboard', { replace: true });
     } catch (err) {
-      const raw = (err.message || '').toLowerCase();
-      const isOffline = raw.includes('502') || raw.includes('503') || raw.includes('504') || raw.includes('failed to fetch') || raw.includes('networkerror') || raw.includes('load failed') || raw.includes('net::') || err.name === 'AbortError';
-      if (isOffline) {
-        const LOCAL_EMAIL = 'abdulwasay@khm.ae';
-        const LOCAL_PASSWORD = 'Wasay123';
-        if (email.trim() === LOCAL_EMAIL && password === LOCAL_PASSWORD) {
-          setAdminAuth({ token: 'local-dev-token', user: { _id: 'local', name: 'Admin (Local)', email: LOCAL_EMAIL, role: 'admin' } });
-          navigate('/admin/dashboard', { replace: true });
-          return;
-        } else { setError('Incorrect email or password.'); }
-      } else { setError(err.message || 'Login failed'); }
+      setError(err.message || 'Login failed');
     } finally { setLoading(false); }
   }
 
