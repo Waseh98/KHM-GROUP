@@ -33,6 +33,7 @@ export default function Dashboard() {
   }
 
   const handleCopyId = () => {
+    if (!user.id) return
     navigator.clipboard.writeText(user.id)
     setCopied(true)
     toast.success('User ID copied to clipboard!')
@@ -474,7 +475,7 @@ export default function Dashboard() {
                 <span style={detailLabel}>Unique ID</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ ...detailValue, fontSize: 11, color: 'var(--mid-gray)', fontFamily: 'monospace' }}>
-                    {user.id.substring(0, 16)}...
+                    {(user.id || '').substring(0, 16) || 'N/A'}...
                   </span>
                   <button
                     onClick={handleCopyId}
