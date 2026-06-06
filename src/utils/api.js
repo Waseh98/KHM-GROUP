@@ -1,6 +1,6 @@
 import { clearAdminAuth } from '../admin/adminAuth';
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://api.ktexstore.com').replace(/\/$/, '');
 export { API_BASE };
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80';

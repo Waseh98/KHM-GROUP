@@ -33,7 +33,7 @@ app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (corsAllowed.has(origin)) return cb(null, true);
-    if (origin && (origin.includes('ktexstore.com') || origin.includes('railway.app'))) return cb(null, true);
+    if (origin && origin.includes('ktexstore.com')) return cb(null, true);
     return cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
