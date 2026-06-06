@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import { auth, isFirebaseConfigured, signInWithGoogle as firebaseGoogleSignIn, signOutFirebase } from '../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { apiRequest } from '../utils/api';
 import { setAdminAuth } from './adminAuth';
 
@@ -23,20 +24,14 @@ export default function AdminLogin() {
   }, [tokenExpired]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isFirebaseConfigured || !auth) return;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        handleOauthAdminCheck(session.user.email);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        handleOauthAdminCheck(firebaseUser.email);
       }
     });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        handleOauthAdminCheck(session.user.email);
-      }
-    });
-    return () => listener?.subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   async function handleOauthAdminCheck(userEmail) {
@@ -49,7 +44,7 @@ export default function AdminLogin() {
       setAdminAuth({ token: data.token, user: data.user });
       navigate('/admin/dashboard', { replace: true });
     } catch (err) {
-      if (isSupabaseConfigured) await supabase.auth.signOut().catch(() => {});
+      if (isFirebaseConfigured) await signOutFirebase().catch(() => {});
       setError(err.message || 'This email is not registered as admin');
     } finally {
       setOauthLoading(false);
@@ -82,20 +77,17 @@ export default function AdminLogin() {
   }
 
   async function handleGoogleLogin() {
-    if (!isSupabaseConfigured) {
-      setError('Auth is not configured');
+    if (!isFirebaseConfigured) {
+      setError('Firebase is not configured');
       return;
     }
     setOauthLoading(true);
     setError('');
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/admin/login` }
-    });
-    if (oauthError) {
-      setError(oauthError.message);
-      setOauthLoading(false);
+    const { error: googleError } = await firebaseGoogleSignIn();
+    if (googleError) {
+      setError(googleError.message);
     }
+    setOauthLoading(false);
   }
 
   const pageStyle = {
