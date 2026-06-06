@@ -18,22 +18,34 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
 }));
 app.use(morgan('dev'));
-const corsAllowed = new Set(
-  ['http://localhost:5173', 'http://localhost:5174', process.env.CLIENT_URL, 'https://ktexstore.com', 'http://ktexstore.com'].filter(Boolean)
-);
+const corsAllowed = new Set([
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+  'https://ktexstore.com',
+  'http://ktexstore.com',
+  'https://www.ktexstore.com',
+  'http://www.ktexstore.com',
+  'https://khm-group-production.up.railway.app'
+].filter(Boolean));
+
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
     if (corsAllowed.has(origin)) return cb(null, true);
-    if (origin && (origin.endsWith('.ktexstore.com') || origin.includes('ktexstore.com'))) return cb(null, true);
-    return cb(null, false);
+    if (origin && (origin.includes('ktexstore.com') || origin.includes('railway.app'))) return cb(null, true);
+    return cb(new Error('Not allowed by CORS'));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Requested-With']
 }));
 
 // Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: { success: false, message: 'Too many requests, please try again later.' }
 });
@@ -52,10 +64,14 @@ app.use('/api/collections', require('./routes/collection.routes'));
 
 // ─── Health Check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.json({
     success: true,
     message: '🏆 K-TEX API is running!',
     version: '1.0.0',
+    status: 'online',
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
