@@ -5,7 +5,7 @@ import { isFirebaseConfigured } from '../lib/firebase'
 import toast from 'react-hot-toast'
 
 export default function Login() {
-  const { signIn, signInWithGoogle, user, sendPhoneCode, confirmPhoneCode, phoneLoading } = useAuth()
+  const { signIn, signInWithGoogle, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -16,25 +16,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
 
-  const [phoneMode, setPhoneMode] = useState(false)
-  const [phone, setPhone] = useState('')
-  const [otp, setOtp] = useState('')
-  const [showOtpInput, setShowOtpInput] = useState(false)
-
-
   useEffect(() => {
     if (user) {
       navigate(from, { replace: true })
     }
   }, [user, navigate, from])
-
-  useEffect(() => {
-    return () => {
-      window.recaptchaVerifier?.clear()
-      window.recaptchaVerifier = null
-      window.confirmationResult = null
-    }
-  }, [])
 
   const handleEmailLogin = async (e) => {
     e.preventDefault()
@@ -55,36 +41,6 @@ export default function Login() {
       return
     }
     await signInWithGoogle(from)
-  }
-
-  const handleSendOtp = async (e) => {
-    e.preventDefault()
-    if (!phone || phone.length < 10) {
-      toast.error('Please enter a valid phone number')
-      return
-    }
-    const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`
-    const result = await sendPhoneCode(formattedPhone)
-    if (!result.error) {
-      setShowOtpInput(true)
-    }
-  }
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault()
-    if (!otp || otp.length < 6) {
-      toast.error('Please enter the 6-digit code')
-      return
-    }
-    const result = await confirmPhoneCode(otp)
-    if (!result.error) {
-      navigate(from)
-    }
-  }
-
-  const handlePhoneLogin = () => {
-    setPhoneMode(!phoneMode)
-    setLoginError('')
   }
 
   const pageStyle = {
@@ -223,19 +179,6 @@ export default function Login() {
               Continue with Google
             </button>
 
-            <button
-              style={{ ...oauthBtn, marginTop: 12 }}
-              onClick={handlePhoneLogin}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gold)'; e.currentTarget.style.background = '#fdfbf7' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = '#fff' }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-              Continue with Phone
-            </button>
-
             <div style={dividerStyle}>
               <span style={dividerLine} />
               <span>or sign in with email</span>
@@ -244,142 +187,80 @@ export default function Login() {
           </>
         )}
 
-        {phoneMode ? (
-          <div>
-            {!showOtpInput ? (
-              <form onSubmit={handleSendOtp}>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={labelStyle}>Phone Number</label>
-                  <input
-                    style={inputStyle}
-                    type="tel"
-                    placeholder="+92 300 1234567"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    required
-                  />
-                </div>
-                <div id="recaptcha-container" style={{ display: 'none' }} />
-                <button
-                  type="submit"
-                  style={btnPrimary}
-                  disabled={phoneLoading}
-                >
-                  {phoneLoading ? (
-                    <>
-                      <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', animation: 'spin 0.7s linear infinite', display: 'inline-block' }} />
-                      Sending code...
-                    </>
-                  ) : 'Send Verification Code'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOtp}>
-                <div style={{ marginBottom: 16 }}>
-                  <label style={labelStyle}>Verification Code</label>
-                  <input
-                    style={inputStyle}
-                    type="text"
-                    placeholder="Enter 6-digit code"
-                    value={otp}
-                    onChange={e => setOtp(e.target.value)}
-                    maxLength={6}
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  style={btnPrimary}
-                >
-                  Verify & Sign In
-                </button>
-
-              </form>
-            )}
-            <button
-              type="button"
-              style={{ width: '100%', marginTop: 16, background: 'none', border: 'none', color: 'var(--mid-gray)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
-              onClick={handlePhoneLogin}
-            >
-              Back to Email Login
-            </button>
+        <form onSubmit={handleEmailLogin}>
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Email</label>
+            <input
+              style={inputStyle}
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
           </div>
-        ) : (
-          <form onSubmit={handleEmailLogin}>
-            <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Email</label>
-              <input
-                style={inputStyle}
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
 
-            <div style={{ marginBottom: 8 }}>
-              <label style={labelStyle}>Password</label>
-              <input
-                style={inputStyle}
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-              />
-            </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={labelStyle}>Password</label>
+            <input
+              style={inputStyle}
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-            <div style={{ textAlign: 'right', marginBottom: 20 }}>
-              <Link to="/forgot-password" style={{
-                fontSize: 12,
-                color: 'var(--gold)',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontFamily: 'var(--font-body)',
-              }}>
-                Forgot Password?
-              </Link>
-            </div>
+          <div style={{ textAlign: 'right', marginBottom: 20 }}>
+            <Link to="/forgot-password" style={{
+              fontSize: 12,
+              color: 'var(--gold)',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontFamily: 'var(--font-body)',
+            }}>
+              Forgot Password?
+            </Link>
+          </div>
 
-            {loginError && (
-              <div style={{
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                color: '#b91c1c',
-                fontSize: 13,
-                padding: '10px 14px',
-                borderRadius: 8,
-                fontFamily: 'var(--font-body)',
-              }}>
-                {loginError}
-              </div>
+          {loginError && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#b91c1c',
+              fontSize: 13,
+              padding: '10px 14px',
+              borderRadius: 8,
+              fontFamily: 'var(--font-body)',
+            }}>
+              {loginError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            style={btnPrimary}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: '50%',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTopColor: '#fff',
+                  animation: 'spin 0.7s linear infinite',
+                  display: 'inline-block',
+                }} />
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
             )}
-
-            <button
-              type="submit"
-              style={btnPrimary}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTopColor: '#fff',
-                    animation: 'spin 0.7s linear infinite',
-                    display: 'inline-block',
-                  }} />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
-        )}
+          </button>
+        </form>
 
         <p style={{
           textAlign: 'center',

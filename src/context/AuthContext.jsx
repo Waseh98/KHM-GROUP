@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { auth, isFirebaseConfigured, signInWithGoogle as firebaseGoogleSignIn, signUpWithEmail as firebaseSignUp, signInWithEmail as firebaseSignIn, signOutFirebase, sendResetEmail as firebaseResetEmail, verifyPhoneNumber as firebaseVerifyPhone, confirmVerificationCode as firebaseConfirmCode, setupRecaptcha } from '../lib/firebase'
+import { auth, isFirebaseConfigured, signInWithGoogle as firebaseGoogleSignIn, signUpWithEmail as firebaseSignUp, signInWithEmail as firebaseSignIn, signOutFirebase, sendResetEmail as firebaseResetEmail } from '../lib/firebase'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext(null)
@@ -8,7 +8,6 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [phoneLoading, setPhoneLoading] = useState(false)
 
   useEffect(() => {
     if (!isFirebaseConfigured || !auth) {
@@ -83,54 +82,15 @@ export function AuthProvider({ children }) {
     return { success: true }
   }
 
-  const sendPhoneCode = async (phoneNumber, recaptchaContainerId = 'recaptcha-container') => {
-    if (!isFirebaseConfigured) {
-      toast.error('Firebase is not configured')
-      return { error: { message: 'Firebase not configured' } }
-    }
-    setPhoneLoading(true)
-    try {
-      const result = await firebaseVerifyPhone(phoneNumber, recaptchaContainerId)
-      setPhoneLoading(false)
-      if (result.error) {
-        toast.error(result.error.message)
-        return result
-      }
-      toast.success('Verification code sent!')
-      return result
-    } catch (error) {
-      setPhoneLoading(false)
-      toast.error(error.message)
-      return { error }
-    }
-  }
-
-  const confirmPhoneCode = async (code) => {
-    if (!isFirebaseConfigured) {
-      toast.error('Firebase is not configured')
-      return { error: { message: 'Firebase not configured' } }
-    }
-    const result = await firebaseConfirmCode(code)
-    if (result.error) {
-      toast.error(result.error.message)
-      return result
-    }
-    toast.success('Phone number verified!')
-    return result
-  }
-
   return (
     <AuthContext.Provider value={{
       user,
       loading,
-      phoneLoading,
       signUp,
       signIn,
       signOut,
       signInWithGoogle,
       resetPassword,
-      sendPhoneCode,
-      confirmPhoneCode,
     }}>
       {children}
     </AuthContext.Provider>

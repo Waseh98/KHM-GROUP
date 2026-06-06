@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithPhoneNumber, RecaptchaVerifier, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth'
+import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -59,45 +59,6 @@ export const sendResetEmail = async (email) => {
   try {
     await sendPasswordResetEmail(auth, email)
     return { success: true }
-  } catch (error) {
-    return { error }
-  }
-}
-
-export const setupRecaptcha = (containerId) => {
-  if (!auth) return null
-  if (window.recaptchaVerifier) {
-    window.recaptchaVerifier.clear()
-    window.recaptchaVerifier = null
-  }
-  const verifier = new RecaptchaVerifier(auth, containerId, {
-    size: 'invisible',
-    callback: () => {},
-    'expired-callback': () => {},
-  })
-  verifier.render()
-  window.recaptchaVerifier = verifier
-  return verifier
-}
-
-export const verifyPhoneNumber = async (phoneNumber, recaptchaContainer) => {
-  if (!auth) return { error: { message: 'Firebase not configured' } }
-  try {
-    const recaptchaVerifier = setupRecaptcha(recaptchaContainer)
-    await recaptchaVerifier.render()
-    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier)
-    window.confirmationResult = confirmationResult
-    return { confirmationResult }
-  } catch (error) {
-    return { error }
-  }
-}
-
-export const confirmVerificationCode = async (code) => {
-  if (!window.confirmationResult) return { error: { message: 'No verification in progress' } }
-  try {
-    const result = await window.confirmationResult.confirm(code)
-    return { user: result.user }
   } catch (error) {
     return { error }
   }
