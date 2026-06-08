@@ -1,9 +1,13 @@
 import { clearAdminAuth } from '../admin/adminAuth';
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'https://api.ktexstore.com').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://ktexstore.com').replace(/\/$/, '');
 export { API_BASE };
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80';
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+const REQUEST_TIMEOUT_MS = 15000;
 
 export function getImageUrl(image) {
   if (!image) return FALLBACK_IMAGE;
@@ -32,17 +36,63 @@ export function getProductImageUrl(product) {
 
 const INVALID_TOKEN = 'local-dev-token';
 
+const requestInterceptors = [];
+const responseInterceptors = [];
+
+export function addRequestInterceptor(fn) { requestInterceptors.push(fn); }
+export function addResponseInterceptor(fn) { responseInterceptors.push(fn); }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function fetchWithTimeout(url, options, timeout = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetchWithTimeout(url, options);
+      return res;
+    } catch (err) {
+      lastError = err;
+      const isRetryable = err.name === 'AbortError' || err.message?.includes('fetch') || err.message?.includes('network');
+      if (!isRetryable || attempt === retries) break;
+      await sleep(RETRY_DELAY_MS * Math.pow(2, attempt));
+    }
+  }
+  throw lastError;
+}
+
 export async function apiRequest(path, { method = 'GET', body, token, headers } = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
-  const res = await fetch(url, {
+
+  let reqHeaders = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(headers || {}),
+  };
+
+  for (const fn of requestInterceptors) {
+    const result = fn({ url, method, headers: reqHeaders, body });
+    if (result?.headers) reqHeaders = result.headers;
+  }
+
+  const res = await fetchWithRetry(url, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(headers || {}),
-    },
+    headers: reqHeaders,
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
+
+  for (const fn of responseInterceptors) {
+    fn({ url, method, status: res.status, headers: res.headers });
+  }
 
   if (res.status === 401 && token === INVALID_TOKEN) {
     clearAdminAuth();
