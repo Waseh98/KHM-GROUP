@@ -5,9 +5,28 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+const admin = require('firebase-admin');
 
 const app = express();
 app.set('trust proxy', 1);
+
+// Initialize Firebase Admin SDK if credentials are provided in .env
+if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      }),
+    });
+    console.log('🔥 Firebase Admin SDK Initialized Successfully');
+  } catch (error) {
+    console.error('❌ Firebase Admin SDK Initialization Error:', error.message);
+  }
+} else {
+  console.warn('⚠️ Firebase credentials missing in .env. Social login token verification will bypass checking Firebase servers.');
+}
 
 // ─── Middleware ───────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
@@ -18,6 +37,7 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
 }));
 app.use(morgan('dev'));
+
 const corsAllowed = new Set([
   'http://localhost:5173',
   'http://localhost:5174',

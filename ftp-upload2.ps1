@@ -1,6 +1,6 @@
 param(
     [string]$FtpHost = "31.220.110.252",
-    [string]$User = "u959866192",
+    [string]$User = "u959866192.Wasay98",
     [string]$Pass = "Wasay123@#$",
     [string]$LocalDir = "C:\Users\ARSHMAN LAPTOP\Desktop\KHM-Group-Final\dist",
     [string]$RemoteBase = "/domains/ktexstore.com/public_html"

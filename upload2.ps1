@@ -1,5 +1,5 @@
 $ftp = "ftp://31.220.110.252"
-$user = "u959866192"
+$user = "u959866192.Wasay98"
 $pass = "Wasay123@#$"
 $localDir = "C:\Users\ARSHMAN LAPTOP\Desktop\KHM-Group-Final\dist"
 $remoteDir = "/domains/ktexstore.com/public_html"

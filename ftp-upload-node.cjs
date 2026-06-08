@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const FTP_HOST = '31.220.110.252';
-const FTP_USER = 'u959866192';
+const FTP_USER = 'u959866192.Wasay98';
 const FTP_PASS = 'Wasay123@#$';
 const LOCAL_DIR = 'C:\\Users\\ARSHMAN LAPTOP\\Desktop\\KHM-Group-Final\\dist';
 const REMOTE_BASE = '/domains/ktexstore.com/public_html';
