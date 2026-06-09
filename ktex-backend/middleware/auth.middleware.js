@@ -12,7 +12,26 @@ exports.protect = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Not authorized, please login' });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
+    
+    const isEnvAdmin = decoded.id === 'admin' || decoded.id === '500000000000000000000000' || (
+      decoded.role === 'admin' && 
+      decoded.email && 
+      process.env.ADMIN_EMAIL && 
+      decoded.email.toLowerCase().trim() === process.env.ADMIN_EMAIL.toLowerCase().trim()
+    );
+
+    if (isEnvAdmin) {
+      req.user = {
+        _id: '500000000000000000000000',
+        name: 'Admin',
+        email: decoded.email,
+        role: 'admin',
+        isActive: true
+      };
+    } else {
+      req.user = await User.findById(decoded.id);
+    }
+
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'User not found' });
     }

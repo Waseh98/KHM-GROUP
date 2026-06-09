@@ -13,20 +13,6 @@ export default defineConfig({
     path.resolve(__dirname, '.env'),
     path.resolve(__dirname, '.env.production'),
   ],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/uploads': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
   build: {
     target: 'es2020',
     minify: 'esbuild',

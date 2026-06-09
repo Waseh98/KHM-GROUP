@@ -31,7 +31,7 @@ exports.login = async (req, res) => {
       if (email.toLowerCase().trim() === process.env.ADMIN_EMAIL.toLowerCase().trim() &&
           password === process.env.ADMIN_PASSWORD) {
         const token = jwt.sign(
-          { email: process.env.ADMIN_EMAIL, role: 'admin' },
+          { id: '500000000000000000000000', email: process.env.ADMIN_EMAIL, role: 'admin' },
           process.env.JWT_SECRET,
           { expiresIn: process.env.JWT_EXPIRE || '7d' }
         );
@@ -39,7 +39,7 @@ exports.login = async (req, res) => {
           success: true,
           message: 'Login successful',
           token,
-          user: { email: process.env.ADMIN_EMAIL, role: 'admin', name: 'Admin' }
+          user: { _id: '500000000000000000000000', email: process.env.ADMIN_EMAIL, role: 'admin', name: 'Admin' }
         });
       }
     }

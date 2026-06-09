@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "cd ktex-backend && npm run dev",
+    "dev:frontend": "vite",
     "build": "vite build",
     "postbuild": "cd ktex-backend && npm install",
-    "start": "node start.cjs",
+    "start": "npm run build && node start.cjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

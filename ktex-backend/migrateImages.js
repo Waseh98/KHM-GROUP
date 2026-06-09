@@ -30,7 +30,7 @@ async function migrate() {
       if (needsUpdate) {
         console.log(`Migrating images for product: ${product.name}`);
         // Process images
-        const newImages = processImageArray(product.images);
+        const newImages = await processImageArray(product.images);
         product.images = newImages;
         await product.save();
         updatedCount++;

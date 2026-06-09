@@ -71,7 +71,7 @@ exports.createGuestOrder = async (req, res) => {
     let screenshotUrl = '';
     if (paymentScreenshot) {
       try {
-        screenshotUrl = processImage(paymentScreenshot);
+        screenshotUrl = await processImage(paymentScreenshot);
       } catch (e) {
         console.error('Screenshot upload failed:', e.message);
       }

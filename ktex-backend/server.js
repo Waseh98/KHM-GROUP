@@ -10,6 +10,8 @@ const admin = require('firebase-admin');
 const app = express();
 app.set('trust proxy', 1);
 
+const PORT = process.env.PORT || 5000;
+
 // Initialize Firebase Admin SDK if credentials are provided in .env
 if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
   try {
@@ -42,6 +44,8 @@ const corsAllowed = new Set([
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
+  `http://localhost:${PORT}`,
+  `http://127.0.0.1:${PORT}`,
   process.env.CLIENT_URL,
   'https://ktexstore.com',
   'http://ktexstore.com',
@@ -116,35 +120,61 @@ const fs = require('fs');
 const { uploadDir } = require('./utils/imageUploader');
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// ─── Serve Frontend in Production ──────────────────────────
-function findDistPath() {
-  const candidates = [
-    path.join(__dirname, '..', 'dist'),
-    path.join(__dirname, '..', '..', 'dist'),
-    path.join(__dirname, 'dist'),
-    path.join(__dirname, '..', 'public', 'dist'),
-    path.join(process.cwd(), 'dist'),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(path.join(p, 'index.html'))) {
-      console.log('📁 Serving frontend from:', p);
-      return p;
-    }
-  }
-  console.warn('⚠️  dist/index.html not found. Attempted paths:', candidates);
-  return candidates[0];
-}
-const clientDistPath = findDistPath();
-app.use(express.static(clientDistPath));
+// ─── Serve Frontend ──────────────────────────────────────
+const isProduction = process.env.NODE_ENV === 'production';
 
-app.get('*', (req, res) => {
-  const htmlPath = path.join(clientDistPath, 'index.html');
-  if (fs.existsSync(htmlPath)) {
-    res.sendFile(htmlPath);
-  } else {
-    res.status(200).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>K-TEX</title></head><body><div id="root"></div><script>console.warn('dist/index.html not found at ${htmlPath.replace(/\\/g, '\\\\')}');</script></body></html>`);
+if (isProduction) {
+  // Production: serve built dist folder
+  function findDistPath() {
+    const candidates = [
+      path.join(__dirname, '..', 'dist'),
+      path.join(__dirname, '..', '..', 'dist'),
+      path.join(__dirname, 'dist'),
+      path.join(__dirname, '..', 'public', 'dist'),
+      path.join(process.cwd(), 'dist'),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(path.join(p, 'index.html'))) {
+        console.log('📁 Serving frontend from:', p);
+        return p;
+      }
+    }
+    console.warn('️  dist/index.html not found. Attempted paths:', candidates);
+    return candidates[0];
   }
-});
+  const clientDistPath = findDistPath();
+  app.use(express.static(clientDistPath));
+
+  app.get('*', (req, res) => {
+    const htmlPath = path.join(clientDistPath, 'index.html');
+    if (fs.existsSync(htmlPath)) {
+      res.sendFile(htmlPath);
+    } else {
+      res.status(200).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>K-TEX</title></head><body><div id="root"></div><script>console.warn('dist/index.html not found at ${htmlPath.replace(/\\/g, '\\\\')}');</script></body></html>`);
+    }
+  });
+} else {
+  // Development: use Vite middleware mode for HMR
+  (async () => {
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+        root: path.join(__dirname, '..'),
+        envFilePath: [
+          path.join(__dirname, '..', '.env.local'),
+          path.join(__dirname, '..', '.env'),
+        ],
+      });
+      app.use(vite.middlewares);
+      console.log('⚡ Vite dev server attached (middleware mode)');
+    } catch (err) {
+      console.error('❌ Failed to start Vite dev server:', err.message);
+      console.log(' Tip: Make sure vite is installed in the project root');
+    }
+  })();
+}
 
 // ─── Global Error Handler ─────────────────────────────────
 app.use((err, req, res, next) => {
@@ -157,7 +187,7 @@ app.use((err, req, res, next) => {
 
 // ─── Database + Start ─────────────────────────────────────
 
-const PORT = process.env.PORT || 3000;
+// PORT is defined at the top
 
 
 

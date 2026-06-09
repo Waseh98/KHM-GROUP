@@ -85,6 +85,7 @@ exports.createProduct = async (req, res) => {
     const product = await Product.create(req.body);
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (error) {
+    console.error('Error in createProduct:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
