@@ -1,39 +1,32 @@
 {
-  "name": "khm-group-final",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "ktex-api",
+  "version": "1.0.0",
+  "description": "K-TEX Luxury Fashion E-Commerce Backend API",
+  "main": "server.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "postinstall": "cd ktex-backend && npm install",
-    "postbuild": "cd ktex-backend && npm install",
-    "start": "node start.cjs",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node utils/seeder.js",
+    "create-admin": "node utils/createAdmin.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.106.0",
-    "firebase": "^12.14.0",
-    "mongoose": "^9.6.2",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-hot-toast": "^2.6.0",
-    "react-router-dom": "^7.14.2"
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "firebase-admin": "^12.0.0",
+    "helmet": "^7.1.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "stripe": "^14.11.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@tailwindcss/vite": "^4.3.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "agentation": "^3.0.2",
-    "esbuild": "^0.28.0",
-    "eslint": "^10.2.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.5.0",
-    "tailwindcss": "^4.3.0",
-    "vite": "^8.0.10"
+    "nodemon": "^3.0.2"
   }
 }

@@ -1,16 +1,44 @@
+# K-TEX API (Backend)
 
+Express + MongoDB API for the K-TEX e-commerce store.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- **Deploy:** Hostinger (Express / Node.js)
+- **Frontend:** separate repo → [ktex-frontend](../ktex-frontend) → Vercel
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+cp .env.example .env
+# Fill in MongoDB, JWT, admin, Firebase credentials
+npm run dev
+```
 
-## React Compiler
+API runs at `http://localhost:5001`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scripts
 
-## Expanding the ESLint configuration
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start production server |
+| `npm run dev` | Start with nodemon |
+| `npm run create-admin` | Create admin user in DB |
+| `npm run seed` | Seed sample data |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Deploy to Hostinger
+
+See [DEPLOY.md](./DEPLOY.md)
+
+## Environment variables
+
+Copy `.env.example` and fill in all values. **Do not commit `.env`.**
+
+| Variable | Required |
+|----------|----------|
+| `MONGO_URI` | Yes |
+| `JWT_SECRET` | Yes |
+| `CLIENT_URL` | Yes — set to `https://ktexstore.com` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Yes |
+| `FIREBASE_*` | For Google login |
+
+Do **not** set `PORT` on Hostinger — the platform assigns it.
