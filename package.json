@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postinstall": "cd ktex-backend && npm install",
     "postbuild": "cd ktex-backend && npm install",
     "start": "node start.cjs",
     "lint": "eslint .",
