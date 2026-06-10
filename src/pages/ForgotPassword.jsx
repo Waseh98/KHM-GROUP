@@ -1,25 +1,24 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 
-/**
- * Forgot Password page.
- * Sends a password reset link to the user's email via Supabase.
- * Shows success state after sending.
- */
 export default function ForgotPassword() {
-  const { resetPassword } = useAuth()
+  const { resetPassword, isFirebaseConfigured } = useAuth()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     setLoading(true)
     const result = await resetPassword(email)
     setLoading(false)
-    if (result.success) {
+    if (result?.success) {
       setSent(true)
+    } else if (result?.error) {
+      setError(result.error.message)
     }
   }
 
@@ -119,8 +118,16 @@ export default function ForgotPassword() {
       <div style={cardStyle} className="auth-card">
         <h1 style={titleStyle} className="auth-title">Reset Password</h1>
         <p style={subtitleStyle}>
-          Enter your email and we'll send you a reset link
+          {isFirebaseConfigured
+            ? "Enter your email and we'll send you a reset link"
+            : 'Password reset requires Firebase email auth. Contact support for help.'}
         </p>
+
+        {!isFirebaseConfigured && !sent && (
+          <div style={{ ...successBox, background: '#fff8e6', borderColor: '#f5d78e', color: '#7a5b00', textAlign: 'left' }}>
+            Local development uses backend login only. Use your existing password or contact the store admin.
+          </div>
+        )}
 
         {sent ? (
           <>
@@ -155,10 +162,14 @@ export default function ForgotPassword() {
               />
             </div>
 
+            {error && (
+              <div style={{ color: '#b91c1c', fontSize: 13, marginBottom: 16, textAlign: 'left' }}>{error}</div>
+            )}
+
             <button
               type="submit"
               style={btnPrimary}
-              disabled={loading}
+              disabled={loading || !isFirebaseConfigured}
             >
               {loading ? (
                 <>

@@ -1,6 +1,10 @@
+/**
+ * Admin panel session (ktex_admin_token / ktex_admin_user).
+ * Intentionally separate from customer auth in userAuth.js — admins may sign in
+ * while a customer session exists, and admin routes require role === 'admin'.
+ */
 const TOKEN_KEY = 'ktex_admin_token';
 const USER_KEY = 'ktex_admin_user';
-const INVALID_TOKEN = 'local-dev-token';
 
 export function getAdminToken() {
   return localStorage.getItem(TOKEN_KEY) || '';
@@ -41,9 +45,5 @@ export function validateAdminToken() {
     return false;
   }
   return true;
-}
-
-export function isLocalDevToken() {
-  return getAdminToken() === INVALID_TOKEN;
 }
 

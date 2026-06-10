@@ -9,7 +9,7 @@ import WishlistDrawer from './components/WishlistDrawer';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
 import { syncProductsFromBackend, syncCategoriesFromBackend, syncCollectionsFromBackend } from './data';
 
 // Lazy-loaded pages

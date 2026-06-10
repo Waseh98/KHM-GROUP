@@ -1,10 +1,12 @@
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const admin = require('firebase-admin');
 
 const app = express();
@@ -25,7 +27,7 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && proc
     console.error('❌ Firebase Admin SDK Initialization Error:', error.message);
   }
 } else {
-  console.warn('⚠️ Firebase credentials missing in .env. Social login token verification will bypass checking Firebase servers.');
+  console.warn('⚠️ Firebase Admin credentials missing in .env. Google admin login will not work until FIREBASE_* vars are set.');
 }
 
 // ─── Middleware ───────────────────────────────────────────
@@ -54,7 +56,7 @@ app.use(cors({
     if (!origin) return cb(null, true);
     if (corsAllowed.has(origin)) return cb(null, true);
     if (origin && origin.includes('ktexstore.com')) return cb(null, true);
-    return cb(new Error('Not allowed by CORS'));
+    return cb(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -83,9 +85,6 @@ app.use('/api/collections', require('./routes/collection.routes'));
 
 // ─── Health Check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.json({
     success: true,
     message: '🏆 K-TEX API is running!',
@@ -111,9 +110,6 @@ app.use('/api', (req, res) => {
 });
 
 // ─── Serve Uploaded Images ─────────────────────────────────
-const path = require('path');
-const fs = require('fs');
-const { uploadDir } = require('./utils/imageUploader');
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ─── Serve Frontend in Production ──────────────────────────
@@ -137,13 +133,13 @@ function findDistPath() {
 const clientDistPath = findDistPath();
 app.use(express.static(clientDistPath));
 
-app.get('*', (req, res) => {
+// SPA fallback — never intercept API or uploads
+app.get(/^(?!\/api|\/uploads).*/, (req, res) => {
   const htmlPath = path.join(clientDistPath, 'index.html');
   if (fs.existsSync(htmlPath)) {
-    res.sendFile(htmlPath);
-  } else {
-    res.status(200).send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>K-TEX</title></head><body><div id="root"></div><script>console.warn('dist/index.html not found at ${htmlPath.replace(/\\/g, '\\\\')}');</script></body></html>`);
+    return res.sendFile(htmlPath);
   }
+  res.status(503).send('Frontend build not found. Run npm run build first.');
 });
 
 // ─── Global Error Handler ─────────────────────────────────
@@ -157,20 +153,28 @@ app.use((err, req, res, next) => {
 
 // ─── Database + Start ─────────────────────────────────────
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5001;
 
 
 
 mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
   .then(() => {
     console.log('✅ MongoDB Connected');
-    // Start server only after DB is ready
-    app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 K-TEX Server running on port ${PORT}`);
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Stop the other process or set PORT in .env`);
+      } else {
+        console.error('❌ Server failed to start:', err.message);
+      }
+      process.exit(1);
     });
   })
   .catch(err => {
     console.error('❌ MongoDB connection failed:', err.message);
+    process.exit(1);
   });
 
 module.exports = app;

@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useNavigate, Link } from 'react-router-dom'
@@ -17,13 +17,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
 
-  // Redirect to login if user session is lost
-  if (!user) {
-    navigate('/login', { replace: true })
-    return null
-  }
-
-  const rawDisplayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Premium Member'
+  const rawDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Premium Member'
   const userDisplayName = rawDisplayName.replace(/^(salam|slam)[,\s]*/i, '')
   const userAvatar = user.user_metadata?.avatar_url || ''
 
@@ -455,7 +449,7 @@ export default function Dashboard() {
                     <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
                     </svg>
-                    Google Verified
+                    {user?.authProvider === 'firebase' ? 'Google Verified' : 'Email Verified'}
                   </span>
                 </span>
               </div>

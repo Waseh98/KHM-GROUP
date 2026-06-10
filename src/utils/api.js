@@ -1,4 +1,5 @@
-import { clearAdminAuth } from '../admin/adminAuth';
+import { clearAdminAuth, getAdminToken } from '../admin/adminAuth';
+import { getUserToken, clearUserAuth } from './userAuth';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'https://ktexstore.com').replace(/\/$/, '');
 export { API_BASE };
@@ -34,8 +35,6 @@ export function getProductImageUrl(product) {
   return getImageUrl(product.image || '');
 }
 
-const INVALID_TOKEN = 'local-dev-token';
-
 const requestInterceptors = [];
 const responseInterceptors = [];
 
@@ -70,12 +69,30 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
   throw lastError;
 }
 
-export async function apiRequest(path, { method = 'GET', body, token, headers } = {}) {
+function handleUnauthorized(authToken) {
+  if (!authToken) return;
+  if (authToken === getAdminToken()) {
+    clearAdminAuth();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/admin/login?reason=token_expired';
+    }
+    return;
+  }
+  if (authToken === getUserToken()) {
+    clearUserAuth();
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
+      window.location.href = '/login?reason=token_expired';
+    }
+  }
+}
+
+export async function apiRequest(path, { method = 'GET', body, token, headers, auth = true } = {}) {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
+  const authToken = token ?? (auth ? getUserToken() : '');
 
   let reqHeaders = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     ...(headers || {}),
   };
 
@@ -94,9 +111,8 @@ export async function apiRequest(path, { method = 'GET', body, token, headers } 
     fn({ url, method, status: res.status, headers: res.headers });
   }
 
-  if (res.status === 401 && token === INVALID_TOKEN) {
-    clearAdminAuth();
-    window.location.href = '/admin/login?reason=token_expired';
+  if (res.status === 401 && authToken) {
+    handleUnauthorized(authToken);
     throw new Error('Session expired. Redirecting to login...');
   }
 

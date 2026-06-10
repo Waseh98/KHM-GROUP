@@ -4,7 +4,7 @@ import { getProducts } from '../data';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getImageUrl } from '../utils/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const links = ['Home', 'Men', 'Women', 'Kids', 'New Arrivals', 'Collections', 'Sale'];
 

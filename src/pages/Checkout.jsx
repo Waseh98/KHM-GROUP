@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { API_BASE, getImageUrl } from '../utils/api';
+import { getUserToken } from '../utils/userAuth';
 
 function generateOrderNumber() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -14,10 +15,14 @@ function generateOrderNumber() {
 async function submitOrderToBackend(payload) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
+  const token = getUserToken();
   try {
     const res = await fetch(`${API_BASE}/api/orders/guest`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
@@ -58,13 +63,10 @@ export default function Checkout() {
   const [screenshotPreview, setScreenshotPreview] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', street: '' });
+  const [prevUserId, setPrevUserId] = useState(user?.id);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    document.title = "Secure Checkout | K-TEX";
-  }, []);
-
-  useEffect(() => {
+  if (user?.id !== prevUserId) {
+    setPrevUserId(user?.id);
     if (user) {
       const rawName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
       const cleanName = rawName.replace(/^(salam|slam)[,\s]*/i, '');
@@ -74,7 +76,12 @@ export default function Checkout() {
         email: prev.email || user.email || '',
       }));
     }
-  }, [user]);
+  }
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "Secure Checkout | K-TEX";
+  }, []);
 
   function buildOrderItems() {
     if (!cartItems || cartItems.length === 0) return [];

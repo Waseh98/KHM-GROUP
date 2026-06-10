@@ -1,12 +1,39 @@
-const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User.model');
 const { sendTokenResponse } = require('../middleware/auth.middleware');
 const admin = require('firebase-admin');
 
+async function verifyFirebaseIdToken(token) {
+  if (!token) {
+    return { error: { status: 401, message: 'Firebase ID token is required' } };
+  }
+  if (admin.apps.length === 0) {
+    return { error: { status: 503, message: 'Firebase Admin is not configured on the server' } };
+  }
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const email = (decodedToken.email || '').toLowerCase().trim();
+    if (!email) {
+      return { error: { status: 400, message: 'Verified token did not include an email' } };
+    }
+    return {
+      email,
+      name: decodedToken.name || email.split('@')[0] || 'Member',
+      emailVerified: Boolean(decodedToken.email_verified),
+    };
+  } catch (err) {
+    return { error: { status: 401, message: 'Firebase token verification failed: ' + err.message } };
+  }
+}
+
 // @POST /api/auth/register
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, password, phone } = req.body;
+    const email = (req.body.email || '').toLowerCase().trim();
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide email and password' });
+    }
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
@@ -21,26 +48,29 @@ exports.register = async (req, res) => {
 // @POST /api/auth/login
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = (req.body.email || '').toLowerCase().trim();
+    const { password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    // 1) Check .env admin credentials first (works even without DB user)
+    // 1) Check .env admin credentials — ensure a real DB user exists for JWT/protected routes
     if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-      if (email.toLowerCase().trim() === process.env.ADMIN_EMAIL.toLowerCase().trim() &&
+      if (email === process.env.ADMIN_EMAIL.toLowerCase().trim() &&
           password === process.env.ADMIN_PASSWORD) {
-        const token = jwt.sign(
-          { email: process.env.ADMIN_EMAIL, role: 'admin' },
-          process.env.JWT_SECRET,
-          { expiresIn: process.env.JWT_EXPIRE || '7d' }
-        );
-        return res.json({
-          success: true,
-          message: 'Login successful',
-          token,
-          user: { email: process.env.ADMIN_EMAIL, role: 'admin', name: 'Admin' }
-        });
+        let adminUser = await User.findOne({ email: process.env.ADMIN_EMAIL }).select('+password');
+        if (!adminUser) {
+          adminUser = await User.create({
+            name: 'Admin',
+            email: process.env.ADMIN_EMAIL,
+            password: process.env.ADMIN_PASSWORD,
+            role: 'admin',
+          });
+        } else if (adminUser.role !== 'admin') {
+          adminUser.role = 'admin';
+          await adminUser.save();
+        }
+        return sendTokenResponse(adminUser, 200, res);
       }
     }
 
@@ -104,31 +134,41 @@ exports.logout = async (req, res) => {
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
+// @POST /api/auth/firebase-login — Customer Firebase → backend JWT
+exports.firebaseLogin = async (req, res) => {
+  try {
+    const verified = await verifyFirebaseIdToken(req.body.token);
+    if (verified.error) {
+      return res.status(verified.error.status).json({ success: false, message: verified.error.message });
+    }
+
+    let user = await User.findOne({ email: verified.email });
+    if (!user) {
+      user = await User.create({
+        name: verified.name,
+        email: verified.email,
+        password: crypto.randomBytes(32).toString('hex'),
+        isEmailVerified: verified.emailVerified,
+      });
+    } else if (!user.isActive) {
+      return res.status(401).json({ success: false, message: 'Account deactivated. Contact support.' });
+    }
+
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @POST /api/auth/admin-oauth
 exports.adminOauthLogin = async (req, res) => {
   try {
-    const { email, token } = req.body;
-    let targetEmail = email;
-
-    // Secure verification of Firebase ID token if provided
-    if (token) {
-      if (admin.apps.length > 0) {
-        try {
-          const decodedToken = await admin.auth().verifyIdToken(token);
-          targetEmail = decodedToken.email;
-        } catch (err) {
-          return res.status(401).json({ success: false, message: 'Firebase token verification failed: ' + err.message });
-        }
-      } else {
-        return res.status(400).json({ success: false, message: 'Firebase token provided but backend is not configured with Firebase Admin credentials' });
-      }
+    const verified = await verifyFirebaseIdToken(req.body.token);
+    if (verified.error) {
+      return res.status(verified.error.status).json({ success: false, message: verified.error.message });
     }
 
-    if (!targetEmail) {
-      return res.status(400).json({ success: false, message: 'Email or token is required' });
-    }
-
-    const user = await User.findOne({ email: targetEmail });
+    const user = await User.findOne({ email: verified.email });
     if (!user) {
       return res.status(401).json({ success: false, message: 'No account found with this email' });
     }

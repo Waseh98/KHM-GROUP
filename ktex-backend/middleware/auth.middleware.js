@@ -1,6 +1,23 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User.model');
 
+// Populate req.user when a valid token is present; continue as guest otherwise
+exports.optionalProtect = async (req, res, next) => {
+  try {
+    let token;
+    if (req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) return next();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (user?.isActive) req.user = user;
+  } catch {
+    // Invalid or expired token — proceed without req.user
+  }
+  next();
+};
+
 // Protect routes — must be logged in
 exports.protect = async (req, res, next) => {
   try {

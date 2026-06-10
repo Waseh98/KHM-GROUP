@@ -8,20 +8,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [react()],
   envDir: __dirname,
-  envFilePath: [
-    path.resolve(__dirname, '.env.local'),
-    path.resolve(__dirname, '.env'),
-    path.resolve(__dirname, '.env.production'),
-  ],
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
         secure: false,
       },
