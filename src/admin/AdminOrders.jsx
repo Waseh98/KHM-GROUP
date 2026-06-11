@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { API_BASE, getImageUrl } from '../utils/api';
+import { API_BASE, hasImage, resolveImageUrl } from '../utils/api';
 
 const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 
@@ -160,7 +160,7 @@ export default function AdminOrders() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {(o.orderItems || []).map((item, idx) => (
                           <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                            {getImageUrl(item.image) && <img src={getImageUrl(item.image)} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid #E2DDD6' }} />}
+                            {hasImage(item.image) && <img src={resolveImageUrl(item.image)} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, border: '1px solid #E2DDD6' }} />}
                             <div style={{ fontSize: 12, color: '#555' }}>
                               <span style={{ fontWeight: 600, color: '#0D0D0D' }}>{item.name}</span>
                               <span style={{ color: '#888', marginLeft: 6 }}>×{item.quantity}</span>
@@ -249,7 +249,7 @@ export default function AdminOrders() {
               <Section title="🛒 Items ({viewOrder.orderItems?.length || 0})">
                 {(viewOrder.orderItems || []).map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: idx < viewOrder.orderItems.length - 1 ? '1px solid #f0ede8' : 'none' }}>
-                    {item.image && <img src={getImageUrl(item.image)} alt={item.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid #E2DDD6' }} />}
+                    {hasImage(item.image) && <img src={resolveImageUrl(item.image)} alt={item.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid #E2DDD6' }} />}
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, color: '#0D0D0D', fontSize: 14 }}>{item.name}</div>
                       <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>

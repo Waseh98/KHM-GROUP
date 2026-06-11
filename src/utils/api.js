@@ -1,7 +1,7 @@
 import { clearAdminAuth, getAdminToken } from '../admin/adminAuth';
 import { getUserToken, clearUserAuth } from './userAuth';
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'https://api.ktexstore.com').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5001').replace(/\/$/, '');
 export { API_BASE };
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=600&q=80';
@@ -9,6 +9,25 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1586363104862-3a5e2ab6
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 const REQUEST_TIMEOUT_MS = 15000;
+
+export function getRawImageValue(image) {
+  if (!image) return '';
+  if (typeof image === 'object' && image !== null) {
+    return typeof image.url === 'string' ? image.url.trim() : '';
+  }
+  return typeof image === 'string' ? image.trim() : '';
+}
+
+export function hasImage(image) {
+  return Boolean(getRawImageValue(image));
+}
+
+/** Resolve a real image URL without the storefront placeholder fallback. */
+export function resolveImageUrl(image) {
+  const raw = getRawImageValue(image);
+  if (!raw) return '';
+  return getImageUrl(raw);
+}
 
 export function getImageUrl(image) {
   if (!image) return FALLBACK_IMAGE;

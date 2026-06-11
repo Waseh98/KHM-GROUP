@@ -1,5 +1,5 @@
-import { useId, useState } from 'react';
-import { getImageUrl } from '../utils/api';
+import { useId, useRef, useState } from 'react';
+import { resolveImageUrl } from '../utils/api';
 import { uploadFile } from '../utils/upload';
 
 export default function ImageUploadField({
@@ -12,9 +12,27 @@ export default function ImageUploadField({
   previewHeight = 120,
 }) {
   const inputId = useId();
+  const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const preview = getImageUrl(value);
+  const preview = resolveImageUrl(value);
+
+  function resetFileInput() {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function openFilePicker() {
+    if (uploading) return;
+    fileInputRef.current?.click();
+  }
+
+  function handleClear(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    resetFileInput();
+    setError('');
+    onChange('');
+  }
 
   async function handleFile(file) {
     if (!file) return;
@@ -27,6 +45,7 @@ export default function ImageUploadField({
       setError(err.message || 'Upload failed');
     } finally {
       setUploading(false);
+      resetFileInput();
     }
   }
 
@@ -43,7 +62,7 @@ export default function ImageUploadField({
           transition: 'border-color 0.2s ease',
         }}
       >
-        {preview && preview !== '' ? (
+        {preview ? (
           <div style={{ position: 'relative', marginBottom: 10 }}>
             <img
               src={preview}
@@ -58,11 +77,13 @@ export default function ImageUploadField({
             />
             <button
               type="button"
-              onClick={() => onChange('')}
+              onClick={handleClear}
+              aria-label="Remove image"
               style={{
                 position: 'absolute',
                 top: 8,
                 right: 8,
+                zIndex: 2,
                 width: 28,
                 height: 28,
                 borderRadius: '50%',
@@ -75,31 +96,59 @@ export default function ImageUploadField({
             >
               ✕
             </button>
+            <button
+              type="button"
+              onClick={openFilePicker}
+              disabled={uploading}
+              style={{
+                position: 'absolute',
+                bottom: 8,
+                right: 8,
+                zIndex: 2,
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: 'none',
+                background: 'rgba(0,0,0,0.72)',
+                color: '#fff',
+                cursor: uploading ? 'wait' : 'pointer',
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              {uploading ? 'Uploading...' : 'Replace'}
+            </button>
           </div>
         ) : (
-          <label
-            htmlFor={inputId}
+          <button
+            type="button"
+            onClick={openFilePicker}
+            disabled={uploading}
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
+              width: '100%',
               minHeight: previewHeight,
               cursor: uploading ? 'wait' : 'pointer',
               color: '#888',
               fontSize: 13,
               fontWeight: 600,
+              border: 'none',
+              background: 'transparent',
+              padding: 0,
             }}
           >
             <span style={{ fontSize: 28, opacity: 0.6 }}>{uploading ? '⏳' : '📷'}</span>
             <span>{uploading ? 'Uploading to Cloudinary...' : 'Click to upload image'}</span>
             <span style={{ fontSize: 11, color: '#666' }}>JPG, PNG, WebP · max 8MB</span>
-          </label>
+          </button>
         )}
 
         <input
           id={inputId}
+          ref={fileInputRef}
           type="file"
           accept="image/*"
           hidden
