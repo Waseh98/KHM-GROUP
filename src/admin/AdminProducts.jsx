@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
-import { API_BASE, getImageUrl } from '../utils/api';
+import { API_BASE, hasImage, resolveImageUrl } from '../utils/api';
 import { UPLOAD_FOLDERS } from '../utils/upload';
 import ImageUploadField from '../components/ImageUploadField';
 
@@ -304,8 +304,8 @@ export default function AdminProducts() {
                       <td style={{ padding: 10 }}>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                           {(p.images || []).slice(0, 4).map((img, i) => {
-                            const src = getImageUrl(img?.url || img || '');
-                            if (!src || src.endsWith('...')) return null;
+                            const src = resolveImageUrl(img);
+                            if (!src) return null;
                             return (
                               <img key={i} src={src} alt={`${p.name} ${i + 1}`}
                                 style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }}
@@ -313,7 +313,7 @@ export default function AdminProducts() {
                               />
                             );
                           })}
-                          {(p.images || []).length === 0 && (
+                          {(p.images || []).every((img) => !hasImage(img)) && (
                             <div style={{ width: 36, height: 36, borderRadius: 6, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444' }}>📷</div>
                           )}
                         </div>

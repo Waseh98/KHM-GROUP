@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
-import { API_BASE, getImageUrl } from '../utils/api';
+import { API_BASE, hasImage, resolveImageUrl } from '../utils/api';
 import { UPLOAD_FOLDERS } from '../utils/upload';
 import ImageUploadField from '../components/ImageUploadField';
 
@@ -180,7 +180,7 @@ export default function AdminCategories() {
                 categories.map(c => (
                   <tr key={c._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <td style={{ padding: 12 }}>
-                      {getImageUrl(c.image) ? <img src={getImageUrl(c.image)} alt={c.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} /> : <div style={{ width: 44, height: 44, borderRadius: 8, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 18 }}>🏷️</div>}
+                      {hasImage(c.image) ? <img src={resolveImageUrl(c.image)} alt={c.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} /> : <div style={{ width: 44, height: 44, borderRadius: 8, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 18 }}>🏷️</div>}
                     </td>
                     <td style={{ padding: 12, fontWeight: 700, color: '#d4af5a', fontSize: 14 }}>{c.name}</td>
                     <td style={{ padding: 12, display: 'flex', gap: 4, flexWrap: 'wrap' }}>

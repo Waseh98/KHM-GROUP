@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
-import { API_BASE, getImageUrl } from '../utils/api';
+import { API_BASE, hasImage, resolveImageUrl } from '../utils/api';
 import { UPLOAD_FOLDERS } from '../utils/upload';
 import ImageUploadField from '../components/ImageUploadField';
 
@@ -177,8 +177,8 @@ export default function AdminCollections() {
                 collections.map(col => (
                   <tr key={col._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                     <td style={{ padding: 12 }}>
-                      {getImageUrl(col.image) ? (
-                        <img src={getImageUrl(col.image)} alt={col.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                      {hasImage(col.image) ? (
+                        <img src={resolveImageUrl(col.image)} alt={col.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
                       ) : (
                         <div style={{ width: 44, height: 44, borderRadius: 8, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 18 }}>📁</div>
                       )}

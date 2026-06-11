@@ -10,6 +10,25 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 const REQUEST_TIMEOUT_MS = 15000;
 
+export function getRawImageValue(image) {
+  if (!image) return '';
+  if (typeof image === 'object' && image !== null) {
+    return typeof image.url === 'string' ? image.url.trim() : '';
+  }
+  return typeof image === 'string' ? image.trim() : '';
+}
+
+export function hasImage(image) {
+  return Boolean(getRawImageValue(image));
+}
+
+/** Resolve a real image URL without the storefront placeholder fallback. */
+export function resolveImageUrl(image) {
+  const raw = getRawImageValue(image);
+  if (!raw) return '';
+  return getImageUrl(raw);
+}
+
 export function getImageUrl(image) {
   if (!image) return FALLBACK_IMAGE;
   if (typeof image === 'object' && image !== null) {
