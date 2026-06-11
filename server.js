@@ -26,7 +26,7 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && proc
   }
 }
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(morgan('dev'));
@@ -67,13 +67,16 @@ app.use('/api/reviews', require('./routes/review.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/categories', require('./routes/category.routes'));
 app.use('/api/collections', require('./routes/collection.routes'));
+app.use('/api/upload', require('./routes/upload.routes'));
 
 app.get('/api/health', (req, res) => {
+  const { isConfigured } = require('./utils/cloudinary');
   res.json({
     success: true,
     message: 'K-TEX API is running!',
     version: '1.0.0',
     status: 'online',
+    cloudinary: isConfigured(),
   });
 });
 

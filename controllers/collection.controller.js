@@ -1,5 +1,6 @@
 const Collection = require('../models/Collection.model');
 const Product = require('../models/Product.model');
+const { processImageField, FOLDERS } = require('../utils/imageUploader');
 
 exports.getCollections = async (req, res) => {
   try {
@@ -64,6 +65,9 @@ exports.getCollectionProducts = async (req, res) => {
 
 exports.createCollection = async (req, res) => {
   try {
+    if (req.body.image) {
+      req.body.image = await processImageField(req.body.image, FOLDERS.collections);
+    }
     const collection = await Collection.create(req.body);
     res.status(201).json({ success: true, message: 'Created', data: collection });
   } catch (error) {
@@ -74,6 +78,9 @@ exports.createCollection = async (req, res) => {
 
 exports.updateCollection = async (req, res) => {
   try {
+    if (req.body.image) {
+      req.body.image = await processImageField(req.body.image, FOLDERS.collections);
+    }
     const collection = await Collection.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!collection) return res.status(404).json({ success: false, message: 'Not found' });
     res.status(200).json({ success: true, message: 'Updated', data: collection });
