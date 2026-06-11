@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
 import { API_BASE, getImageUrl } from '../utils/api';
+import { UPLOAD_FOLDERS } from '../utils/upload';
+import ImageUploadField from '../components/ImageUploadField';
 
 const API = `${API_BASE}/api/collections`;
 const CAT_API = `${API_BASE}/api/categories`;
@@ -18,6 +20,8 @@ export default function AdminCollections() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [formData, setFormData] = useState({ name: '', image: '', description: '', categories: [] });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchCollections = useCallback(async () => {
     setLoading(true);
@@ -75,6 +79,8 @@ export default function AdminCollections() {
   const closeModal = () => {
     setModal(null);
     setFormData({ name: '', image: '', description: '', categories: [] });
+    setSaving(false);
+    setError('');
   };
 
   const toggleCategory = (catId) => {
@@ -89,6 +95,12 @@ export default function AdminCollections() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
+    if (formData.image?.startsWith('data:image/')) {
+      setError('Please wait for the image upload to finish before saving.');
+      return;
+    }
+    setSaving(true);
+    setError('');
     try {
       const url = modal === 'new' ? API : `${API}/${modal}`;
       const method = modal === 'new' ? 'POST' : 'PUT';
@@ -97,7 +109,7 @@ export default function AdminCollections() {
       let data;
       try { data = JSON.parse(text); } catch { data = { message: text || `Server returned ${res.status}` }; }
       if (!res.ok) {
-        alert('Error: ' + (data.message || `Server returned ${res.status}`));
+        setError(data.message || `Server returned ${res.status}`);
         return;
       }
       closeModal();
@@ -106,7 +118,9 @@ export default function AdminCollections() {
       window.dispatchEvent(new Event('collections-updated'));
       fetchCollections();
     } catch (e) {
-      alert('Save failed: ' + e.message);
+      setError(e.message || 'Save failed');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -215,11 +229,14 @@ export default function AdminCollections() {
                 <label style={labelStyle}>Description</label>
                 <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, width: '100%', minHeight: 60, resize: 'vertical' }} placeholder="Short description..." />
               </div>
-              <div>
-                <label style={labelStyle}>Image URL</label>
-                <input type="url" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder="https://..." />
-                {getImageUrl(formData.image) && <img src={getImageUrl(formData.image)} alt="preview" style={{ marginTop: 8, width: 80, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />}
-              </div>
+              <ImageUploadField
+                label="Collection Image"
+                value={formData.image}
+                onChange={(url) => setFormData({ ...formData, image: url })}
+                folder={UPLOAD_FOLDERS.collections}
+                token={getAdminToken()}
+                previewHeight={120}
+              />
               <div>
                 <label style={labelStyle}>Linked Categories</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
@@ -261,7 +278,10 @@ export default function AdminCollections() {
                   <button type="button" onClick={() => { closeModal(); handleDelete(modal); }} style={{ ...btnSecondaryStyle, color: '#ff4d4d', borderColor: '#ff4d4d', marginRight: 'auto' }}>Delete</button>
                 )}
                 <button type="button" onClick={closeModal} style={btnSecondaryStyle}>Cancel</button>
-                <button type="submit" style={btnPrimaryStyle}>💾 Save</button>
+                {error && <p style={{ color: '#ff6b6b', fontSize: 13, fontWeight: 600, margin: 0 }}>{error}</p>}
+                <button type="submit" disabled={saving} style={{ ...btnPrimaryStyle, opacity: saving ? 0.6 : 1 }}>
+                  {saving ? 'Saving...' : '💾 Save'}
+                </button>
               </div>
             </form>
           </div>

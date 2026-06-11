@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
 import { API_BASE, getImageUrl } from '../utils/api';
+import { UPLOAD_FOLDERS } from '../utils/upload';
+import ImageUploadField from '../components/ImageUploadField';
 
 const API_PROD = `${API_BASE}/api/products`;
 const API_CATS = `${API_BASE}/api/categories`;
@@ -151,7 +153,14 @@ export default function AdminProducts() {
     setSaving(true);
     setError('');
 
-    const validImages = formData.images.filter(img => img && img.trim() !== '');
+    const validImages = formData.images.filter((img) => img && img.trim() !== '');
+    const pendingUpload = validImages.some((url) => url.startsWith('data:image/'));
+    if (pendingUpload) {
+      setError('Please wait for image uploads to finish before saving.');
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       name: formData.name.trim(),
       pageType: formData.pageType,
@@ -163,13 +172,13 @@ export default function AdminProducts() {
       stock: Number(formData.stock) || 0,
       sku: formData.sku || undefined,
       productStatus: formData.productStatus,
-      images: validImages.map(url => ({ url })),
+      images: validImages.map((url) => ({ url })),
       description: formData.description || 'Product description'
     };
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000);
+      const timeout = setTimeout(() => controller.abort(), 60000);
       let res;
       if (modal === 'edit') {
         res = await fetch(`${API_PROD}/${editId}`, { method: 'PUT', headers: apiHeaders(), body: JSON.stringify(payload), signal: controller.signal });
@@ -178,9 +187,9 @@ export default function AdminProducts() {
       }
       clearTimeout(timeout);
 
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `Error ${res.status}`);
+        throw new Error(data.message || `Error ${res.status}`);
       }
       setSaving(false);
       closeModal();
@@ -217,47 +226,11 @@ export default function AdminProducts() {
     }
   };
 
-  const handleImageUpload = (index, file) => {
-    if (!file) return;
-    // Resize and compress image before base64 encoding
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_W = 400;
-        const MAX_H = 533;
-        let w = img.width;
-        let h = img.height;
-        if (w > MAX_W || h > MAX_H) {
-          const ratio = Math.min(MAX_W / w, MAX_H / h);
-          w = Math.round(w * ratio);
-          h = Math.round(h * ratio);
-        }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        const compressed = canvas.toDataURL('image/jpeg', 0.8);
-        const updated = [...formData.images];
-        updated[index] = compressed;
-        setFormData({ ...formData, images: updated });
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleImageUrlChange = (index, url) => {
+  const updateImageSlot = (index, url) => {
     const updated = [...formData.images];
     updated[index] = url;
     setFormData({ ...formData, images: updated });
-  };
-
-  const removeImage = (index) => {
-    const updated = [...formData.images];
-    updated[index] = '';
-    setFormData({ ...formData, images: updated });
+    setError('');
   };
 
   return (
@@ -449,57 +422,21 @@ export default function AdminProducts() {
 
               <div>
                 <label style={labelStyle}>Product Images (up to 4)</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+                <p style={{ color: '#777', fontSize: 12, margin: '0 0 12px' }}>
+                  Images upload to Cloudinary automatically. Only the URL is saved in the database.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
                   {formData.images.map((img, idx) => (
-                    <div key={idx} style={{
-                      border: '2px dashed rgba(255,255,255,0.15)',
-                      borderRadius: 12,
-                      padding: 8,
-                      textAlign: 'center',
-                      background: img ? 'rgba(212,175,42,0.05)' : 'transparent',
-                      transition: 'all 0.2s ease',
-                      position: 'relative',
-                    }}>
-                      {img ? (
-                        <>
-                          <img src={img} alt={`Product ${idx + 1}`} style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }} />
-                          <button type="button" onClick={() => removeImage(idx)}
-                            style={{
-                              position: 'absolute', top: 12, right: 12,
-                              width: 22, height: 22, borderRadius: '50%',
-                              background: 'rgba(255,80,80,0.9)', color: '#fff',
-                              border: 'none', cursor: 'pointer', fontSize: 12,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontWeight: 700, lineHeight: 1,
-                            }}
-                          >✕</button>
-                        </>
-                      ) : (
-                        <div style={{ aspectRatio: '3/4', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer' }}
-                          onClick={() => document.getElementById(`img-upload-${idx}`).click()}>
-                          <span style={{ fontSize: 24, opacity: 0.5 }}>📷</span>
-                          <span style={{ fontSize: 10, color: '#666', fontWeight: 600 }}>Image {idx + 1}</span>
-                        </div>
-                      )}
-                      <input
-                        id={`img-upload-${idx}`}
-                        type="file"
-                        accept="image/*"
-                        hidden
-                        onChange={e => { if (e.target.files?.[0]) handleImageUpload(idx, e.target.files[0]); }}
-                      />
-                      <input
-                        type="url"
-                        value={img}
-                        onChange={e => handleImageUrlChange(idx, e.target.value)}
-                        placeholder="Or paste URL..."
-                        style={{
-                          ...inputStyle, width: '100%', marginTop: 6,
-                          fontSize: 10, padding: '6px 8px', borderRadius: 8,
-                          textOverflow: 'ellipsis',
-                        }}
-                      />
-                    </div>
+                    <ImageUploadField
+                      key={idx}
+                      label={`Image ${idx + 1}`}
+                      value={img}
+                      onChange={(url) => updateImageSlot(idx, url)}
+                      folder={UPLOAD_FOLDERS.products}
+                      token={getAdminToken()}
+                      previewHeight={140}
+                      placeholder="Cloudinary URL or upload..."
+                    />
                   ))}
                 </div>
               </div>

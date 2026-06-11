@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/useAuth';
 import { API_BASE, getImageUrl } from '../utils/api';
+import { compressImageFile, uploadPaymentProof } from '../utils/upload';
 import { getUserToken } from '../utils/userAuth';
 
 function generateOrderNumber() {
@@ -100,23 +101,16 @@ export default function Checkout() {
     });
   }
 
-  function handleScreenshot(file) {
+  async function handleScreenshot(file) {
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file (JPG, PNG, etc.)');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Screenshot must be less than 5MB');
-      return;
-    }
     setError('');
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setScreenshot(reader.result);
-      setScreenshotPreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await compressImageFile(file);
+      setScreenshot(dataUrl);
+      setScreenshotPreview(dataUrl);
+    } catch (err) {
+      setError(err.message || 'Could not process image');
+    }
   }
 
   function handleDrop(e) {
@@ -150,12 +144,18 @@ export default function Checkout() {
     setLoading(true);
     setError('');
     try {
+      let paymentScreenshot = screenshot;
+      if (screenshot.startsWith('data:image/')) {
+        const uploaded = await uploadPaymentProof(screenshot);
+        paymentScreenshot = uploaded.url;
+      }
+
       const result = await submitOrderToBackend({
         email: email || undefined,
         orderItems: buildOrderItems(),
         shippingAddress: { fullName, phone, street, city: '—', province: '—', country: 'Pakistan' },
         paymentInfo: { method: paymentMethod, status: 'pending' },
-        paymentScreenshot: screenshot,
+        paymentScreenshot,
       });
       let orderNumber, orderStatus;
       if (result.source === 'server') {
@@ -170,7 +170,7 @@ export default function Checkout() {
           items: buildOrderItems(),
           placedAt: new Date().toISOString(),
           status: 'pending',
-          paymentScreenshot: screenshot,
+          paymentScreenshot: paymentScreenshot,
           paymentMethod: paymentMethod,
         });
         localStorage.setItem('ktex_offline_orders', JSON.stringify(saved));
