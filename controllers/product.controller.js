@@ -1,5 +1,5 @@
 const Product = require('../models/Product.model');
-const { processImageArray } = require('../utils/imageUploader');
+const { processImageArray, FOLDERS } = require('../utils/imageUploader');
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -76,23 +76,38 @@ exports.getProduct = async (req, res) => {
   }
 };
 
+function formatProductError(error) {
+  if (error.name === 'ValidationError') {
+    return { status: 400, message: Object.values(error.errors).map((e) => e.message).join(', ') };
+  }
+  if (error.code === 11000) {
+    return { status: 400, message: 'SKU already exists. Use a different SKU or leave it blank.' };
+  }
+  if (/image|too large/i.test(error.message || '')) {
+    return { status: 400, message: error.message };
+  }
+  return { status: 500, message: error.message || 'Server error' };
+}
+
 exports.createProduct = async (req, res) => {
   try {
     req.body.createdBy = req.user._id;
-    if (req.body.images) {
-      req.body.images = await processImageArray(req.body.images);
+    if (req.body.images?.length) {
+      req.body.images = await processImageArray(req.body.images, FOLDERS.products);
     }
     const product = await Product.create(req.body);
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('createProduct error:', error.message);
+    const { status, message } = formatProductError(error);
+    res.status(status).json({ success: false, message });
   }
 };
 
 exports.updateProduct = async (req, res) => {
   try {
-    if (req.body.images) {
-      req.body.images = await processImageArray(req.body.images);
+    if (req.body.images?.length) {
+      req.body.images = await processImageArray(req.body.images, FOLDERS.products);
     }
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true, runValidators: true
@@ -100,7 +115,9 @@ exports.updateProduct = async (req, res) => {
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     res.status(200).json({ success: true, message: 'Product updated', data: product });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('updateProduct error:', error.message);
+    const { status, message } = formatProductError(error);
+    res.status(status).json({ success: false, message });
   }
 };
 

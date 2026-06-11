@@ -1,6 +1,6 @@
 const Order = require('../models/Order.model');
 const Product = require('../models/Product.model');
-const { processImage } = require('../utils/imageUploader');
+const { processImage, FOLDERS } = require('../utils/imageUploader');
 
 // @POST /api/orders
 exports.createOrder = async (req, res) => {
@@ -67,13 +67,13 @@ exports.createGuestOrder = async (req, res) => {
     const taxPrice      = Math.round(itemsPrice * 0.05);
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
-    // Process payment screenshot if provided (base64 → file)
+    // Store payment screenshot in MongoDB as base64 or URL
     let screenshotUrl = '';
     if (paymentScreenshot) {
       try {
-        screenshotUrl = processImage(paymentScreenshot);
+        screenshotUrl = await processImage(paymentScreenshot, FOLDERS.orders);
       } catch (e) {
-        console.error('Screenshot upload failed:', e.message);
+        console.error('Screenshot save failed:', e.message);
       }
     }
 

@@ -1,46 +1,107 @@
 const cloudinary = require('./cloudinary');
-const path = require('path');
+const { isConfigured } = require('./cloudinary');
 
-exports.uploadDir = null;
-
-exports.processImage = async (imageStr) => {
-  if (!imageStr || typeof imageStr !== 'string') return imageStr;
-
-  const matches = imageStr.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-  if (!matches || matches.length !== 3) {
-    return imageStr;
-  }
-
-  const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
-  const buffer = Buffer.from(matches[2], 'base64');
-
-  return new Promise((resolve) => {
-    cloudinary.uploader.upload(
-      `data:image/${ext};base64,${matches[2]}`,
-      { folder: 'ktex-products', resource_type: 'image' },
-      (error, result) => {
-        if (error) {
-          console.warn('Cloudinary upload failed:', error.message);
-          resolve(imageStr);
-        } else {
-          resolve(result.secure_url);
-        }
-      }
-    );
-  });
+const UPLOAD_TIMEOUT_MS = 30_000;
+const FOLDERS = {
+  products: 'ktex/products',
+  collections: 'ktex/collections',
+  categories: 'ktex/categories',
+  orders: 'ktex/orders',
+  misc: 'ktex/misc',
 };
 
-exports.processImageArray = async (images) => {
+function ensureConfigured() {
+  if (!isConfigured()) {
+    throw new Error('Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to the server environment.');
+  }
+}
+
+function isDataUri(value) {
+  return typeof value === 'string' && value.startsWith('data:image/');
+}
+
+function isRemoteUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
+function isCloudinaryUrl(value) {
+  return typeof value === 'string' && value.includes('res.cloudinary.com');
+}
+
+function withTimeout(promise, ms = UPLOAD_TIMEOUT_MS) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Image upload timed out. Please try again.')), ms);
+    }),
+  ]);
+}
+
+function cloudinaryUpload(source, folder) {
+  ensureConfigured();
+  return withTimeout(new Promise((resolve, reject) => {
+    cloudinary.uploader.upload(
+      source,
+      { folder, resource_type: 'image' },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve({
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
+    );
+  }));
+}
+
+async function uploadFromSource(source, folder = FOLDERS.misc) {
+  if (!source || typeof source !== 'string') {
+    return { url: source || '', public_id: '' };
+  }
+
+  if (isCloudinaryUrl(source)) {
+    return { url: source, public_id: '' };
+  }
+
+  if (isRemoteUrl(source) && !isDataUri(source)) {
+    return cloudinaryUpload(source, folder);
+  }
+
+  if (isDataUri(source)) {
+    return cloudinaryUpload(source, folder);
+  }
+
+  return { url: source, public_id: '' };
+}
+
+exports.FOLDERS = FOLDERS;
+exports.isCloudinaryConfigured = isConfigured;
+
+exports.processImage = async (imageStr, folder = FOLDERS.misc) => {
+  const result = await uploadFromSource(imageStr, folder);
+  return result.url;
+};
+
+exports.processImageField = async (value, folder = FOLDERS.misc) => {
+  if (!value) return value;
+  const result = await uploadFromSource(value, folder);
+  return result.url;
+};
+
+exports.processImageArray = async (images, folder = FOLDERS.products) => {
   if (!images || !Array.isArray(images)) return images;
 
   const results = [];
   for (const img of images) {
-    if (img && img.url) {
-      const processed = await exports.processImage(img.url);
-      results.push({ ...img, url: processed });
-    } else {
-      results.push(img);
-    }
+    const source = typeof img === 'string' ? img : img?.url;
+    if (!source) continue;
+    const uploaded = await uploadFromSource(source, folder);
+    results.push({
+      url: uploaded.url,
+      public_id: uploaded.public_id || img?.public_id || '',
+    });
   }
   return results;
 };
+
+exports.uploadFromSource = uploadFromSource;

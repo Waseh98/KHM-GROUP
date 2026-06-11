@@ -1,5 +1,6 @@
 const Category = require('../models/Category.model');
 const Product  = require('../models/Product.model');
+const { processImageField, FOLDERS } = require('../utils/imageUploader');
 
 exports.getCategories = async (req, res) => {
   try {
@@ -36,6 +37,9 @@ exports.getCategoryBySlug = async (req, res) => {
 
 exports.createCategory = async (req, res) => {
   try {
+    if (req.body.image) {
+      req.body.image = await processImageField(req.body.image, FOLDERS.categories);
+    }
     const category = await Category.create(req.body);
     res.status(201).json({ success: true, message: 'Created', data: category });
   } catch (error) {
@@ -46,6 +50,9 @@ exports.createCategory = async (req, res) => {
 
 exports.updateCategory = async (req, res) => {
   try {
+    if (req.body.image) {
+      req.body.image = await processImageField(req.body.image, FOLDERS.categories);
+    }
     const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!category) return res.status(404).json({ success: false, message: 'Not found' });
     res.status(200).json({ success: true, message: 'Updated', data: category });
