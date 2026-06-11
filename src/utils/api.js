@@ -17,6 +17,7 @@ export function getImageUrl(image) {
     return FALLBACK_IMAGE;
   }
   if (typeof image !== 'string') return FALLBACK_IMAGE;
+  if (image.startsWith('data:image/')) return image;
   if (image.startsWith('http://') || image.startsWith('https://')) return image;
   if (image.startsWith('/uploads/') || image.startsWith('uploads/')) {
     return `${API_BASE}${image.startsWith('/') ? image : '/' + image}`;

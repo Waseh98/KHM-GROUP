@@ -40,8 +40,11 @@ export default function Product() {
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState('');
   const [reviewErrorMsg, setReviewErrorMsg] = useState('');
 
-  const productImages = product?.images && product.images.filter(img => img !== '').length > 0
-    ? product.images.filter(img => img !== '').map(img => getImageUrl(img))
+  const productImages = product?.images?.length
+    ? product.images
+        .map((img) => (typeof img === 'string' ? img : img?.url))
+        .filter(Boolean)
+        .map((img) => getImageUrl(img))
     : [getImageUrl(product?.image)];
 
   const sizes = product?.sizes && product.sizes.length > 0

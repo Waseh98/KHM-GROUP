@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getAdminToken } from './adminAuth';
 import { API_BASE, getImageUrl } from '../utils/api';
+import { UPLOAD_FOLDERS } from '../utils/upload';
+import ImageUploadField from '../components/ImageUploadField';
 
 const API = `${API_BASE}/api/categories`;
 
@@ -16,6 +18,8 @@ export default function AdminCategories() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [formData, setFormData] = useState({ name: '', image: '', pageTypes: ['Men'] });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -54,7 +58,12 @@ export default function AdminCategories() {
     setModal(cat?._id || 'new');
   };
 
-  const closeModal = () => { setModal(null); setFormData({ name: '', image: '', pageTypes: ['Men'] }); };
+  const closeModal = () => {
+    setModal(null);
+    setFormData({ name: '', image: '', pageTypes: ['Men'] });
+    setSaving(false);
+    setError('');
+  };
 
   const togglePageType = (page) => {
     setFormData(prev => {
@@ -68,6 +77,12 @@ export default function AdminCategories() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
+    if (formData.image?.startsWith('data:image/')) {
+      setError('Please wait for the image upload to finish before saving.');
+      return;
+    }
+    setSaving(true);
+    setError('');
     try {
       const url = modal === 'new' ? API : `${API}/${modal}`;
       const method = modal === 'new' ? 'POST' : 'PUT';
@@ -76,18 +91,18 @@ export default function AdminCategories() {
       let data;
       try { data = JSON.parse(text); } catch { data = { message: text || `Server returned ${res.status}` }; }
       if (!res.ok) {
-        alert('Error: ' + (data.message || `Server returned ${res.status}`));
+        setError(data.message || `Server returned ${res.status}`);
         return;
       }
       closeModal();
-      // Clear cached categories so frontend gets fresh data
       localStorage.removeItem('ktex_categories_synced_at');
       localStorage.removeItem('ktex_categories');
-      // Notify other tabs/components to refresh
       window.dispatchEvent(new Event('categories-updated'));
       fetchCategories();
     } catch (e) {
-      alert('Save failed: ' + e.message);
+      setError(e.message || 'Save failed');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -226,16 +241,24 @@ export default function AdminCategories() {
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>Image URL (optional)</label>
-                <input type="url" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder="https://..." />
-                {getImageUrl(formData.image) && <img src={getImageUrl(formData.image)} alt="preview" style={{ marginTop: 8, width: 80, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />}
+                <ImageUploadField
+                  label="Category Image (optional)"
+                  value={formData.image}
+                  onChange={(url) => setFormData({ ...formData, image: url })}
+                  folder={UPLOAD_FOLDERS.categories}
+                  token={getAdminToken()}
+                  previewHeight={100}
+                />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
                 {modal !== 'new' && (
                   <button type="button" onClick={() => { closeModal(); handleDelete(modal); }} style={{ ...btnSecondaryStyle, color: '#ff4d4d', borderColor: '#ff4d4d', marginRight: 'auto' }}>Delete</button>
                 )}
                 <button type="button" onClick={closeModal} style={btnSecondaryStyle}>Cancel</button>
-                <button type="submit" style={btnPrimaryStyle}>💾 Save</button>
+                {error && <p style={{ color: '#ff6b6b', fontSize: 13, fontWeight: 600, margin: 0 }}>{error}</p>}
+                <button type="submit" disabled={saving} style={{ ...btnPrimaryStyle, opacity: saving ? 0.6 : 1 }}>
+                  {saving ? 'Saving...' : '💾 Save'}
+                </button>
               </div>
             </form>
           </div>
