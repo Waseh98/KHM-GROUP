@@ -5,6 +5,23 @@ import { API_BASE, getImageUrl } from '../utils/api';
 const API = `${API_BASE}/api/collections`;
 const CAT_API = `${API_BASE}/api/categories`;
 
+const PAGE_TYPE_OPTIONS = [
+  { value: '', label: '— None (use own detail page) —', path: '' },
+  { value: 'Sale', label: '🏷️ Sale Page', path: '/sale' },
+  { value: 'Men', label: '👔 Men Page', path: '/men' },
+  { value: 'Women', label: '👗 Women Page', path: '/women' },
+  { value: 'NewArrivals', label: '✨ New Arrivals Page', path: '/new-arrivals' },
+  { value: 'Kids', label: '🧒 Kids Page', path: '/kids' },
+  { value: 'Custom', label: '🔗 Custom URL...', path: '' },
+];
+
+function pageTypePath(pageType, customPath) {
+  if (!pageType) return '';
+  if (pageType === 'Custom') return customPath || '';
+  const opt = PAGE_TYPE_OPTIONS.find(o => o.value === pageType);
+  return opt ? opt.path : '';
+}
+
 function apiHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -17,7 +34,7 @@ export default function AdminCollections() {
   const [allCategories, setAllCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
-  const [formData, setFormData] = useState({ name: '', image: '', description: '', categories: [] });
+  const [formData, setFormData] = useState({ name: '', image: '', description: '', categories: [], pageType: '', customPath: '' });
 
   const fetchCollections = useCallback(async () => {
     setLoading(true);
@@ -65,16 +82,16 @@ export default function AdminCollections() {
   const openModal = (col = null) => {
     if (col) {
       const catIds = (col.categories || []).map(c => typeof c === 'object' ? c._id : c);
-      setFormData({ name: col.name, image: col.image || '', description: col.description || '', categories: catIds });
+      setFormData({ name: col.name, image: col.image || '', description: col.description || '', categories: catIds, pageType: col.pageType || '', customPath: col.customPath || '' });
     } else {
-      setFormData({ name: '', image: '', description: '', categories: [] });
+      setFormData({ name: '', image: '', description: '', categories: [], pageType: '', customPath: '' });
     }
     setModal(col?._id || 'new');
   };
 
   const closeModal = () => {
     setModal(null);
-    setFormData({ name: '', image: '', description: '', categories: [] });
+    setFormData({ name: '', image: '', description: '', categories: [], pageType: '', customPath: '' });
   };
 
   const toggleCategory = (catId) => {
@@ -84,6 +101,34 @@ export default function AdminCollections() {
         : [...prev.categories, catId];
       return { ...prev, categories: cats };
     });
+  };
+
+  const handleImageUpload = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_W = 800;
+        const MAX_H = 800;
+        let w = img.width;
+        let h = img.height;
+        if (w > MAX_W || h > MAX_H) {
+          const ratio = Math.min(MAX_W / w, MAX_H / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.85);
+        setFormData(prev => ({ ...prev, image: compressed }));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async (e) => {
@@ -149,14 +194,14 @@ export default function AdminCollections() {
           <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff', minWidth: 600 }}>
             <thead>
               <tr style={{ background: 'linear-gradient(180deg, #1a1a1a 0%, #111 100%)' }}>
-                <Th>Image</Th><Th>Collection</Th><Th>Categories</Th><Th>Slug</Th><Th>Actions</Th>
+                <Th>Image</Th><Th>Collection</Th><Th>Categories</Th><Th>Destination</Th><Th>Slug</Th><Th>Actions</Th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading...</td></tr>
+                <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading...</td></tr>
               ) : collections.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: '#666' }}>
+                <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#666' }}>
                   No collections yet. Click "+ Add Collection" to create one.
                 </td></tr>
               ) : (
@@ -187,6 +232,19 @@ export default function AdminCollections() {
                         )}
                       </div>
                     </td>
+                    <td style={{ padding: 12 }}>
+                      {col.pageType ? (
+                        <span style={{
+                          padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 800,
+                          background: 'rgba(77,166,255,0.12)', color: '#4da6ff',
+                          border: '1px solid rgba(77,166,255,0.3)',
+                        }}>
+                          {col.pageType === 'Custom' ? `🔗 ${col.customPath || '/...'}` : `→ ${col.pageType}`}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#666', fontSize: 12 }}>Detail page</span>
+                      )}
+                    </td>
                     <td style={{ padding: 12, color: '#888', fontSize: 12 }}>{col.slug}</td>
                     <td style={{ padding: 12 }}>
                       <button onClick={() => openModal(col)} style={actionBtn('#4da6ff')}>✏️</button>
@@ -216,9 +274,86 @@ export default function AdminCollections() {
                 <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, width: '100%', minHeight: 60, resize: 'vertical' }} placeholder="Short description..." />
               </div>
               <div>
-                <label style={labelStyle}>Image URL</label>
-                <input type="url" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder="https://..." />
-                {getImageUrl(formData.image) && <img src={getImageUrl(formData.image)} alt="preview" style={{ marginTop: 8, width: 80, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />}
+                <label style={labelStyle}>Destination Page *</label>
+                <select
+                  value={formData.pageType}
+                  onChange={e => setFormData({ ...formData, pageType: e.target.value, customPath: e.target.value === 'Custom' ? formData.customPath : '' })}
+                  style={{ ...inputStyle, width: '100%', cursor: 'pointer' }}
+                >
+                  {PAGE_TYPE_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value} style={{ background: '#111', color: '#fff' }}>{opt.label}</option>
+                  ))}
+                </select>
+                {formData.pageType && (
+                  <p style={{ color: '#888', fontSize: 11, marginTop: 6 }}>
+                    {formData.pageType === 'Custom'
+                      ? `Clicking this collection opens: ${formData.customPath || '(set custom path below)'}`
+                      : `Clicking this collection opens: ${pageTypePath(formData.pageType)} (filtered by linked categories)`}
+                  </p>
+                )}
+              </div>
+              {formData.pageType === 'Custom' && (
+                <div>
+                  <label style={labelStyle}>Custom Path</label>
+                  <input
+                    type="text"
+                    value={formData.customPath}
+                    onChange={e => setFormData({ ...formData, customPath: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                    placeholder="e.g. /sale?collection=winter-sale"
+                  />
+                </div>
+              )}
+              <div>
+                <label style={labelStyle}>Image</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    type="url"
+                    value={formData.image.startsWith('data:') ? '' : formData.image}
+                    onChange={e => setFormData({ ...formData, image: e.target.value })}
+                    style={{ ...inputStyle, flex: 1, width: '100%' }}
+                    placeholder="Paste image URL or upload below"
+                  />
+                  <input
+                    id="collection-image-upload"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={e => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); e.target.value = ''; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('collection-image-upload').click()}
+                    style={{
+                      padding: '12px 16px', borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+                      color: '#d4af5a', cursor: 'pointer',
+                      fontWeight: 700, fontSize: 12,
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    📤 Upload from Desktop
+                  </button>
+                </div>
+                {getImageUrl(formData.image) && (
+                  <div style={{ marginTop: 8, position: 'relative', display: 'inline-block' }}>
+                    <img src={getImageUrl(formData.image)} alt="preview" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, image: '' })}
+                      style={{
+                        position: 'absolute', top: -6, right: -6,
+                        width: 22, height: 22, borderRadius: '50%',
+                        background: 'rgba(255,80,80,0.9)', color: '#fff',
+                        border: 'none', cursor: 'pointer', fontSize: 12,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 700, lineHeight: 1,
+                      }}
+                    >✕</button>
+                  </div>
+                )}
               </div>
               <div>
                 <label style={labelStyle}>Linked Categories</label>

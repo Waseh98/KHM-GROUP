@@ -10,7 +10,7 @@ import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider } from './context/AuthContext';
-import { syncProductsFromBackend, syncCategoriesFromBackend, syncCollectionsFromBackend } from './data';
+import { syncProductsFromBackend, syncCategoriesFromBackend, syncCollectionsFromBackend, syncPageSubCategoriesFromBackend } from './data';
 
 // Lazy-loaded pages
 const Home = lazy(() => import('./pages/Home'));
@@ -39,6 +39,7 @@ const AdminOrders = lazy(() => import('./admin/AdminOrders'));
 const AdminProducts = lazy(() => import('./admin/AdminProducts'));
 const AdminCategories = lazy(() => import('./admin/AdminCategories'));
 const AdminCollections = lazy(() => import('./admin/AdminCollections'));
+const AdminPageSubCategories = lazy(() => import('./admin/AdminPageSubCategories'));
 const AdminMessages = lazy(() => import('./admin/AdminMessages'));
 const AdminProtectedRoute = lazy(() => import('./admin/AdminProtectedRoute'));
 const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
@@ -88,6 +89,7 @@ function AppFrame() {
       syncProductsFromBackend(true).then(() => setDataVersion(v => v + 1)).catch(() => {});
       syncCategoriesFromBackend().catch(() => {});
       syncCollectionsFromBackend().catch(() => {});
+      syncPageSubCategoriesFromBackend().catch(() => {});
     }
   }, [isAdmin]);
 
@@ -113,6 +115,14 @@ function AppFrame() {
     }
     window.addEventListener('collections-updated', handler);
     return () => window.removeEventListener('collections-updated', handler);
+  }, []);
+
+  useEffect(() => {
+    function handler() {
+      syncPageSubCategoriesFromBackend(true).then(() => setDataVersion(v => v + 1)).catch(() => {});
+    }
+    window.addEventListener('page-subcategories-updated', handler);
+    return () => window.removeEventListener('page-subcategories-updated', handler);
   }, []);
 
   return (
@@ -162,6 +172,7 @@ function AppFrame() {
             <Route path="products" element={<Suspense fallback={<PageLoader />}><AdminProducts /></Suspense>} />
             <Route path="categories" element={<Suspense fallback={<PageLoader />}><AdminCategories /></Suspense>} />
             <Route path="collections" element={<Suspense fallback={<PageLoader />}><AdminCollections /></Suspense>} />
+            <Route path="page-subcategories" element={<Suspense fallback={<PageLoader />}><AdminPageSubCategories /></Suspense>} />
             <Route path="messages" element={<Suspense fallback={<PageLoader />}><AdminMessages /></Suspense>} />
           </Route>
         </Route>

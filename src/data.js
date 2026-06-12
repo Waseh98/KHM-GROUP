@@ -556,6 +556,8 @@ function transformCollection(c) {
       slug: cat.slug || '',
       image: fixImageUrl(cat.image || '')
     })),
+    pageType: c.pageType || '',
+    customPath: c.customPath || '',
     order: c.order || 0
   };
 }
@@ -578,6 +580,68 @@ export async function syncCollectionsFromBackend(force = false) {
   } catch (e) {
     console.warn('Collection sync from backend failed, using cache', e.message);
   }
+}
+
+export async function syncPageSubCategoriesFromBackend(force = false) {
+  if (typeof window === 'undefined') return;
+  if (!force) {
+    const lastSync = localStorage.getItem('ktex_page_subcategories_synced_at');
+    if (lastSync && Date.now() - parseInt(lastSync) < 30000) return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/api/page-subcategories`);
+    if (!res.ok) return;
+    const json = await res.json();
+    if (json.success && json.data) {
+      const transformed = json.data.map(s => ({
+        id: s._id,
+        pageType: s.pageType,
+        name: s.name,
+        slug: s.slug,
+        image: fixImageUrl(s.image || ''),
+        order: s.order || 0,
+      }));
+      localStorage.setItem('ktex_page_subcategories', JSON.stringify(transformed));
+      localStorage.setItem('ktex_page_subcategories_synced_at', Date.now().toString());
+    }
+  } catch (e) {
+    console.warn('Page sub-category sync from backend failed, using cache', e.message);
+  }
+}
+
+export const getPageSubCategories = (pageType) => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('ktex_page_subcategories');
+      if (saved) {
+        const all = JSON.parse(saved);
+        if (pageType) return all.filter(s => s.pageType === pageType);
+        return all;
+      }
+    } catch (e) {
+      console.error('Failed to parse page sub-categories from localStorage', e);
+    }
+  }
+  return [];
+};
+
+export const PAGE_TYPE_TO_PATH = {
+  Sale: '/sale',
+  Men: '/men',
+  Women: '/women',
+  NewArrivals: '/new-arrivals',
+  Kids: '/kids',
+};
+
+export function getCollectionTargetPath(collection) {
+  if (!collection) return null;
+  if (collection.pageType && PAGE_TYPE_TO_PATH[collection.pageType]) {
+    return `${PAGE_TYPE_TO_PATH[collection.pageType]}?collection=${encodeURIComponent(collection.slug || collection.id || '')}`;
+  }
+  if (collection.pageType === 'Custom' && collection.customPath) {
+    return collection.customPath;
+  }
+  return `/collections/${collection.slug || ''}`;
 }
 
 const defaultCollections = [

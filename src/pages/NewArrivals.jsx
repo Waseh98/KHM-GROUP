@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getProducts } from '../data';
+import { useCollectionFromUrl, usePageSubCategories } from '../hooks/useCollectionFilters';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { getImageUrl } from '../utils/api';
 
 function DarkProductCard({ product, onWishlist, isWishlisted }) {
   const { addToCart } = useCart();
@@ -117,12 +119,28 @@ function ProductSegment({ title, products, toggleWishlist, isWishlisted }) {
 export default function NewArrivals() {
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const [selected, setSelected] = useState('all');
+  const collection = useCollectionFromUrl();
+  const pageSubs = usePageSubCategories('NewArrivals');
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "New Arrivals — Fresh Drops & Polos | K-TEX";
-  }, []);
+    document.title = collection ? `${collection.name} — New Arrivals | K-TEX` : "New Arrivals — Fresh Drops & Polos | K-TEX";
+  }, [collection]);
 
   const allProducts = getProducts();
+
+  const filterByCollection = (products) => {
+    if (!collection || !Array.isArray(collection.categories) || collection.categories.length === 0) return products;
+    const names = collection.categories.map(c => (c.name || c || '').toLowerCase()).filter(Boolean);
+    if (names.length === 0) return products;
+    return products.filter(p => {
+      const pSub = (p.subCategory || '').toLowerCase();
+      const pCat = (p.category || '').toLowerCase();
+      const pTag = (p.tag || '').toLowerCase();
+      const pMain = (p.mainCategory || '').toLowerCase();
+      const pName = (p.name || '').toLowerCase();
+      return names.some(n => pSub === n || pCat === n || pTag === n || pMain === n || pName.includes(n));
+    });
+  };
 
   const categories = [
     { key: 'all', label: 'All Products' },
@@ -130,6 +148,7 @@ export default function NewArrivals() {
     { key: 'Women', label: "Women's" },
     { key: 'Kids', label: "Kids'" },
     { key: 'Sale', label: 'Sale' },
+    ...pageSubs.map(s => ({ key: `page_${s.id}`, label: s.name })),
   ];
 
   const newProducts = allProducts.filter(p => {
@@ -137,7 +156,7 @@ export default function NewArrivals() {
     return ['men', 'women', 'kids', 'sale', 't-shirt', 'round-neck', 'new'].includes(tag) || p.badge === 'NEW' || p.isNewArrival;
   });
 
-  const allNew = newProducts;
+  const allNew = filterByCollection(newProducts);
 
   const menNew = allNew.filter(p => p.tag === 'Men');
   const womenNew = allNew.filter(p => p.tag === 'Women');
@@ -151,20 +170,48 @@ export default function NewArrivals() {
     { id: 'Sale', name: 'Sale', products: saleNew },
   ].filter(s => s.products.length > 0);
 
-  const filtered = selected === 'all' ? null : (() => { const seg = segmentProducts.find(s => s.id === selected); return seg ? { title: seg.name, products: seg.products } : null; })();
+  const filtered = selected === 'all' ? null : (() => {
+    if (typeof selected === 'string' && selected.startsWith('page_')) {
+      const subId = selected.replace('page_', '');
+      const sub = pageSubs.find(s => s.id === subId);
+      if (sub) {
+        const subName = sub.name.toLowerCase();
+        const products = allNew.filter(p => {
+          const pName = (p.name || '').toLowerCase();
+          const pSub = (p.subCategory || '').toLowerCase();
+          const pCat = (p.category || '').toLowerCase();
+          return pName.includes(subName) || pSub.includes(subName) || pCat.includes(subName);
+        });
+        return { title: sub.name, products };
+      }
+    }
+    const seg = segmentProducts.find(s => s.id === selected);
+    return seg ? { title: seg.name, products: seg.products } : null;
+  })();
 
   return (
     <main style={{ background: 'linear-gradient(180deg, #0d0d12, #151318, #0d0d12)' }}>
       {/* Hero */}
       <section style={{ position: 'relative', width: '100%', height: '40vh', minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
+        {collection?.image ? (
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${getImageUrl(collection.image)})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.3 }} />
+        )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(13,13,18,0.3), rgba(13,13,18,0.9))' }} />
-        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', color: '#fff' }}>
-          <span className="fade-up" style={{ display: 'inline-block', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14, padding: '6px 20px', background: 'rgba(184,151,42,0.1)', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 20 }}>K-TEX New Arrivals</span>
-          <h1 className="fade-up" style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 12px' }}>New Arrivals</h1>
+        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', color: '#fff', padding: '0 20px' }}>
+          <span className="fade-up" style={{ display: 'inline-block', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14, padding: '6px 20px', background: 'rgba(184,151,42,0.1)', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 20 }}>{collection ? 'Curated Collection' : 'K-TEX New Arrivals'}</span>
+          <h1 className="fade-up" style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 12px' }}>{collection ? collection.name : 'New Arrivals'}</h1>
           <p className="fade-up-1" style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', maxWidth: 500, margin: '0 auto', color: 'rgba(255,255,255,0.6)' }}>
-            Discover the latest drops — fresh styles, premium quality, just arrived.
+            {collection ? collection.description : 'Discover the latest drops — fresh styles, premium quality, just arrived.'}
           </p>
+          {collection && (
+            <div style={{ marginTop: 14 }}>
+              <Link to="/collections" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 12 }}>
+                ← Back to all collections
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

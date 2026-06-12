@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getProducts, categories } from '../data';
+import { useCollectionFromUrl, usePageSubCategories } from '../hooks/useCollectionFilters';
 import TrustBadges from '../components/TrustBadges';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -137,10 +138,13 @@ export default function Men() {
   const { toggle: toggleWishlist, isWishlisted } = useWishlist();
   const [selected, setSelected] = useState('all');
   const [showDropdown, setShowDropdown] = useState(false);
+  const collection = useCollectionFromUrl();
+  const pageSubs = usePageSubCategories('Men');
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "Men's Collection — Premium Polo Shirts | K-TEX";
-  }, []);
+    const title = collection ? `${collection.name} — Men's | K-TEX` : "Men's Collection — Premium Polo Shirts | K-TEX";
+    document.title = title;
+  }, [collection]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -197,14 +201,46 @@ export default function Men() {
       }))
     : [{ id: 'all-men', name: "Men's Collection", image: '', products: allProducts.filter(p => p.tag === 'Men' || p.tag === 'men' || p.tag === 'T-Shirt') }];
 
+  const filterByCollection = (products) => {
+    if (!collection || !Array.isArray(collection.categories) || collection.categories.length === 0) return products;
+    const names = collection.categories.map(c => (c.name || c || '').toLowerCase()).filter(Boolean);
+    if (names.length === 0) return products;
+    return products.filter(p => {
+      const pSub = (p.subCategory || '').toLowerCase();
+      const pCat = (p.category || '').toLowerCase();
+      const pTag = (p.tag || '').toLowerCase();
+      const pMain = (p.mainCategory || '').toLowerCase();
+      const pName = (p.name || '').toLowerCase();
+      return names.some(n => pSub === n || pCat === n || pTag === n || pMain === n || pName.includes(n));
+    });
+  };
+
   const allMenProducts = allProducts.filter(p =>
     p.pageType === 'Men' || p.tag === 'Men' || p.tag === 'men' || p.tag === 'T-Shirt' ||
     segmentProducts.some(seg => seg.products.some(sp => sp.id === p.id))
   );
 
-  const filterCategories = [{ key: 'all', label: 'Category' }, ...menSubs.map(s => ({ key: s.id, label: s.name }))];
+  const filterCategories = [
+    { key: 'all', label: 'Category' },
+    ...menSubs.map(s => ({ key: s.id, label: s.name })),
+    ...pageSubs.map(s => ({ key: `page_${s.id}`, label: s.name })),
+  ];
   
   const filtered = selected === 'all' ? null : (() => {
+    if (typeof selected === 'string' && selected.startsWith('page_')) {
+      const subId = selected.replace('page_', '');
+      const sub = pageSubs.find(s => s.id === subId);
+      if (sub) {
+        const subName = sub.name.toLowerCase();
+        const products = filterByCollection(allMenProducts).filter(p => {
+          const pName = (p.name || '').toLowerCase();
+          const pSub = (p.subCategory || '').toLowerCase();
+          const pCat = (p.category || '').toLowerCase();
+          return pName.includes(subName) || pSub.includes(subName) || pCat.includes(subName);
+        });
+        return { title: sub.name, products };
+      }
+    }
     let seg = segmentProducts.find(s => s.id === selected);
     if (!seg) {
       const selLower = selected.toLowerCase();
@@ -217,21 +253,39 @@ export default function Men() {
                selLower.includes(nameLower.replace(' shirts', '').replace(' tops', ''));
       });
     }
-    return seg ? { title: seg.name, products: seg.products } : null;
+    if (!seg) return null;
+    return { title: seg.name, products: filterByCollection(seg.products) };
   })();
+
+  const allMenProductsFiltered = filterByCollection(allMenProducts);
+  const filteredSegmentProducts = segmentProducts.map(seg => ({
+    ...seg,
+    products: filterByCollection(seg.products)
+  }));
 
   return (
     <main style={{ background: 'linear-gradient(180deg, #0d0d12, #151318, #0d0d12)' }}>
       {/* Hero */}
       <section style={{ position: 'relative', width: '100%', height: '40vh', minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=1600&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4 }} />
+        {collection?.image ? (
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${getImageUrl(collection.image)})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4 }} />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=1600&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4 }} />
+        )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(13,13,18,0.3), rgba(13,13,18,0.9))' }} />
-        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', color: '#fff' }}>
-          <span className="fade-up" style={{ display: 'inline-block', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14, padding: '6px 20px', background: 'rgba(184,151,42,0.1)', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 20 }}>K-TEX Men</span>
-          <h1 className="fade-up" style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 12px' }}>Men's Collection</h1>
+        <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', color: '#fff', padding: '0 20px' }}>
+          <span className="fade-up" style={{ display: 'inline-block', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 14, padding: '6px 20px', background: 'rgba(184,151,42,0.1)', border: '1px solid rgba(184,151,42,0.2)', borderRadius: 20 }}>{collection ? 'Curated Collection' : 'K-TEX Men'}</span>
+          <h1 className="fade-up" style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 700, letterSpacing: '0.05em', margin: '0 0 12px' }}>{collection ? collection.name : "Men's Collection"}</h1>
           <p className="fade-up-1" style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', maxWidth: 500, margin: '0 auto', color: 'rgba(255,255,255,0.6)' }}>
-            Premium polos, tees & round necks — crafted for the modern gentleman.
+            {collection ? collection.description : 'Premium polos, tees & round necks — crafted for the modern gentleman.'}
           </p>
+          {collection && (
+            <div style={{ marginTop: 14 }}>
+              <Link to="/collections" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline', textUnderlineOffset: 3, fontSize: 12 }}>
+                ← Back to all collections
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -296,7 +350,7 @@ export default function Men() {
             )}
           </div>
           <span className="product-count" style={{ color: '#8a7d65', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
-            {selected === 'all' ? `${allMenProducts.length} Products` : `${filtered?.products.length ?? 0} Products`}
+            {selected === 'all' ? `${allMenProductsFiltered.length} Products` : `${filtered?.products.length ?? 0} Products`}
           </span>
         </div>
       </div>
@@ -304,7 +358,7 @@ export default function Men() {
       {/* Products */}
       <div id="men-products" style={{ padding: '10px 0 40px' }}>
         {selected === 'all'
-          ? segmentProducts.map(seg => <ProductSegment key={seg.id} title={seg.name} products={seg.products} toggleWishlist={toggleWishlist} isWishlisted={isWishlisted} />)
+          ? filteredSegmentProducts.map(seg => <ProductSegment key={seg.id} title={seg.name} products={seg.products} toggleWishlist={toggleWishlist} isWishlisted={isWishlisted} />)
           : filtered && <ProductSegment title={filtered.title} products={filtered.products} toggleWishlist={toggleWishlist} isWishlisted={isWishlisted} />
         }
       </div>

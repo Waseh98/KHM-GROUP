@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getCollections, syncCollectionsFromBackend } from '../data';
+import { getCollections, syncCollectionsFromBackend, getCollectionTargetPath, PAGE_TYPE_TO_PATH } from '../data';
 import { getImageUrl } from '../utils/api';
 
 function slugify(name) {
@@ -44,15 +44,21 @@ export default function Collections() {
           <div className="collection-grid" style={{ display: 'grid', gap: 16 }}>
             {items.map((c) => {
               const slug = slugify(c.name);
+              const targetPath = getCollectionTargetPath(c) || `/collections/${slug}`;
               return (
-                <Link key={c.id} to={`/collections/${slug}`} className="collection-card"
+                <Link key={c.id} to={targetPath} className="collection-card"
                   style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', boxShadow: 'var(--shadow-sm)', minHeight: 280, background: '#eee', textDecoration: 'none' }}
                   onMouseEnter={(e) => { const img = e.currentTarget.querySelector('img'); if (img) img.style.transform = 'scale(1.08)'; }}
                   onMouseLeave={(e) => { const img = e.currentTarget.querySelector('img'); if (img) img.style.transform = 'scale(1)'; }}>
                   <img src={getImageUrl(c.image)} alt={c.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', padding: 24, background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)' }}>
                     <div>
-                      <div style={{ color: '#d4af5a', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>Shop Now</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <div style={{ color: '#d4af5a', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Shop Now</div>
+                        {c.pageType && PAGE_TYPE_TO_PATH[c.pageType] && (
+                          <span style={{ color: '#4da6ff', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '2px 8px', border: '1px solid rgba(77,166,255,0.4)', borderRadius: 12 }}>{c.pageType}</span>
+                        )}
+                      </div>
                       <div style={{ color: '#fff', fontFamily: 'var(--font-heading)', fontSize: 22, fontWeight: 800 }}>{c.name}</div>
                       <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 4 }}>{c.description}</div>
                     </div>

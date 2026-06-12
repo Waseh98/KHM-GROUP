@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getCollections, syncCollectionsFromBackend } from '../data';
+import { getImageUrl } from '../utils/api';
 
-const shopCategories = [
+const fallbackCategories = [
   { id: 'polo', name: 'Polo Shirts', subtitle: 'Timeless Classic', image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&q=80', link: '/men?cat=sub_men_polo' },
   { id: 'tshirt', name: 'T-Shirts', subtitle: 'Everyday Essential', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&q=80', link: '/men?cat=sub_men_tshirt' },
   { id: 'roundneck', name: 'Round Neck', subtitle: 'Casual Comfort', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80', link: '/men?cat=sub_men_roundneck' },
@@ -10,6 +13,36 @@ const shopCategories = [
 ];
 
 export default function CategoryGrid() {
+  const [items, setItems] = useState(() => {
+    const cols = getCollections();
+    return cols && cols.length > 0 ? cols : fallbackCategories;
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    const refresh = () => {
+      const cols = getCollections();
+      if (mounted) setItems(cols && cols.length > 0 ? cols : fallbackCategories);
+    };
+    refresh();
+    syncCollectionsFromBackend()
+      .then(refresh)
+      .catch(() => {});
+    window.addEventListener('collections-updated', refresh);
+    return () => {
+      mounted = false;
+      window.removeEventListener('collections-updated', refresh);
+    };
+  }, []);
+
+  const shopCategories = items.map((c) => ({
+    id: c._id || c.id || c.slug,
+    name: c.name,
+    subtitle: c.description || 'Explore Collection',
+    image: getImageUrl(c.image) || c.image,
+    link: c.slug ? `/collections/${c.slug}` : (c.link || '/collections'),
+  }));
+
   return (
     <section style={{
       padding: '100px 0',

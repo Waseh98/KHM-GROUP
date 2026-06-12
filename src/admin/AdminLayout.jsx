@@ -16,6 +16,7 @@ export default function AdminLayout() {
       { to: '/admin/orders', label: 'Orders', icon: '📦' },
       { to: '/admin/products', label: 'Products', icon: '👕' },
       { to: '/admin/collections', label: 'Collections', icon: '📁' },
+      { to: '/admin/page-subcategories', label: 'Page Sub-Cats', icon: '🧩' },
       { to: '/admin/categories', label: 'Categories', icon: '🏷️' },
       { to: '/admin/messages', label: 'Messages', icon: '💬' },
     ],

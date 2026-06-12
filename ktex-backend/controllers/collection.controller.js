@@ -3,7 +3,9 @@ const Product = require('../models/Product.model');
 
 exports.getCollections = async (req, res) => {
   try {
-    const collections = await Collection.find({ isActive: true })
+    const filter = { isActive: true };
+    if (req.query.pageType) filter.pageType = req.query.pageType;
+    const collections = await Collection.find(filter)
       .populate('categories', 'name slug image')
       .sort({ order: 1, name: 1 });
     res.status(200).json({ success: true, count: collections.length, data: collections });

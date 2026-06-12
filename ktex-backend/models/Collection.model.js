@@ -14,6 +14,12 @@ const collectionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category'
   }],
+  pageType: {
+    type: String,
+    enum: ['', 'Sale', 'Men', 'Women', 'NewArrivals', 'Kids', 'Custom'],
+    default: ''
+  },
+  customPath: { type: String, default: '' },
   order: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });

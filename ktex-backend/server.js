@@ -84,6 +84,7 @@ app.use('/api/reviews', require('./routes/review.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/categories', require('./routes/category.routes'));
 app.use('/api/collections', require('./routes/collection.routes'));
+app.use('/api/page-subcategories', require('./routes/pageSubCategory.routes'));
 
 // ─── Health Check ─────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -104,7 +105,8 @@ app.get('/api/health', (req, res) => {
       reviews: '/api/reviews',
       admin: '/api/admin',
       categories: '/api/categories',
-      collections: '/api/collections'
+      collections: '/api/collections',
+      pageSubCategories: '/api/page-subcategories'
     }
   });
 });
@@ -191,16 +193,30 @@ app.use((err, req, res, next) => {
 
 
 
-mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 })
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 15000,
+  socketTimeoutMS: 45000,
+  family: 4
+})
   .then(() => {
     console.log('✅ MongoDB Connected');
-    // Start server only after DB is ready
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 K-TEX Server running on port ${PORT}`);
     });
   })
   .catch(err => {
     console.error('❌ MongoDB connection failed:', err.message);
+    console.error('Full error:', err);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`⚠️ Server running on port ${PORT} WITHOUT database`);
+    });
   });
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB disconnected. Attempting reconnect...');
+});
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected');
+});
 
 module.exports = app;
