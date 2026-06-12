@@ -18,7 +18,7 @@ export const PAYMENT_METHODS_CONFIG = [
     gradient: 'linear-gradient(135deg, #E30613 0%, #FF1744 100%)',
     details: { 
       title: 'JazzCash Account', 
-      lines: ['Account Title: Tanezeela Khalid', 'Number: 03254324502'] 
+      lines: ['Account Title: Tanzeela Khalid', 'Number: 03254324502'] 
     },
   },
   {
