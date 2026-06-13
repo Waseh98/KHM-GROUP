@@ -26,7 +26,16 @@ export default function Product() {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [imageZoom, setImageZoom] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [isMobile, setIsMobile] = useState(false);
   const imageRef = useRef(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   // Reviews integration states
   const [reviews, setReviews] = useState([]);
@@ -195,6 +204,7 @@ export default function Product() {
   };
 
   const handleImageNav = (dir) => {
+    setImageZoom(false);
     setSelectedImageIndex(prev => {
       if (dir === 'prev') return prev === 0 ? productImages.length - 1 : prev - 1;
       return prev === productImages.length - 1 ? 0 : prev + 1;
@@ -292,13 +302,14 @@ export default function Product() {
                     overflow: 'hidden',
                     aspectRatio: '3/4',
                     position: 'relative',
-                    cursor: imageZoom ? 'zoom-out' : 'zoom-in',
+                    cursor: isMobile ? 'default' : (imageZoom ? 'zoom-out' : 'zoom-in'),
                     flex: 1,
                     maxHeight: '500px',
+                    touchAction: isMobile ? 'pan-y' : 'auto',
                   }}
-                  onMouseEnter={() => setImageZoom(true)}
-                  onMouseLeave={() => setImageZoom(false)}
-                  onMouseMove={handleMouseMove}
+                  onMouseEnter={() => { if (!isMobile) setImageZoom(true); }}
+                  onMouseLeave={() => { if (!isMobile) setImageZoom(false); }}
+                  onMouseMove={(e) => { if (!isMobile) handleMouseMove(e); }}
                 >
                   <img
                     src={productImages[selectedImageIndex] || productImages[0]}
@@ -306,7 +317,7 @@ export default function Product() {
                     style={{
                       width: '100%', height: '100%', objectFit: 'cover',
                       transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                      transform: imageZoom ? 'scale(1.8)' : 'scale(1)',
+                      transform: !isMobile && imageZoom ? 'scale(1.8)' : 'scale(1)',
                       transition: 'transform 0.1s ease-out',
                     }}
                     draggable="false"
