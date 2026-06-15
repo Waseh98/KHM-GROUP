@@ -455,6 +455,17 @@ export const products = getProducts();
 
 function transformProduct(p) {
   const hasDiscount = p.discountPrice > 0;
+  const colors = (p.colors || []).map(c => ({
+    hexCode: c.hexCode || c,
+    name: c.name || '',
+    images: (c.images || []).map(img => fixImageUrl(img?.url || img)),
+  }));
+  const colorHexCodes = colors.map(c => c.hexCode).filter(Boolean);
+  const colorNames = colors.map(c => c.name).filter(Boolean);
+  const colorImages = colors.map(c => c.images.filter(Boolean));
+  const firstColorImages = colorImages[0] || [];
+  const globalImages = (p.images || []).map(img => fixImageUrl(img?.url || img));
+
   return {
     id: p._id,
     name: p.name,
@@ -462,17 +473,18 @@ function transformProduct(p) {
     price: hasDiscount ? p.discountPrice : p.price,
     oldPrice: hasDiscount ? p.price : undefined,
     discount: hasDiscount ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
-    image: fixImageUrl(p.images?.[0]?.url || p.images?.[0] || ''),
-    images: (p.images || []).map(img => fixImageUrl(img?.url || img)),
+    image: firstColorImages[0] || globalImages[0] || fixImageUrl(p.images?.[0]?.url || p.images?.[0] || ''),
+    images: firstColorImages.length ? firstColorImages : globalImages,
     tag: p.pageType || p.mainCategory || p.category || 'Men',
     pageType: p.pageType,
     subCategory: p.subCategory,
     mainCategory: p.mainCategory,
-    colors: (p.colors || []).map(c => c.hexCode).filter(Boolean),
-    colorNames: (p.colors || []).map(c => c.name).filter(Boolean),
+    colors: colorHexCodes,
+    colorNames,
+    colorImages,
     badge: '',
     badgeColor: '#000000',
-    colorCount: (p.colors || []).length || 1,
+    colorCount: colorHexCodes.length || 1,
     sku: p.sku,
     stock: p.stock,
     fabric: p.fabric || '',

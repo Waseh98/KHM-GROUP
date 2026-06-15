@@ -38,7 +38,7 @@ export default function AdminProducts() {
   function emptyForm() {
     return {
       name: '', pageType: 'Men', subCategory: '', price: '', discountPrice: '',
-      stock: '', sku: '', description: '', images: ['', '', '', ''], productStatus: 'active',
+      stock: '', sku: '', description: '', productStatus: 'active',
       colors: []
     };
   }
@@ -130,8 +130,24 @@ export default function AdminProducts() {
   const openEditModal = (p) => {
     setModal('edit');
     setEditId(p._id);
-    const existingImages = (p.images || []).map(img => img.url || img || '').slice(0, 4);
-    while (existingImages.length < 4) existingImages.push('');
+
+    let colors = (p.colors || []).map(c => ({
+      hexCode: c.hexCode || c,
+      name: c.name || '',
+      images: (c.images || []).map(img => img?.url || img || '').slice(0, 4)
+    }));
+    colors = colors.map(c => {
+      const imgs = [...c.images];
+      while (imgs.length < 4) imgs.push('');
+      return { ...c, images: imgs };
+    });
+
+    if (colors.length === 0 && (p.images || []).length > 0) {
+      const imgs = (p.images || []).map(img => img?.url || img || '').slice(0, 4);
+      while (imgs.length < 4) imgs.push('');
+      colors = [{ hexCode: '#000000', name: 'Default', images: imgs }];
+    }
+
     setFormData({
       name: p.name || '',
       pageType: p.pageType || p.mainCategory || 'Men',
@@ -140,10 +156,9 @@ export default function AdminProducts() {
       discountPrice: p.discountPrice || '',
       stock: p.stock || '',
       sku: p.sku || '',
-      images: existingImages,
       description: p.description || '',
       productStatus: p.productStatus || 'active',
-      colors: (p.colors || []).map(c => ({ hexCode: c.hexCode || c, name: c.name || '' }))
+      colors
     });
   };
 
@@ -155,8 +170,8 @@ export default function AdminProducts() {
     setSaving(true);
     setError('');
 
-    const validImages = formData.images.filter((img) => img && img.trim() !== '');
-    const pendingUpload = validImages.some((url) => url.startsWith('data:image/'));
+    const allColorImages = formData.colors.flatMap(c => (c.images || []).filter(img => img && img.trim()));
+    const pendingUpload = allColorImages.some(url => url.startsWith('data:image/'));
     if (pendingUpload) {
       setError('Please wait for image uploads to finish before saving.');
       setSaving(false);
@@ -164,6 +179,8 @@ export default function AdminProducts() {
     }
 
     const validColors = formData.colors.filter(c => c.hexCode?.trim());
+    const firstColorImages = validColors[0]?.images?.filter(img => img?.trim()) || [];
+
     const payload = {
       name: formData.name.trim(),
       pageType: formData.pageType,
@@ -175,9 +192,13 @@ export default function AdminProducts() {
       stock: Number(formData.stock) || 0,
       sku: formData.sku || undefined,
       productStatus: formData.productStatus,
-      images: validImages.map((url) => ({ url })),
+      images: firstColorImages.map(url => ({ url })),
       description: formData.description || 'Product description',
-      colors: validColors.map(c => ({ hexCode: c.hexCode.trim(), name: c.name?.trim() || '' }))
+      colors: validColors.map(c => ({
+        hexCode: c.hexCode.trim(),
+        name: c.name?.trim() || '',
+        images: (c.images || []).filter(img => img?.trim()).map(url => ({ url }))
+      }))
     };
 
     try {
@@ -230,10 +251,12 @@ export default function AdminProducts() {
     }
   };
 
-  const updateImageSlot = (index, url) => {
-    const updated = [...formData.images];
-    updated[index] = url;
-    setFormData({ ...formData, images: updated });
+  const updateColorImage = (colorIdx, imgIdx, url) => {
+    const colors = [...formData.colors];
+    const images = [...(colors[colorIdx].images || ['', '', '', ''])];
+    images[imgIdx] = url;
+    colors[colorIdx] = { ...colors[colorIdx], images };
+    setFormData({ ...formData, colors });
     setError('');
   };
 
@@ -442,101 +465,94 @@ export default function AdminProducts() {
                 </div>
               </div>
 
+              {/* Color Variants Section */}
               <div>
-                <label style={labelStyle}>Product Images (up to 4)</label>
+                <label style={labelStyle}>Color Variants (Each with up to 4 images)</label>
                 <p style={{ color: '#777', fontSize: 12, margin: '0 0 12px' }}>
-                  Images upload to Cloudinary automatically. Only the URL is saved in the database.
+                  Add color variants. Each color can have its own set of images. Upload will process automatically.
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-                  {formData.images.map((img, idx) => (
-                    <ImageUploadField
-                      key={idx}
-                      label={`Image ${idx + 1}`}
-                      value={img}
-                      onChange={(url) => updateImageSlot(idx, url)}
-                      folder={UPLOAD_FOLDERS.products}
-                      token={getAdminToken()}
-                      previewHeight={140}
-                      placeholder="Cloudinary URL or upload..."
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Colors Section */}
-              <div>
-                <label style={labelStyle}>Colors (Multicolor Options)</label>
-                <p style={{ color: '#777', fontSize: 12, margin: '0 0 12px' }}>
-                  Add color variants available for this product.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {formData.colors.map((color, idx) => (
-                    <div key={idx} style={{
-                      display: 'flex', gap: 8, alignItems: 'center',
-                      padding: '10px 12px', borderRadius: 10,
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      background: 'rgba(255,255,255,0.03)',
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {formData.colors.map((color, colorIdx) => (
+                    <div key={colorIdx} style={{
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 12, padding: 16,
+                      background: 'rgba(255,255,255,0.02)',
                     }}>
-                      <input
-                        type="color"
-                        value={color.hexCode || '#000000'}
-                        onChange={e => {
-                          const updated = [...formData.colors];
-                          updated[idx] = { ...updated[idx], hexCode: e.target.value };
-                          setFormData({ ...formData, colors: updated });
-                        }}
-                        style={{
-                          width: 38, height: 38, border: 'none', borderRadius: 8,
-                          cursor: 'pointer', padding: 0, background: 'transparent',
-                          flexShrink: 0,
-                        }}
-                      />
-                      <input
-                        type="text"
-                        value={color.hexCode}
-                        onChange={e => {
-                          const updated = [...formData.colors];
-                          updated[idx] = { ...updated[idx], hexCode: e.target.value };
-                          setFormData({ ...formData, colors: updated });
-                        }}
-                        placeholder="#hex"
-                        style={{
-                          width: 90, padding: '8px 10px', borderRadius: 8,
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          background: 'rgba(255,255,255,0.06)', color: '#fff',
-                          fontSize: 12, fontWeight: 600, outline: 'none',
-                        }}
-                      />
-                      <input
-                        type="text"
-                        value={color.name || ''}
-                        onChange={e => {
-                          const updated = [...formData.colors];
-                          updated[idx] = { ...updated[idx], name: e.target.value };
-                          setFormData({ ...formData, colors: updated });
-                        }}
-                        placeholder="Color name"
-                        style={{
-                          flex: 1, padding: '8px 10px', borderRadius: 8,
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          background: 'rgba(255,255,255,0.06)', color: '#fff',
-                          fontSize: 12, fontWeight: 600, outline: 'none',
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = formData.colors.filter((_, i) => i !== idx);
-                          setFormData({ ...formData, colors: updated });
-                        }}
-                        style={{
-                          background: 'rgba(255,50,50,0.15)', border: '1px solid rgba(255,50,50,0.3)',
-                          color: '#ff4d4d', borderRadius: 8, padding: '6px 10px',
-                          cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0,
-                        }}
-                      >
-                        ✕
-                      </button>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+                        <input
+                          type="color"
+                          value={color.hexCode || '#000000'}
+                          onChange={e => {
+                            const updated = [...formData.colors];
+                            updated[colorIdx] = { ...updated[colorIdx], hexCode: e.target.value };
+                            setFormData({ ...formData, colors: updated });
+                          }}
+                          style={{
+                            width: 38, height: 38, border: 'none', borderRadius: 8,
+                            cursor: 'pointer', padding: 0, background: 'transparent', flexShrink: 0,
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={color.hexCode}
+                          onChange={e => {
+                            const updated = [...formData.colors];
+                            updated[colorIdx] = { ...updated[colorIdx], hexCode: e.target.value };
+                            setFormData({ ...formData, colors: updated });
+                          }}
+                          placeholder="#hex"
+                          style={{
+                            width: 90, padding: '8px 10px', borderRadius: 8,
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            background: 'rgba(255,255,255,0.06)', color: '#fff',
+                            fontSize: 12, fontWeight: 600, outline: 'none',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={color.name || ''}
+                          onChange={e => {
+                            const updated = [...formData.colors];
+                            updated[colorIdx] = { ...updated[colorIdx], name: e.target.value };
+                            setFormData({ ...formData, colors: updated });
+                          }}
+                          placeholder="Color name"
+                          style={{
+                            flex: '1 1 100px', padding: '8px 10px', borderRadius: 8,
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            background: 'rgba(255,255,255,0.06)', color: '#fff',
+                            fontSize: 12, fontWeight: 600, outline: 'none',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = formData.colors.filter((_, i) => i !== colorIdx);
+                            setFormData({ ...formData, colors: updated });
+                          }}
+                          style={{
+                            background: 'rgba(255,50,50,0.15)', border: '1px solid rgba(255,50,50,0.3)',
+                            color: '#ff4d4d', borderRadius: 8, padding: '6px 10px',
+                            cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0,
+                          }}
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {[0, 1, 2, 3].map(imgIdx => (
+                          <ImageUploadField
+                            key={imgIdx}
+                            label={`Image ${imgIdx + 1}`}
+                            value={(color.images || [])[imgIdx] || ''}
+                            onChange={(url) => updateColorImage(colorIdx, imgIdx, url)}
+                            folder={UPLOAD_FOLDERS.products}
+                            token={getAdminToken()}
+                            previewHeight={100}
+                            placeholder="URL or upload..."
+                          />
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -544,10 +560,10 @@ export default function AdminProducts() {
                   type="button"
                   onClick={() => setFormData({
                     ...formData,
-                    colors: [...formData.colors, { hexCode: '#000000', name: '' }]
+                    colors: [...formData.colors, { hexCode: '#000000', name: '', images: ['', '', '', ''] }]
                   })}
                   style={{
-                    marginTop: 8, padding: '8px 16px', borderRadius: 8,
+                    marginTop: 12, padding: '10px 20px', borderRadius: 8,
                     border: '1px dashed rgba(255,255,255,0.15)',
                     background: 'transparent', color: '#888',
                     cursor: 'pointer', fontSize: 12, fontWeight: 700,
@@ -556,7 +572,7 @@ export default function AdminProducts() {
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#d4af5a'; e.currentTarget.style.color = '#d4af5a'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = '#888'; }}
                 >
-                  + Add Color
+                  + Add Color Variant
                 </button>
               </div>
 

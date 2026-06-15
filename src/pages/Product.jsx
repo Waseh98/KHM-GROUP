@@ -49,12 +49,16 @@ export default function Product() {
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState('');
   const [reviewErrorMsg, setReviewErrorMsg] = useState('');
 
-  const productImages = product?.images?.length
-    ? product.images
-        .map((img) => (typeof img === 'string' ? img : img?.url))
+  const productImages = product?.colorImages?.[selectedColor]?.length
+    ? product.colorImages[selectedColor]
         .filter(Boolean)
         .map((img) => getImageUrl(img))
-    : [getImageUrl(product?.image)];
+    : (product?.images?.length
+        ? product.images
+            .map((img) => (typeof img === 'string' ? img : img?.url))
+            .filter(Boolean)
+            .map((img) => getImageUrl(img))
+        : [getImageUrl(product?.image)]);
 
   const sizes = product?.sizes && product.sizes.length > 0
     ? product.sizes.map(s => typeof s === 'string' ? s : s.size).filter(Boolean)
@@ -474,7 +478,7 @@ export default function Product() {
                           key={idx}
                           onClick={() => {
                             setSelectedColor(idx);
-                            setSelectedImageIndex(idx);
+                            setSelectedImageIndex(0);
                           }}
                           aria-label={`Color: ${product.colorNames?.[idx] || `option ${idx + 1}`}`}
                           style={{
