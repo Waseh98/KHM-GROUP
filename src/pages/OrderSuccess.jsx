@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function OrderSuccess() {
@@ -88,7 +88,23 @@ export default function OrderSuccess() {
           border: '1px solid rgba(184,151,42,0.15)',
         }}>
           <div style={{ display: 'grid', gap: 'clamp(8px, 1.5vw, 12px)' }}>
-            <Row label="Payment" value={paymentMethod === 'cod' ? 'COD' : 'Paid'} />
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '12px 16px', borderRadius: '12px',
+              background: paymentMethod === 'cod'
+                ? 'linear-gradient(135deg, #2ECC71 0%, #27AE60 100%)'
+                : 'linear-gradient(135deg, #d4af5a 0%, #a08040 100%)',
+            }}>
+              <span style={{ fontWeight: 600, color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
+                Payment
+              </span>
+              <span style={{
+                fontWeight: 800, color: '#fff', fontSize: '14px',
+                textTransform: 'uppercase', letterSpacing: '0.05em',
+              }}>
+                {paymentMethod === 'cod' ? '💵 COD' : '✅ Paid'}
+              </span>
+            </div>
             <Row label="Status" value={orderStatus} gold />
             {orderNumber && <Row label="Tracking ID" value={orderNumber} />}
           </div>
@@ -201,3 +217,5 @@ const btnStyle = {
     transition: 'all 0.2s',
   },
 };
+
+
