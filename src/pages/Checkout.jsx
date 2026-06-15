@@ -137,15 +137,15 @@ export default function Checkout() {
       setStep(1);
       return;
     }
-    if (!screenshot) {
+    if (paymentMethod !== 'cod' && !screenshot) {
       setError('Please upload payment screenshot to confirm your order.');
       return;
     }
     setLoading(true);
     setError('');
     try {
-      let paymentScreenshot = screenshot;
-      if (screenshot.startsWith('data:image/')) {
+      let paymentScreenshot = paymentMethod === 'cod' ? '' : screenshot;
+      if (paymentMethod !== 'cod' && screenshot.startsWith('data:image/')) {
         const uploaded = await uploadPaymentProof(screenshot);
         paymentScreenshot = uploaded.url;
       }
@@ -642,6 +642,7 @@ export default function Checkout() {
                               {method.id === 'easypaisa' && 'Mobile wallet transfer'}
                               {method.id === 'jazzcash' && 'Mobile wallet transfer'}
                               {method.id === 'bank_transfer' && 'Direct bank deposit'}
+                              {method.id === 'cod' && 'Pay when you receive'}
                             </div>
                           </div>
                           <div style={{
@@ -691,16 +692,18 @@ export default function Checkout() {
                                 </div>
                               ))}
                             </div>
-                            <div style={{
-                              marginTop: '12px', padding: '10px 14px',
-                              background: 'rgba(184,151,42,0.1)',
-                              borderRadius: '8px', fontSize: '0.75rem',
-                              color: 'var(--gold)', fontWeight: 600,
-                              display: 'flex', alignItems: 'center', gap: '8px',
-                            }}>
-                              <span>📸</span>
-                              You will upload payment screenshot in the next step
-                            </div>
+                            {method.id !== 'cod' && (
+                              <div style={{
+                                marginTop: '12px', padding: '10px 14px',
+                                background: 'rgba(184,151,42,0.1)',
+                                borderRadius: '8px', fontSize: '0.75rem',
+                                color: 'var(--gold)', fontWeight: 600,
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                              }}>
+                                <span>📸</span>
+                                You will upload payment screenshot in the next step
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -810,194 +813,216 @@ export default function Checkout() {
                 </div>
 
                 {/* Payment Details Reminder */}
-                <div style={{
-                  padding: '16px 20px', marginBottom: '20px',
-                  background: `${selectedMethod?.color}10`,
-                  border: `1px solid ${selectedMethod?.color}25`,
-                  borderRadius: '14px',
-                }}>
+                {paymentMethod !== 'cod' && selectedMethod && (
                   <div style={{
-                    fontWeight: 700, fontSize: '0.85rem', color: selectedMethod?.color,
-                    marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '16px 20px', marginBottom: '20px',
+                    background: `${selectedMethod?.color}10`,
+                    border: `1px solid ${selectedMethod?.color}25`,
+                    borderRadius: '14px',
                   }}>
-                    <span>📌</span>
-                    {selectedMethod?.details.title}
+                    <div style={{
+                      fontWeight: 700, fontSize: '0.85rem', color: selectedMethod?.color,
+                      marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px',
+                    }}>
+                      <span>📌</span>
+                      {selectedMethod?.details.title}
+                    </div>
+                    <div style={{
+                      fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)',
+                      lineHeight: 1.8,
+                    }}>
+                      {selectedMethod?.details.lines.map((line, i) => (
+                        <div key={i}>{line}</div>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{
-                    fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)',
-                    lineHeight: 1.8,
-                  }}>
-                    {selectedMethod?.details.lines.map((line, i) => (
-                      <div key={i}>{line}</div>
-                    ))}
-                  </div>
-                </div>
+                )}
 
                 {/* Screenshot Upload Section */}
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{
-                    display: 'block', fontSize: '0.75rem', fontWeight: 700,
-                    marginBottom: '12px', color: 'rgba(255,255,255,0.6)',
-                    textTransform: 'uppercase', letterSpacing: '0.1em',
-                  }}>
-                    Payment Screenshot <span style={{ color: 'var(--gold)' }}>*</span>
-                  </label>
-
-                  {!screenshotPreview ? (
-                    <div
-                      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                      onDragLeave={() => setDragOver(false)}
-                      onDrop={handleDrop}
-                      onClick={() => document.getElementById('screenshotInput').click()}
-                      style={{
-                        padding: '40px 24px',
-                        border: `2px dashed ${dragOver ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
-                        borderRadius: '16px',
-                        background: dragOver ? 'rgba(184,151,42,0.08)' : 'rgba(255,255,255,0.03)',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        textAlign: 'center',
-                        transform: dragOver ? 'scale(1.01)' : 'scale(1)',
-                      }}
-                    >
-                      <div style={{
-                        width: '64px', height: '64px', borderRadius: '50%',
-                        background: 'rgba(184,151,42,0.1)', margin: '0 auto 16px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.8rem',
-                      }}>
-                        📸
-                      </div>
-                      <div style={{
-                        fontSize: '0.95rem', fontWeight: 700, color: '#fff',
-                        marginBottom: '6px',
-                      }}>
-                        Upload Payment Screenshot
-                      </div>
-                      <div style={{
-                        fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)',
-                        marginBottom: '12px',
-                      }}>
-                        Drag & drop or click to browse
-                      </div>
-                      <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '8px',
-                        padding: '10px 20px', borderRadius: '10px',
-                        background: 'linear-gradient(135deg, var(--gold), var(--light-gold))',
-                        color: '#fff', fontSize: '0.8rem', fontWeight: 700,
-                        boxShadow: '0 4px 16px rgba(184,151,42,0.3)',
-                      }}>
-                        <span>📁</span> Choose File
-                      </div>
-                      <div style={{
-                        fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)',
-                        marginTop: '10px',
-                      }}>
-                        Supports: JPG, PNG, WEBP (Max 5MB)
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{
-                      borderRadius: '16px', overflow: 'hidden',
-                      border: '2px solid var(--gold)',
-                      background: 'rgba(184,151,42,0.05)',
-                      animation: 'fadeIn 0.3s ease',
+                {paymentMethod !== 'cod' ? (
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{
+                      display: 'block', fontSize: '0.75rem', fontWeight: 700,
+                      marginBottom: '12px', color: 'rgba(255,255,255,0.6)',
+                      textTransform: 'uppercase', letterSpacing: '0.1em',
                     }}>
-                      <div style={{
-                        position: 'relative',
-                        maxHeight: '300px', overflow: 'hidden',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: 'rgba(0,0,0,0.3)',
-                      }}>
-                        <img
-                          src={screenshotPreview}
-                          alt="Payment Screenshot"
-                          style={{
-                            maxWidth: '100%', maxHeight: '300px',
-                            objectFit: 'contain',
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={removeScreenshot}
-                          style={{
-                            position: 'absolute', top: '12px', right: '12px',
-                            width: '36px', height: '36px', borderRadius: '50%',
-                            background: 'rgba(200,16,46,0.9)', color: '#fff',
-                            border: 'none', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.1rem', fontWeight: 700,
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                        >
-                          ✕
-                        </button>
+                      Payment Screenshot <span style={{ color: 'var(--gold)' }}>*</span>
+                    </label>
+
+                    {!screenshotPreview ? (
+                      <div
+                        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={handleDrop}
+                        onClick={() => document.getElementById('screenshotInput').click()}
+                        style={{
+                          padding: '40px 24px',
+                          border: `2px dashed ${dragOver ? 'var(--gold)' : 'rgba(255,255,255,0.15)'}`,
+                          borderRadius: '16px',
+                          background: dragOver ? 'rgba(184,151,42,0.08)' : 'rgba(255,255,255,0.03)',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          textAlign: 'center',
+                          transform: dragOver ? 'scale(1.01)' : 'scale(1)',
+                        }}
+                      >
+                        <div style={{
+                          width: '64px', height: '64px', borderRadius: '50%',
+                          background: 'rgba(184,151,42,0.1)', margin: '0 auto 16px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '1.8rem',
+                        }}>
+                          📸
+                        </div>
+                        <div style={{
+                          fontSize: '0.95rem', fontWeight: 700, color: '#fff',
+                          marginBottom: '6px',
+                        }}>
+                          Upload Payment Screenshot
+                        </div>
+                        <div style={{
+                          fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)',
+                          marginBottom: '12px',
+                        }}>
+                          Drag & drop or click to browse
+                        </div>
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '8px',
+                          padding: '10px 20px', borderRadius: '10px',
+                          background: 'linear-gradient(135deg, var(--gold), var(--light-gold))',
+                          color: '#fff', fontSize: '0.8rem', fontWeight: 700,
+                          boxShadow: '0 4px 16px rgba(184,151,42,0.3)',
+                        }}>
+                          <span>📁</span> Choose File
+                        </div>
+                        <div style={{
+                          fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)',
+                          marginTop: '10px',
+                        }}>
+                          Supports: JPG, PNG, WEBP (Max 5MB)
+                        </div>
                       </div>
+                    ) : (
                       <div style={{
-                        padding: '14px 18px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        borderRadius: '16px', overflow: 'hidden',
+                        border: '2px solid var(--gold)',
+                        background: 'rgba(184,151,42,0.05)',
+                        animation: 'fadeIn 0.3s ease',
                       }}>
                         <div style={{
-                          display: 'flex', alignItems: 'center', gap: '10px',
+                          position: 'relative',
+                          maxHeight: '300px', overflow: 'hidden',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: 'rgba(0,0,0,0.3)',
+                        }}>
+                          <img
+                            src={screenshotPreview}
+                            alt="Payment Screenshot"
+                            style={{
+                              maxWidth: '100%', maxHeight: '300px',
+                              objectFit: 'contain',
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={removeScreenshot}
+                            style={{
+                              position: 'absolute', top: '12px', right: '12px',
+                              width: '36px', height: '36px', borderRadius: '50%',
+                              background: 'rgba(200,16,46,0.9)', color: '#fff',
+                              border: 'none', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '1.1rem', fontWeight: 700,
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div style={{
+                          padding: '14px 18px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         }}>
                           <div style={{
-                            width: '32px', height: '32px', borderRadius: '8px',
-                            background: 'rgba(0,166,81,0.2)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1rem',
+                            display: 'flex', alignItems: 'center', gap: '10px',
                           }}>
-                            ✅
-                          </div>
-                          <div>
                             <div style={{
-                              fontSize: '0.85rem', fontWeight: 700, color: '#fff',
+                              width: '32px', height: '32px', borderRadius: '8px',
+                              background: 'rgba(0,166,81,0.2)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '1rem',
                             }}>
-                              Screenshot Uploaded
+                              ✅
                             </div>
-                            <div style={{
-                              fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)',
-                            }}>
-                              Ready to submit
+                            <div>
+                              <div style={{
+                                fontSize: '0.85rem', fontWeight: 700, color: '#fff',
+                              }}>
+                                Screenshot Uploaded
+                              </div>
+                              <div style={{
+                                fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)',
+                              }}>
+                                Ready to submit
+                              </div>
                             </div>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById('screenshotInput').click()}
+                            style={{
+                              padding: '6px 14px', borderRadius: '8px',
+                              background: 'rgba(255,255,255,0.06)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              color: 'rgba(255,255,255,0.6)',
+                              fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.borderColor = 'var(--gold)';
+                              e.currentTarget.style.color = 'var(--gold)';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                              e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+                            }}
+                          >
+                            Change
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => document.getElementById('screenshotInput').click()}
-                          style={{
-                            padding: '6px 14px', borderRadius: '8px',
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: 'rgba(255,255,255,0.6)',
-                            fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.borderColor = 'var(--gold)';
-                            e.currentTarget.style.color = 'var(--gold)';
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                            e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
-                          }}
-                        >
-                          Change
-                        </button>
+                      </div>
+                    )}
+
+                    <input
+                      id="screenshotInput"
+                      type="file"
+                      accept="image/*"
+                      onChange={e => handleScreenshot(e.target.files?.[0])}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '16px 20px', marginBottom: '24px',
+                    background: 'rgba(46,204,113,0.1)',
+                    border: '1px solid rgba(46,204,113,0.25)',
+                    borderRadius: '14px',
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>💵</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#2ECC71' }}>
+                        Cash on Delivery
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                        Pay when your order is delivered. No advance payment needed.
                       </div>
                     </div>
-                  )}
-
-                  <input
-                    id="screenshotInput"
-                    type="file"
-                    accept="image/*"
-                    onChange={e => handleScreenshot(e.target.files?.[0])}
-                    style={{ display: 'none' }}
-                  />
-                </div>
+                  </div>
+                )}
 
                 {/* Error */}
                 {error && (
@@ -1075,7 +1100,7 @@ export default function Checkout() {
                         Placing Order...
                       </span>
                     ) : (
-                      `Place Order via ${selectedMethod?.name}`
+                        paymentMethod === 'cod' ? 'Place Order (Cash on Delivery)' : `Place Order via ${selectedMethod?.name}`
                     )}
                   </button>
                 </div>

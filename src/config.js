@@ -1,5 +1,16 @@
 export const PAYMENT_METHODS_CONFIG = [
   {
+    id: 'cod',
+    name: 'Cash on Delivery',
+    icon: '💵',
+    color: '#2ECC71',
+    gradient: 'linear-gradient(135deg, #2ECC71 0%, #27AE60 100%)',
+    details: {
+      title: 'Cash on Delivery',
+      lines: ['Pay when you receive your order', 'No advance payment required'],
+    },
+  },
+  {
     id: 'easypaisa',
     name: 'EasyPaisa',
     icon: '/images/easypaisa-logo.jfif',
