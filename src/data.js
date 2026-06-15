@@ -453,7 +453,7 @@ export const getProducts = () => {
 
 export const products = getProducts();
 
-function transformProduct(p) {
+export function transformProduct(p) {
   const hasDiscount = p.discountPrice > 0;
   const colors = (p.colors || []).map(c => ({
     hexCode: c.hexCode || c,
