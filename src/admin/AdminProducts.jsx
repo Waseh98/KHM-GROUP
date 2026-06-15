@@ -220,10 +220,10 @@ export default function AdminProducts() {
       setSaving(false);
       closeModal();
 
-      // Re-fetch products from backend and update localStorage cache
+      // Update cache from backend (silent — keep existing cache if this fails)
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
+        const timeout = setTimeout(() => controller.abort(), 6000);
         const refetchRes = await fetch(`${API_PROD}?limit=200&sort=newest`, { headers: apiHeaders(), signal: controller.signal });
         clearTimeout(timeout);
         if (refetchRes.ok) {
@@ -232,46 +232,10 @@ export default function AdminProducts() {
             const transformed = refetchData.data.map(transformProduct);
             localStorage.setItem('ktex_products', JSON.stringify(transformed));
             localStorage.setItem('ktex_products_synced_at', Date.now().toString());
-            window.dispatchEvent(new Event('products-updated'));
-            fetchProducts().catch(() => {});
-            return;
           }
         }
       } catch (e) {}
 
-      // Offline fallback: save directly to localStorage
-      const offline = JSON.parse(localStorage.getItem('ktex_products') || '[]');
-      const offlineProduct = {
-        id: editId || `offline_${Date.now()}`,
-        name: formData.name.trim(),
-        pageType: formData.pageType,
-        subCategory: formData.subCategory,
-        price: Number(formData.price) || 0,
-        oldPrice: Number(formData.discountPrice) || undefined,
-        discount: formData.discountPrice > 0 ? Math.round(((formData.price - formData.discountPrice) / formData.price) * 100) : undefined,
-        image: firstColorImages[0] || '',
-        images: firstColorImages,
-        colors: validColors.map(c => c.hexCode.trim()),
-        colorNames: validColors.map(c => c.name?.trim() || ''),
-        colorImages: validColors.map(c => (c.images || []).filter(img => img?.trim())),
-        colorCount: validColors.length,
-        stock: Number(formData.stock) || 0,
-        sku: formData.sku || '',
-        tag: formData.pageType,
-        mainCategory: formData.pageType,
-        description: formData.description || '',
-        badge: '',
-        badgeColor: '#000000',
-        isLocal: true,
-      };
-      if (editId) {
-        const idx = offline.findIndex(p => p.id === editId || p._id === editId);
-        if (idx >= 0) offline[idx] = offlineProduct;
-        else offline.push(offlineProduct);
-      } else {
-        offline.push(offlineProduct);
-      }
-      localStorage.setItem('ktex_products', JSON.stringify(offline));
       window.dispatchEvent(new Event('products-updated'));
       fetchProducts().catch(() => {});
     } catch (e) {
@@ -286,28 +250,13 @@ export default function AdminProducts() {
 
   const handleDelete = async (p) => {
     if (!window.confirm(`Delete "${p.name}"?`)) return;
-    const deleteId = p._id || p.id;
-
-    // Try backend first, fallback to local
-    if (p._id) {
-      try {
-        const res = await fetch(`${API_PROD}/${p._id}`, { method: 'DELETE', headers: apiHeaders() });
-        if (res.ok) {
-          localStorage.removeItem('ktex_products_synced_at');
-          localStorage.removeItem('ktex_products');
-          window.dispatchEvent(new Event('products-updated'));
-          fetchProducts();
-          return;
-        }
-      } catch (e) {}
-    }
-
-    // Offline fallback: delete from localStorage
-    const offline = JSON.parse(localStorage.getItem('ktex_products') || '[]');
-    const filtered = offline.filter(pr => (pr.id !== deleteId && pr._id !== deleteId));
-    localStorage.setItem('ktex_products', JSON.stringify(filtered));
-    window.dispatchEvent(new Event('products-updated'));
-    fetchProducts();
+    try {
+      const res = await fetch(`${API_PROD}/${p._id || p.id}`, { method: 'DELETE', headers: apiHeaders() });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      localStorage.removeItem('ktex_products_synced_at');
+      localStorage.removeItem('ktex_products');
+      window.dispatchEvent(new Event('products-updated'));
+      fetchProducts();
     } catch (e) {
       alert('Delete failed: ' + e.message);
     }
