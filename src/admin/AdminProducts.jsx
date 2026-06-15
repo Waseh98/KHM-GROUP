@@ -38,7 +38,8 @@ export default function AdminProducts() {
   function emptyForm() {
     return {
       name: '', pageType: 'Men', subCategory: '', price: '', discountPrice: '',
-      stock: '', sku: '', description: '', images: ['', '', '', ''], productStatus: 'active'
+      stock: '', sku: '', description: '', images: ['', '', '', ''], productStatus: 'active',
+      colors: []
     };
   }
 
@@ -141,7 +142,8 @@ export default function AdminProducts() {
       sku: p.sku || '',
       images: existingImages,
       description: p.description || '',
-      productStatus: p.productStatus || 'active'
+      productStatus: p.productStatus || 'active',
+      colors: (p.colors || []).map(c => ({ hexCode: c.hexCode || c, name: c.name || '' }))
     });
   };
 
@@ -161,6 +163,7 @@ export default function AdminProducts() {
       return;
     }
 
+    const validColors = formData.colors.filter(c => c.hexCode?.trim());
     const payload = {
       name: formData.name.trim(),
       pageType: formData.pageType,
@@ -173,7 +176,8 @@ export default function AdminProducts() {
       sku: formData.sku || undefined,
       productStatus: formData.productStatus,
       images: validImages.map((url) => ({ url })),
-      description: formData.description || 'Product description'
+      description: formData.description || 'Product description',
+      colors: validColors.map(c => ({ hexCode: c.hexCode.trim(), name: c.name?.trim() || '' }))
     };
 
     try {
@@ -286,14 +290,14 @@ export default function AdminProducts() {
           <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff', minWidth: 950 }}>
             <thead>
               <tr style={{ background: 'linear-gradient(180deg, #1a1a1a 0%, #111 100%)' }}>
-                <Th>Image</Th><Th>Name / SKU</Th><Th>Page</Th><Th>Subcategory</Th><Th>Price</Th><Th>Disc.</Th><Th>Stock</Th><Th>Status</Th><Th>Actions</Th>
+                <Th>Image</Th><Th>Name / SKU</Th><Th>Page</Th><Th>Subcategory</Th><Th>Price</Th><Th>Disc.</Th><Th>Colors</Th><Th>Stock</Th><Th>Status</Th><Th>Actions</Th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading...</td></tr>
+                <tr><td colSpan={10} style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading...</td></tr>
               ) : products.length === 0 ? (
-                <tr><td colSpan={9} style={{ padding: 40, textAlign: 'center', color: '#666' }}>No products found.</td></tr>
+                <tr><td colSpan={10} style={{ padding: 40, textAlign: 'center', color: '#666' }}>No products found.</td></tr>
               ) : (
                 products.map(p => {
                   const ss = p.stock <= 0 ? 'out' : p.stock <= 5 ? 'low' : 'in';
@@ -331,6 +335,24 @@ export default function AdminProducts() {
                       <td style={{ padding: 10, fontWeight: 800, color: '#d4af5a', fontSize: 13 }}>Rs. {p.price?.toLocaleString()}</td>
                       <td style={{ padding: 10, color: '#888', fontSize: 12 }}>
                         {p.discountPrice > 0 ? `Rs. ${p.discountPrice.toLocaleString()}` : '—'}
+                      </td>
+                      <td style={{ padding: 10 }}>
+                        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 80 }}>
+                          {(p.colors || []).slice(0, 5).map((c, i) => (
+                            <div key={i} style={{
+                              width: 16, height: 16, borderRadius: '50%',
+                              background: c.hexCode || c || '#000',
+                              border: '1px solid rgba(255,255,255,0.15)',
+                              flexShrink: 0,
+                            }} title={c.name || c.hexCode || ''} />
+                          ))}
+                          {(p.colors || []).length > 5 && (
+                            <span style={{ color: '#666', fontSize: 10, fontWeight: 600 }}>+{p.colors.length - 5}</span>
+                          )}
+                          {(!p.colors || p.colors.length === 0) && (
+                            <span style={{ color: '#555', fontSize: 10 }}>—</span>
+                          )}
+                        </div>
                       </td>
                       <td style={{ padding: 10, fontWeight: 700, color: sc[ss] }}>{p.stock || 0}</td>
                       <td style={{ padding: 10 }}>
@@ -439,6 +461,103 @@ export default function AdminProducts() {
                     />
                   ))}
                 </div>
+              </div>
+
+              {/* Colors Section */}
+              <div>
+                <label style={labelStyle}>Colors (Multicolor Options)</label>
+                <p style={{ color: '#777', fontSize: 12, margin: '0 0 12px' }}>
+                  Add color variants available for this product.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {formData.colors.map((color, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex', gap: 8, alignItems: 'center',
+                      padding: '10px 12px', borderRadius: 10,
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      background: 'rgba(255,255,255,0.03)',
+                    }}>
+                      <input
+                        type="color"
+                        value={color.hexCode || '#000000'}
+                        onChange={e => {
+                          const updated = [...formData.colors];
+                          updated[idx] = { ...updated[idx], hexCode: e.target.value };
+                          setFormData({ ...formData, colors: updated });
+                        }}
+                        style={{
+                          width: 38, height: 38, border: 'none', borderRadius: 8,
+                          cursor: 'pointer', padding: 0, background: 'transparent',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={color.hexCode}
+                        onChange={e => {
+                          const updated = [...formData.colors];
+                          updated[idx] = { ...updated[idx], hexCode: e.target.value };
+                          setFormData({ ...formData, colors: updated });
+                        }}
+                        placeholder="#hex"
+                        style={{
+                          width: 90, padding: '8px 10px', borderRadius: 8,
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          background: 'rgba(255,255,255,0.06)', color: '#fff',
+                          fontSize: 12, fontWeight: 600, outline: 'none',
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={color.name || ''}
+                        onChange={e => {
+                          const updated = [...formData.colors];
+                          updated[idx] = { ...updated[idx], name: e.target.value };
+                          setFormData({ ...formData, colors: updated });
+                        }}
+                        placeholder="Color name"
+                        style={{
+                          flex: 1, padding: '8px 10px', borderRadius: 8,
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          background: 'rgba(255,255,255,0.06)', color: '#fff',
+                          fontSize: 12, fontWeight: 600, outline: 'none',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = formData.colors.filter((_, i) => i !== idx);
+                          setFormData({ ...formData, colors: updated });
+                        }}
+                        style={{
+                          background: 'rgba(255,50,50,0.15)', border: '1px solid rgba(255,50,50,0.3)',
+                          color: '#ff4d4d', borderRadius: 8, padding: '6px 10px',
+                          cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0,
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({
+                    ...formData,
+                    colors: [...formData.colors, { hexCode: '#000000', name: '' }]
+                  })}
+                  style={{
+                    marginTop: 8, padding: '8px 16px', borderRadius: 8,
+                    border: '1px dashed rgba(255,255,255,0.15)',
+                    background: 'transparent', color: '#888',
+                    cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#d4af5a'; e.currentTarget.style.color = '#d4af5a'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = '#888'; }}
+                >
+                  + Add Color
+                </button>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
