@@ -175,7 +175,7 @@ export default function Checkout() {
         });
         localStorage.setItem('ktex_offline_orders', JSON.stringify(saved));
       }
-      navigate('/order-success', { state: { orderNumber, orderStatus } });
+      navigate('/order-success', { state: { orderNumber, orderStatus, paymentMethod } });
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {

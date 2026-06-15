@@ -5,6 +5,7 @@ export default function OrderSuccess() {
   const location = useLocation();
   const orderNumber = location.state?.orderNumber || '';
   const orderStatus = location.state?.orderStatus || 'pending';
+  const paymentMethod = location.state?.paymentMethod || 'cod';
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -87,7 +88,7 @@ export default function OrderSuccess() {
           border: '1px solid rgba(184,151,42,0.15)',
         }}>
           <div style={{ display: 'grid', gap: 'clamp(8px, 1.5vw, 12px)' }}>
-            <Row label="Payment" value="Paid" />
+            <Row label="Payment" value={paymentMethod === 'cod' ? 'COD' : 'Paid'} />
             <Row label="Status" value={orderStatus} gold />
             {orderNumber && <Row label="Tracking ID" value={orderNumber} />}
           </div>
