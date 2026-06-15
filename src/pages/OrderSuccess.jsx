@@ -87,7 +87,7 @@ export default function OrderSuccess() {
           border: '1px solid rgba(184,151,42,0.15)',
         }}>
           <div style={{ display: 'grid', gap: 'clamp(8px, 1.5vw, 12px)' }}>
-            <Row label="Payment" value="Cash on Delivery" />
+            <Row label="Payment" value="Paid" />
             <Row label="Status" value={orderStatus} gold />
             {orderNumber && <Row label="Tracking ID" value={orderNumber} />}
           </div>
