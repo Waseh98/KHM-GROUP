@@ -470,12 +470,10 @@ export default function Product() {
                   <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
                     Color: <span style={{ color: 'var(--mid-gray)', fontWeight: 400, textTransform: 'none' }}>{currentColorName}</span>
                   </h3>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {product.colors.map((color, idx) => {
-                      if (!product.images || !product.images[idx]) return null;
-                      return (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {product.colors.map((color, idx) => (
+                      <div key={idx} style={{ textAlign: 'center' }}>
                         <button
-                          key={idx}
                           onClick={() => {
                             setSelectedColor(idx);
                             setSelectedImageIndex(0);
@@ -491,10 +489,21 @@ export default function Product() {
                             transition: 'transform 0.2s',
                             transform: selectedColor === idx ? 'scale(1.1)' : 'scale(1)',
                             boxShadow: selectedColor === idx ? '0 0 0 2px var(--black)' : 'none',
+                            display: 'block', margin: '0 auto',
                           }}
                         />
-                      );
-                    })}
+                        {product.colorNames?.[idx] && (
+                          <span style={{
+                            fontSize: '0.6rem', color: 'var(--mid-gray)', marginTop: 4,
+                            display: 'block', fontWeight: selectedColor === idx ? 700 : 400,
+                            maxWidth: 50, overflow: 'hidden', textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {product.colorNames[idx]}
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
