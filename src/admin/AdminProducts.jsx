@@ -193,21 +193,13 @@ export default function AdminProducts() {
       sku: formData.sku || undefined,
       productStatus: formData.productStatus,
       description: formData.description || 'Product description',
-    };
-
-    // Only add images if there are valid colors with images
-    if (firstColorImages.length > 0) {
-      payload.images = firstColorImages.map(url => ({ url }));
-    }
-
-    // Only add colors if there are valid colors
-    if (validColors.length > 0) {
-      payload.colors = validColors.map(c => ({
+      images: firstColorImages.map(url => ({ url })),
+      colors: validColors.map(c => ({
         hexCode: c.hexCode.trim(),
         name: c.name?.trim() || '',
         images: (c.images || []).filter(img => img?.trim()).map(url => ({ url }))
-      }));
-    }
+      }))
+    };
 
     try {
       const controller = new AbortController();
@@ -224,15 +216,19 @@ export default function AdminProducts() {
       if (!res.ok) {
         throw new Error(data.message || `Error ${res.status}`);
       }
+      if (data && data.success === false) {
+        throw new Error(data.message || 'Save failed');
+      }
+
       setSaving(false);
       closeModal();
 
-      // Update cache from backend (silent — keep existing cache if this fails)
+      // Update cache from backend
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 6000);
-        const refetchRes = await fetch(`${API_PROD}?limit=200&sort=newest`, { headers: apiHeaders(), signal: controller.signal });
-        clearTimeout(timeout);
+        const cacheController = new AbortController();
+        const cacheTimeout = setTimeout(() => cacheController.abort(), 6000);
+        const refetchRes = await fetch(`${API_PROD}?limit=200&sort=newest`, { headers: apiHeaders(), signal: cacheController.signal });
+        clearTimeout(cacheTimeout);
         if (refetchRes.ok) {
           const refetchData = await refetchRes.json();
           if (refetchData.success && refetchData.data) {
@@ -241,10 +237,16 @@ export default function AdminProducts() {
             localStorage.setItem('ktex_products_synced_at', Date.now().toString());
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Cache update failed:', e.message);
+      }
 
       window.dispatchEvent(new Event('products-updated'));
-      fetchProducts().catch(() => {});
+      try {
+        await fetchProducts();
+      } catch (e) {
+        console.warn('Table refresh failed:', e.message);
+      }
     } catch (e) {
       setSaving(false);
       if (e.name === 'AbortError') {
