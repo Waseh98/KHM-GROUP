@@ -460,8 +460,8 @@ export function transformProduct(p) {
     name: c.name || '',
     images: (c.images || []).map(img => fixImageUrl(img?.url || img)),
   }));
-  const colorHexCodes = colors.map(c => c.hexCode).filter(Boolean);
-  const colorNames = colors.map(c => c.name).filter(Boolean);
+  const colorHexCodes = colors.map(c => c.hexCode).filter(c => c != null);
+  const colorNames = colors.map(c => c.name);
   const colorImages = colors.map(c => c.images.filter(Boolean));
   const firstColorImages = colorImages[0] || [];
   const globalImages = (p.images || []).map(img => fixImageUrl(img?.url || img));

@@ -74,7 +74,6 @@ export default function AdminProducts() {
       if (sortBy) params.set('sort', sortBy);
       params.set('page', page);
       params.set('limit', '12');
-      params.set('compact', 'true');
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
@@ -193,14 +192,22 @@ export default function AdminProducts() {
       stock: Number(formData.stock) || 0,
       sku: formData.sku || undefined,
       productStatus: formData.productStatus,
-      images: firstColorImages.map(url => ({ url })),
       description: formData.description || 'Product description',
-      colors: validColors.map(c => ({
+    };
+
+    // Only add images if there are valid colors with images
+    if (firstColorImages.length > 0) {
+      payload.images = firstColorImages.map(url => ({ url }));
+    }
+
+    // Only add colors if there are valid colors
+    if (validColors.length > 0) {
+      payload.colors = validColors.map(c => ({
         hexCode: c.hexCode.trim(),
         name: c.name?.trim() || '',
         images: (c.images || []).filter(img => img?.trim()).map(url => ({ url }))
-      }))
-    };
+      }));
+    }
 
     try {
       const controller = new AbortController();
