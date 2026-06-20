@@ -117,7 +117,7 @@ async function sendOrderConfirmationEmail(order, customerEmail, customerName) {
           <!-- Green tick + title -->
           <tr>
             <td style="padding: 40px 40px 24px; text-align:center;">
-              <div style="width:64px; height:64px; background: linear-gradient(135deg, #2ecc71, #27ae60); border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:32px; line-height:64px;">&#10003;</div>
+              <div style="width:64px; height:64px; background: linear-gradient(135deg, #2ecc71, #27ae60); border-radius:50%; margin:0 auto 20px; text-align:center; line-height:64px; color:#ffffff; font-size:32px; display:block;">&#10003;</div>
               <h1 style="margin:0; font-size:24px; font-weight:800; color:#1a1a1a;">Order Confirmed!</h1>
               <p style="margin: 10px 0 0; color:#666; font-size:15px;">Thank you for shopping with K-TEX Store, ${customerName || 'Valued Customer'}!</p>
             </td>
