@@ -40,7 +40,7 @@ exports.getAllProducts = async (req, res) => {
 
     const skip = (Number(page) - 1) * Number(limit);
     const total = await Product.countDocuments(query);
-    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews';
+    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews isFreeDelivery';
 
     const products = await Product.find(query)
       .sort(sortBy)
@@ -133,7 +133,7 @@ exports.deleteProduct = async (req, res) => {
 
 exports.getFeaturedProducts = async (req, res) => {
   try {
-    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews';
+    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews isFreeDelivery';
     const products = await Product.find({ isFeatured: true, isActive: true })
       .select(selectFields)
       .limit(8);
