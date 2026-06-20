@@ -1,6 +1,7 @@
 const Order = require('../models/Order.model');
 const Product = require('../models/Product.model');
 const { processImage, FOLDERS } = require('../utils/imageUploader');
+const { sendOrderConfirmationEmail } = require('../utils/emailService');
 
 // @POST /api/orders
 exports.createOrder = async (req, res) => {
@@ -37,6 +38,13 @@ exports.createOrder = async (req, res) => {
       totalPrice,
       notes
     });
+
+    // Send order confirmation email (non-blocking)
+    const userEmail = req.user?.email || order.guestEmail;
+    const userName  = req.user?.name  || order.shippingAddress?.fullName || 'Valued Customer';
+    sendOrderConfirmationEmail(order, userEmail, userName).catch(err =>
+      console.error('[Email] Confirmation send failed:', err.message)
+    );
 
     res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
   } catch (error) {
@@ -96,6 +104,13 @@ exports.createGuestOrder = async (req, res) => {
       totalPrice,
       notes
     });
+
+    // Send order confirmation email (non-blocking)
+    const guestEmail = email || order.guestEmail;
+    const guestName  = shippingAddress?.fullName || 'Valued Customer';
+    sendOrderConfirmationEmail(order, guestEmail, guestName).catch(err =>
+      console.error('[Email] Guest confirmation send failed:', err.message)
+    );
 
     res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
   } catch (error) {
