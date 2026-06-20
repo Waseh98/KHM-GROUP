@@ -70,6 +70,7 @@ const productSchema = new mongoose.Schema({
   numOfReviews: { type: Number, default: 0 },
   isFeatured:   { type: Boolean, default: false },
   isNewArrival: { type: Boolean, default: false },
+  isFreeDelivery: { type: Boolean, default: false },
   isActive:     { type: Boolean, default: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
