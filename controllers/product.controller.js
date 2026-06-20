@@ -40,7 +40,7 @@ exports.getAllProducts = async (req, res) => {
 
     const skip = (Number(page) - 1) * Number(limit);
     const total = await Product.countDocuments(query);
-    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews isFreeDelivery';
+    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews isFreeDelivery colors';
 
     const products = await Product.find(query)
       .sort(sortBy)
@@ -95,6 +95,13 @@ exports.createProduct = async (req, res) => {
     if (req.body.images?.length) {
       req.body.images = await processImageArray(req.body.images, FOLDERS.products);
     }
+    if (req.body.colors?.length) {
+      for (const color of req.body.colors) {
+        if (color.images?.length) {
+          color.images = await processImageArray(color.images, FOLDERS.products);
+        }
+      }
+    }
     const product = await Product.create(req.body);
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (error) {
@@ -108,6 +115,13 @@ exports.updateProduct = async (req, res) => {
   try {
     if (req.body.images?.length) {
       req.body.images = await processImageArray(req.body.images, FOLDERS.products);
+    }
+    if (req.body.colors?.length) {
+      for (const color of req.body.colors) {
+        if (color.images?.length) {
+          color.images = await processImageArray(color.images, FOLDERS.products);
+        }
+      }
     }
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true, runValidators: true
@@ -133,7 +147,7 @@ exports.deleteProduct = async (req, res) => {
 
 exports.getFeaturedProducts = async (req, res) => {
   try {
-    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews isFreeDelivery';
+    const selectFields = 'name price discountPrice stock pageType mainCategory subCategory sku images productStatus isActive createdAt isFeatured isNewArrival ratings numOfReviews isFreeDelivery colors';
     const products = await Product.find({ isFeatured: true, isActive: true })
       .select(selectFields)
       .limit(8);
