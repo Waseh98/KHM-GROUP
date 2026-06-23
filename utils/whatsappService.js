@@ -3,7 +3,7 @@ const https = require('https');
 // ─── Wati API Config (from .env) ────────────────────────────────────────────
 const WATI_ENDPOINT      = process.env.WATI_ENDPOINT      || 'live-mt-server.wati.io';
 const WATI_TENANT_ID     = process.env.WATI_TENANT_ID     || '10187930';
-const WATI_ACCESS_TOKEN  = process.env.WATI_ACCESS_TOKEN;
+const WATI_ACCESS_TOKEN  = process.env.WATI_ACCESS_TOKEN ? process.env.WATI_ACCESS_TOKEN.replace(/\s+/g, ' ').trim() : undefined;
 const WATI_TEMPLATE_NAME = process.env.WATI_TEMPLATE_NAME || 'order_confirmation';
 
 // ─── Format phone to international format (e.g. 03XX → 923XX) ──────────────
