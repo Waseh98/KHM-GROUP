@@ -2,6 +2,7 @@ const Order = require('../models/Order.model');
 const Product = require('../models/Product.model');
 const { processImage, FOLDERS } = require('../utils/imageUploader');
 const { sendOrderConfirmationEmail } = require('../utils/emailService');
+const { sendWhatsAppOrderConfirmation } = require('../utils/whatsappService');
 
 // @POST /api/orders
 exports.createOrder = async (req, res) => {
@@ -44,6 +45,12 @@ exports.createOrder = async (req, res) => {
     const userName  = req.user?.name  || order.shippingAddress?.fullName || 'Valued Customer';
     sendOrderConfirmationEmail(order, userEmail, userName).catch(err =>
       console.error('[Email] Confirmation send failed:', err.message)
+    );
+
+    // Send WhatsApp order confirmation (non-blocking)
+    const userPhone = req.user?.phone || order.shippingAddress?.phone || order.shippingAddress?.whatsapp;
+    sendWhatsAppOrderConfirmation(order, userPhone, userName).catch(err =>
+      console.error('[WhatsApp] Confirmation send failed:', err.message)
     );
 
     res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
@@ -110,6 +117,12 @@ exports.createGuestOrder = async (req, res) => {
     const guestName  = shippingAddress?.fullName || 'Valued Customer';
     sendOrderConfirmationEmail(order, guestEmail, guestName).catch(err =>
       console.error('[Email] Guest confirmation send failed:', err.message)
+    );
+
+    // Send WhatsApp order confirmation (non-blocking)
+    const guestPhone = shippingAddress?.phone || shippingAddress?.whatsapp;
+    sendWhatsAppOrderConfirmation(order, guestPhone, guestName).catch(err =>
+      console.error('[WhatsApp] Guest confirmation send failed:', err.message)
     );
 
     res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
