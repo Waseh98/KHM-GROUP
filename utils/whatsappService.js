@@ -29,14 +29,16 @@ function formatPhone(phone) {
 
 // ─── Send WhatsApp order confirmation via Wati template ─────────────────────
 async function sendWhatsAppOrderConfirmation(order, customerPhone, customerName) {
+  console.log(`[WhatsApp] 🚀 sendWhatsAppOrderConfirmation called for phone: ${customerPhone}`);
+
   if (!WATI_ACCESS_TOKEN) {
-    console.warn('[WhatsApp] WATI_ACCESS_TOKEN not set — skipping WhatsApp notification');
+    console.log('[WhatsApp] ⚠️ WATI_ACCESS_TOKEN not set — skipping WhatsApp notification');
     return;
   }
 
   const phone = formatPhone(customerPhone);
   if (!phone) {
-    console.warn('[WhatsApp] No valid phone number — skipping WhatsApp notification');
+    console.log('[WhatsApp] ⚠️ No valid phone number — skipping WhatsApp notification');
     return;
   }
 
@@ -79,7 +81,7 @@ async function sendWhatsAppOrderConfirmation(order, customerPhone, customerName)
           if (parsed.result === true) {
             console.log(`[WhatsApp] ✅ Message sent successfully to ${phone} — Order #${orderNumber}`);
           } else {
-            console.warn(`[WhatsApp] ⚠️  Wati responded (${res.statusCode}):`, parsed);
+            console.log(`[WhatsApp] ⚠️  Wati responded (${res.statusCode}):`, parsed);
           }
         } catch {
           console.log(`[WhatsApp] Response (${res.statusCode}):`, data);
@@ -89,7 +91,7 @@ async function sendWhatsAppOrderConfirmation(order, customerPhone, customerName)
     });
 
     req.on('error', (err) => {
-      console.error('[WhatsApp] ❌ Request failed:', err.message);
+      console.log('[WhatsApp] ❌ Request failed:', err.message);
       resolve(); // Never throw — order should still succeed
     });
 
