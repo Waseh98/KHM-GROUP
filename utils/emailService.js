@@ -67,7 +67,7 @@ async function sendOrderConfirmationEmail(order, customerEmail, customerName) {
 
   const orderNumber = order.orderNumber || order._id;
   const paymentMethod = (order.paymentMethod || 'cod').toUpperCase();
-  const paymentLabel  = paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online Payment';
+  const paymentLabel  = paymentMethod === 'COD' ? 'COD (50% Advance Paid)' : 'Online Payment (Fully Paid)';
 
   // Build items rows
   const itemsRows = (order.orderItems || []).map(item => `
@@ -165,12 +165,34 @@ async function sendOrderConfirmationEmail(order, customerEmail, customerName) {
                   <td style="padding:6px 0; text-align:right; color:#333; font-size:14px;">${(order.shippingPrice || 0) === 0 ? '<span style="color:#2ecc71; font-weight:700;">FREE</span>' : 'Rs. ' + (order.shippingPrice || 0).toLocaleString()}</td>
                 </tr>
                 <tr>
+                  <td style="padding:6px 0; color:#666; font-size:14px;">Total Order Value</td>
+                  <td style="padding:6px 0; text-align:right; color:#333; font-size:14px;">Rs. ${(order.totalPrice || 0).toLocaleString()}</td>
+                </tr>
+                ${paymentMethod === 'COD' ? `
+                <tr>
+                  <td style="padding:6px 0; color:#2ecc71; font-weight:700; font-size:14px;">50% Advance Paid</td>
+                  <td style="padding:6px 0; text-align:right; color:#2ecc71; font-weight:700; font-size:14px;">Rs. ${Math.round((order.totalPrice || 0) / 2).toLocaleString()}</td>
+                </tr>
+                <tr>
                   <td colspan="2" style="padding-top:10px; border-top: 2px solid #f0ebe0;"></td>
                 </tr>
                 <tr>
-                  <td style="padding:8px 0; font-weight:800; font-size:16px; color:#1a1510;">Total</td>
-                  <td style="padding:8px 0; text-align:right; font-weight:900; font-size:18px; color:#d4af5a;">Rs. ${(order.totalPrice || 0).toLocaleString()}</td>
+                  <td style="padding:8px 0; font-weight:800; font-size:16px; color:#1a1510;">Remaining on Delivery</td>
+                  <td style="padding:8px 0; text-align:right; font-weight:900; font-size:18px; color:#d4af5a;">Rs. ${((order.totalPrice || 0) - Math.round((order.totalPrice || 0) / 2)).toLocaleString()}</td>
                 </tr>
+                ` : `
+                <tr>
+                  <td style="padding:6px 0; color:#2ecc71; font-weight:700; font-size:14px;">Amount Paid In Advance</td>
+                  <td style="padding:6px 0; text-align:right; color:#2ecc71; font-weight:700; font-size:14px;">Rs. ${(order.totalPrice || 0).toLocaleString()}</td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding-top:10px; border-top: 2px solid #f0ebe0;"></td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0; font-weight:800; font-size:16px; color:#1a1510;">Remaining on Delivery</td>
+                  <td style="padding:8px 0; text-align:right; font-weight:900; font-size:18px; color:#2ecc71;">Rs. 0</td>
+                </tr>
+                `}
               </table>
             </td>
           </tr>
