@@ -15,15 +15,20 @@ exports.createOrder = async (req, res) => {
 
     // Calculate prices
     let itemsPrice = 0;
+    let shippingPrice = 0;
     for (const item of orderItems) {
       const product = await Product.findById(item.product);
       if (!product) return res.status(404).json({ success: false, message: `Product ${item.product} not found` });
       const unitPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
       itemsPrice += unitPrice * item.quantity;
+      
+      // Calculate shipping based on the product isFreeDelivery option
+      if (!product.isFreeDelivery) {
+        shippingPrice += 300 * item.quantity;
+      }
     }
 
-    const shippingPrice = itemsPrice > 5000 ? 0 : 200; // Free shipping over PKR 5000
-    const taxPrice      = Math.round(itemsPrice * 0.05); // 5% tax
+    const taxPrice      = 0; // 5% tax removed
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
     const order = await Order.create({
@@ -71,15 +76,26 @@ exports.createGuestOrder = async (req, res) => {
     // Guest checkout: frontend may not have Mongo product ids yet.
     // We accept price/qty from payload and compute totals.
     let itemsPrice = 0;
+    let shippingPrice = 0;
     for (const item of orderItems) {
       if (!item?.name || !item?.image || typeof item?.price !== 'number' || !item?.quantity) {
         return res.status(400).json({ success: false, message: 'Invalid order item payload' });
       }
       itemsPrice += item.price * Number(item.quantity);
+
+      // Query Product to check if it has free delivery
+      const product = await Product.findById(item.product);
+      if (product) {
+        if (!product.isFreeDelivery) {
+          shippingPrice += 300 * Number(item.quantity);
+        }
+      } else {
+        // Fallback default shipping if product is not found in database
+        shippingPrice += 300 * Number(item.quantity);
+      }
     }
 
-    const shippingPrice = itemsPrice > 5000 ? 0 : 200;
-    const taxPrice      = Math.round(itemsPrice * 0.05);
+    const taxPrice      = 0; // 5% tax removed
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
     // Store payment screenshot in MongoDB as base64 or URL
