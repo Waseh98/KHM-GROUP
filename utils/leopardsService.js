@@ -12,7 +12,7 @@ const CITIES_CACHE_FILE = path.join(__dirname, 'leopards_cities.json');
  */
 async function fetchCitiesFromLeopards() {
   const url = `${LEOPARDS_BASE_URL}/getAllCities/format/json/`;
-  const body = new URLSearchParams({
+  const body = JSON.stringify({
     api_key: LEOPARDS_API_KEY,
     api_password: LEOPARDS_API_PASSWORD
   });
@@ -22,7 +22,7 @@ async function fetchCitiesFromLeopards() {
       method: 'POST',
       body,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/json'
       }
     });
 
@@ -114,9 +114,9 @@ async function bookLeopardsPacket({
   try {
     const res = await fetch(url, {
       method: 'POST',
-      body: new URLSearchParams(payload),
+      body: JSON.stringify(payload),
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/json'
       }
     });
 
