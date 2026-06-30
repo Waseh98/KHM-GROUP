@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const LEOPARDS_API_KEY = process.env.LEOPARDS_API_KEY || '487F7B22F68312D2C1BBC93B1AEA445B1782804115';
+const LEOPARDS_API_KEY = process.env.LEOPARDS_API_KEY || '487F7B22F68312D2C1BBC93B1AEA445B1782813647';
 const LEOPARDS_API_PASSWORD = process.env.LEOPARDS_API_PASSWORD || 'Wasay786@';
 const LEOPARDS_BASE_URL = 'https://merchantapi.leopardscourier.com/api';
 
