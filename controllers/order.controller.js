@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Order = require('../models/Order.model');
 const Product = require('../models/Product.model');
 const { processImage, FOLDERS } = require('../utils/imageUploader');
@@ -296,6 +297,13 @@ exports.getLeopardsCities = async (req, res) => {
 exports.bookLeopardsShipment = async (req, res) => {
   try {
     const { weightGrams, pieces, collectAmount, destinationCityId, instructions } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid Order ID format. Booking is only supported for online database orders.' 
+      });
+    }
     
     const order = await Order.findById(req.params.id);
     if (!order) {
