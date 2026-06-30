@@ -3,6 +3,7 @@ const Product = require('../models/Product.model');
 const { processImage, FOLDERS } = require('../utils/imageUploader');
 const { sendOrderConfirmationEmail } = require('../utils/emailService');
 const { sendWhatsAppOrderConfirmation } = require('../utils/whatsappService');
+const { getLeopardsCities, bookLeopardsPacket } = require('../utils/leopardsService');
 
 // @POST /api/orders
 exports.createOrder = async (req, res) => {
@@ -276,6 +277,67 @@ exports.deleteOrder = async (req, res) => {
     }
     await Order.findByIdAndDelete(req.params.id);
     res.status(200).json({ success: true, message: 'Order deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @GET /api/orders/leopards/cities — Admin
+exports.getLeopardsCities = async (req, res) => {
+  try {
+    const cities = await getLeopardsCities();
+    res.status(200).json({ success: true, data: cities });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @POST /api/orders/:id/book-leopards — Admin
+exports.bookLeopardsShipment = async (req, res) => {
+  try {
+    const { weightGrams, pieces, collectAmount, destinationCityId, instructions } = req.body;
+    
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.leopardsCn) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Order already booked with Leopards CN: ${order.leopardsCn}`,
+        data: order 
+      });
+    }
+
+    // Call booking service
+    const bookingResult = await bookLeopardsPacket({
+      weightGrams: weightGrams || 500,
+      pieces: pieces || 1,
+      collectAmount: collectAmount || 0,
+      orderNumber: order.orderNumber,
+      destinationCityId,
+      customerName: order.shippingAddress.fullName,
+      customerPhone: order.shippingAddress.phone,
+      customerAddress: order.shippingAddress.street,
+      instructions: instructions || 'Standard Overnight Delivery'
+    });
+
+    if (bookingResult.success) {
+      order.leopardsCn = bookingResult.trackNumber;
+      order.leopardsSlip = bookingResult.slipLink;
+      order.trackingNumber = bookingResult.trackNumber; // Sync general tracking ID as well
+      order.orderStatus = 'shipped'; // Update order status to shipped automatically upon booking
+      await order.save();
+
+      res.status(200).json({ 
+        success: true, 
+        message: 'Shipment booked successfully with Leopards!', 
+        data: order 
+      });
+    } else {
+      res.status(400).json({ success: false, message: 'Booking failed with Leopards' });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
