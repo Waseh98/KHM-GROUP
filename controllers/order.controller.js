@@ -31,6 +31,9 @@ exports.createOrder = async (req, res) => {
     }
 
     const taxPrice      = 0; // 5% tax removed
+    if (itemsPrice >= 5000) {
+      shippingPrice = 0;
+    }
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
     const order = await Order.create({
@@ -98,6 +101,9 @@ exports.createGuestOrder = async (req, res) => {
     }
 
     const taxPrice      = 0; // 5% tax removed
+    if (itemsPrice >= 5000) {
+      shippingPrice = 0;
+    }
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
     // Store payment screenshot in MongoDB as base64 or URL
