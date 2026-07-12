@@ -5,6 +5,7 @@ const { processImage, FOLDERS } = require('../utils/imageUploader');
 const { sendOrderConfirmationEmail } = require('../utils/emailService');
 const { sendWhatsAppOrderConfirmation } = require('../utils/whatsappService');
 const { getLeopardsCities, bookLeopardsPacket } = require('../utils/leopardsService');
+const { sendConversionEvent } = require('../utils/metaService');
 
 // @POST /api/orders
 exports.createOrder = async (req, res) => {
@@ -62,6 +63,17 @@ exports.createOrder = async (req, res) => {
     sendWhatsAppOrderConfirmation(order, userPhone, userName).catch(err =>
       console.error('[WhatsApp] Confirmation send failed:', err.message)
     );
+
+    // Send Meta Conversions API Purchase Event (non-blocking)
+    sendConversionEvent('Purchase', {
+      value: order.totalPrice,
+      currency: 'PKR'
+    }, {
+      email: userEmail,
+      phone: userPhone,
+      client_ip_address: req.ip,
+      client_user_agent: req.headers['user-agent']
+    }, order._id.toString()).catch(err => console.error('[Meta CAPI] Event failed:', err.message));
 
     res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
   } catch (error) {
@@ -149,7 +161,18 @@ exports.createGuestOrder = async (req, res) => {
       console.error('[WhatsApp] Guest confirmation send failed:', err.message)
     );
 
-    res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
+    // Send Meta Conversions API Purchase Event (non-blocking)
+    sendConversionEvent('Purchase', {
+      value: order.totalPrice,
+      currency: 'PKR'
+    }, {
+      email: guestEmail,
+      phone: guestPhone,
+      client_ip_address: req.ip,
+      client_user_agent: req.headers['user-agent']
+    }, order._id.toString()).catch(err => console.error('[Meta CAPI] Guest Event failed:', err.message));
+
+    res.status(201).json({ success: true, message: 'Guest order placed successfully!', data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
