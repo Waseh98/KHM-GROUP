@@ -1,6 +1,11 @@
+const mongoose = require('mongoose');
 const Order = require('../models/Order.model');
 const Product = require('../models/Product.model');
 const { processImage, FOLDERS } = require('../utils/imageUploader');
+const { sendOrderConfirmationEmail } = require('../utils/emailService');
+const { sendWhatsAppOrderConfirmation } = require('../utils/whatsappService');
+const { getLeopardsCities, bookLeopardsPacket } = require('../utils/leopardsService');
+const { sendConversionEvent } = require('../utils/metaService');
 
 // @POST /api/orders
 exports.createOrder = async (req, res) => {
@@ -13,15 +18,23 @@ exports.createOrder = async (req, res) => {
 
     // Calculate prices
     let itemsPrice = 0;
+    let shippingPrice = 0;
     for (const item of orderItems) {
       const product = await Product.findById(item.product);
       if (!product) return res.status(404).json({ success: false, message: `Product ${item.product} not found` });
       const unitPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
       itemsPrice += unitPrice * item.quantity;
+      
+      // Calculate shipping based on the product isFreeDelivery option
+      if (!product.isFreeDelivery) {
+        shippingPrice += 300 * item.quantity;
+      }
     }
 
-    const shippingPrice = itemsPrice > 5000 ? 0 : 200; // Free shipping over PKR 5000
-    const taxPrice      = Math.round(itemsPrice * 0.05); // 5% tax
+    const taxPrice      = 0; // 5% tax removed
+    if (itemsPrice >= 5000) {
+      shippingPrice = 0;
+    }
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
     const order = await Order.create({
@@ -37,6 +50,30 @@ exports.createOrder = async (req, res) => {
       totalPrice,
       notes
     });
+
+    // Send order confirmation email (non-blocking)
+    const userEmail = req.user?.email || order.guestEmail;
+    const userName  = req.user?.name  || order.shippingAddress?.fullName || 'Valued Customer';
+    sendOrderConfirmationEmail(order, userEmail, userName).catch(err =>
+      console.error('[Email] Confirmation send failed:', err.message)
+    );
+
+    // Send WhatsApp order confirmation (non-blocking)
+    const userPhone = req.user?.phone || order.shippingAddress?.phone || order.shippingAddress?.whatsapp;
+    sendWhatsAppOrderConfirmation(order, userPhone, userName).catch(err =>
+      console.error('[WhatsApp] Confirmation send failed:', err.message)
+    );
+
+    // Send Meta Conversions API Purchase Event (non-blocking)
+    sendConversionEvent('Purchase', {
+      value: order.totalPrice,
+      currency: 'PKR'
+    }, {
+      email: userEmail,
+      phone: userPhone,
+      client_ip_address: req.ip,
+      client_user_agent: req.headers['user-agent']
+    }, order._id.toString()).catch(err => console.error('[Meta CAPI] Event failed:', err.message));
 
     res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
   } catch (error) {
@@ -56,15 +93,29 @@ exports.createGuestOrder = async (req, res) => {
     // Guest checkout: frontend may not have Mongo product ids yet.
     // We accept price/qty from payload and compute totals.
     let itemsPrice = 0;
+    let shippingPrice = 0;
     for (const item of orderItems) {
       if (!item?.name || !item?.image || typeof item?.price !== 'number' || !item?.quantity) {
         return res.status(400).json({ success: false, message: 'Invalid order item payload' });
       }
       itemsPrice += item.price * Number(item.quantity);
+
+      // Query Product to check if it has free delivery
+      const product = await Product.findById(item.product);
+      if (product) {
+        if (!product.isFreeDelivery) {
+          shippingPrice += 300 * Number(item.quantity);
+        }
+      } else {
+        // Fallback default shipping if product is not found in database
+        shippingPrice += 300 * Number(item.quantity);
+      }
     }
 
-    const shippingPrice = itemsPrice > 5000 ? 0 : 200;
-    const taxPrice      = Math.round(itemsPrice * 0.05);
+    const taxPrice      = 0; // 5% tax removed
+    if (itemsPrice >= 5000) {
+      shippingPrice = 0;
+    }
     const totalPrice    = itemsPrice + shippingPrice + taxPrice;
 
     // Store payment screenshot in MongoDB as base64 or URL
@@ -97,7 +148,31 @@ exports.createGuestOrder = async (req, res) => {
       notes
     });
 
-    res.status(201).json({ success: true, message: 'Order placed successfully!', data: order });
+    // Send order confirmation email (non-blocking)
+    const guestEmail = email || order.guestEmail;
+    const guestName  = shippingAddress?.fullName || 'Valued Customer';
+    sendOrderConfirmationEmail(order, guestEmail, guestName).catch(err =>
+      console.error('[Email] Guest confirmation send failed:', err.message)
+    );
+
+    // Send WhatsApp order confirmation (non-blocking)
+    const guestPhone = shippingAddress?.phone || shippingAddress?.whatsapp;
+    sendWhatsAppOrderConfirmation(order, guestPhone, guestName).catch(err =>
+      console.error('[WhatsApp] Guest confirmation send failed:', err.message)
+    );
+
+    // Send Meta Conversions API Purchase Event (non-blocking)
+    sendConversionEvent('Purchase', {
+      value: order.totalPrice,
+      currency: 'PKR'
+    }, {
+      email: guestEmail,
+      phone: guestPhone,
+      client_ip_address: req.ip,
+      client_user_agent: req.headers['user-agent']
+    }, order._id.toString()).catch(err => console.error('[Meta CAPI] Guest Event failed:', err.message));
+
+    res.status(201).json({ success: true, message: 'Guest order placed successfully!', data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -218,6 +293,88 @@ exports.trackOrder = async (req, res) => {
         deliveredAt: order.deliveredAt || null,
       },
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @DELETE /api/orders/:id — Admin: permanently delete an order
+exports.deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    await Order.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Order deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @GET /api/orders/leopards/cities — Admin
+exports.getLeopardsCities = async (req, res) => {
+  try {
+    const cities = await getLeopardsCities();
+    res.status(200).json({ success: true, data: cities });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @POST /api/orders/:id/book-leopards — Admin
+exports.bookLeopardsShipment = async (req, res) => {
+  try {
+    const { weightGrams, pieces, collectAmount, destinationCityId, instructions } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid Order ID format. Booking is only supported for online database orders.' 
+      });
+    }
+    
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (order.leopardsCn) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Order already booked with Leopards CN: ${order.leopardsCn}`,
+        data: order 
+      });
+    }
+
+    // Call booking service
+    const bookingResult = await bookLeopardsPacket({
+      weightGrams: weightGrams || 500,
+      pieces: pieces || 1,
+      collectAmount: collectAmount || 0,
+      orderNumber: order.orderNumber,
+      destinationCityId,
+      customerName: order.shippingAddress.fullName,
+      customerPhone: order.shippingAddress.phone,
+      customerAddress: order.shippingAddress.street,
+      instructions: instructions || 'Standard Overnight Delivery'
+    });
+
+    if (bookingResult.success) {
+      order.leopardsCn = bookingResult.trackNumber;
+      order.leopardsSlip = bookingResult.slipLink;
+      order.trackingNumber = bookingResult.trackNumber; // Sync general tracking ID as well
+      order.orderStatus = 'shipped'; // Update order status to shipped automatically upon booking
+      await order.save();
+
+      res.status(200).json({ 
+        success: true, 
+        message: 'Shipment booked successfully with Leopards!', 
+        data: order 
+      });
+    } else {
+      res.status(400).json({ success: false, message: 'Booking failed with Leopards' });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

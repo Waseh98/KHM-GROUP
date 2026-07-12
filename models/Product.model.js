@@ -60,7 +60,11 @@ const productSchema = new mongoose.Schema({
   }],
   colors: [{
     name: String,
-    hexCode: String
+    hexCode: String,
+    images: [{
+      url: String,
+      public_id: String
+    }]
   }],
   fabric:   String,
   brand:    { type: String, default: 'K-TEX' },

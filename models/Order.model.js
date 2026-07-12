@@ -49,6 +49,8 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   trackingNumber: String,
+  leopardsCn:     String,
+  leopardsSlip:   String,
   notes:          String,
   deliveredAt:    Date,
   cancelledAt:    Date,
